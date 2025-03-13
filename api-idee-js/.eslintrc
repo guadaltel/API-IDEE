@@ -2,8 +2,8 @@
   "extends": "airbnb",
   "globals": {
     "IDEE": true,
-    "ol": "true",
-    "cesium": "true",
+    "ol": true,
+    "cesium": true,
     "Handlebars": true,
     "proj4": true,
     "ActiveXObject": true,
@@ -26,11 +26,6 @@
   // ],
   "parserOptions": {
     "ecmaVersion": 2020
-  },
-  "settings": {
-    "react": {
-      "version": "18.2.0"
-    }
   },
   "rules": {
     "no-underscore-dangle": [
