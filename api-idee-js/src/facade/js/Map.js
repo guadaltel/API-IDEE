@@ -376,6 +376,11 @@ class Map extends Base {
       this.setTicket(params.ticket);
     }
 
+    // OpenLayers only background color (Cesium requires skyBox with one pixel PNG of said color)
+    if (!isNullOrEmpty(params.bgColorContainer)) {
+      this.setBGColorContainer(params.bgColorContainer);
+    }
+
     // initial zoom
     if (isNullOrEmpty(params.bbox) && isNullOrEmpty(params.zoom) && isNullOrEmpty(params.center)) {
       this.zoomToMaxExtent(true);
@@ -406,7 +411,7 @@ class Map extends Base {
    * @function
    */
   addDropFileEvent() {
-    const container = this.getContainer().parentNode.parentNode;
+    const container = this.getContainer().closest('.m-api-idee-container');
     container.addEventListener('dragover', (e) => {
       e.preventDefault();
     }, false);
@@ -4116,6 +4121,22 @@ class Map extends Base {
    */
   isFinished() {
     return this._finishedMap;
+  }
+
+  /**
+   * This function assigns a color to the map container
+   *
+   * @function
+   * @public
+   * @api
+   * @param {String}
+   */
+  setBGColorContainer(color) {
+    if (!isNullOrEmpty(color)) {
+      const containerStyle = this.getContainer().closest('.m-api-idee-container').style;
+      containerStyle.backgroundColor = color;
+      containerStyle.backgroundImage = 'unset';
+    }
   }
 
   /**

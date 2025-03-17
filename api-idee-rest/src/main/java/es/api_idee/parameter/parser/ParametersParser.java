@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import es.api_idee.parameter.Parameters;
 
 public abstract class ParametersParser {
-   
+
    public static Parameters parse (MultivaluedMap<String, String> queryParams) {
       String container = queryParams.getFirst("container");
       if ((container == null) || (container.trim().isEmpty())) {
@@ -33,7 +33,8 @@ public abstract class ParametersParser {
       String ticket = queryParams.getFirst("ticket");
       String zoomconstrains = queryParams.getFirst("zoomconstrains");
       String viewextent = queryParams.getFirst("viewextent");
-      
+      String bgcolorcontainer = queryParams.getFirst("bgcolorcontainer");
+
       Parameters parameters = new Parameters();
       parameters.addContainer(container);
       parameters.addWmcfiles(wmcfiles);
@@ -50,10 +51,11 @@ public abstract class ParametersParser {
       parameters.addTicket(ticket);
       parameters.addZoomConstrains(zoomconstrains);
       parameters.addViewExtent(viewextent);
-      
+      parameters.addBGColorContainer(bgcolorcontainer);
+
       return parameters;
    }
-   
+
    public static List<String> parseControls (String controlsParameter) {
       List<String> controls = new LinkedList<String>();
       if (!StringUtils.isEmpty(controlsParameter)) {
@@ -84,9 +86,9 @@ public abstract class ParametersParser {
          }
 
          layerParameter = matcher.replaceAll("");
-         
+
          String[] layersArray = layerParameter.split(",");
-         
+
          for (String item : layersArray) {
             if (!item.isEmpty()) {
                layers.add(item);
@@ -94,8 +96,7 @@ public abstract class ParametersParser {
          }
 
          layers.addAll(layerGroups);
-         /* String[] layersValues = layerParameter.split(",");
-         layers = Arrays.asList(layersValues); */
+         //String[] layersValues = layerParameter.split(",");layers = Arrays.asList(layersValues);
       }
       return layers;
    }

@@ -86,7 +86,7 @@ public class Parameters {
          parameters.put("maxExtent", maxextent);
       }
    }
-   
+
    public void addTicket (String ticket) {
       if (ticket != null) {
          parameters.put("ticket", ticket);
@@ -117,7 +117,13 @@ public class Parameters {
          }
       }
    }
-   
+
+   public void addBGColorContainer (String color) {
+      if (color != null) {
+         parameters.put("bgColorContainer", color);
+      }
+   }
+
    public JSONObject toJSON () {
       return parameters;
    }
