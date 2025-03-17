@@ -1,14 +1,21 @@
-22/05/24 - Versión 1.0.0
+01/01/25 - Versión 1.0.0
 - Se incluye implementación 3D con Cesium
 - Modificación del contexto API-CNIG a API-IDEE
-- Actualización de la librería commons-httpclient 3.1 a httpclient 4.5.2 
+- Actualización de la librería commons-httpclient 3.1 a httpclient 4.5.2
 - Adaptación de las clases proxy tras el cambio de librería commons-httpclient
 - Mejoras sobre el proxy tras la unificación con Mapea
+- Eliminar librerías en desuso y fijar versiones de librerías en package.json
 - Se modifica tms.base por baseLayer en IDEE
-- Eliminación de la configuración de temas así como su uso.
-- Se elimina la configuración de Mapbox y su uso.
+- Eliminación de la configuración de temas así como su uso
+- Se elimina la configuración de Mapbox y su uso
 - Actualización y eliminación de librerías del fichero package.json
-- Eliminación de la configuración de TEMPLATES_PATH y métodos getTemplateUrl, get y compile.
-- Añade nuevo control Implementation Switcher.
-- Eliminación y configuración de pefiles de compilación.
-- Eliminación de plantillas de /files/templates y /templates dentro del war.
+- Eliminación de la configuración de TEMPLATES_PATH y métodos getTemplateUrl, get y compile
+- Añade nuevo control Implementation Switcher
+- Eliminar fichero index.md de documentación para utilizar README.md en su lugar
+- Se crea nueva página con enlaces a la documentación
+- Eliminación y configuración de perfiles de compilación
+- Eliminación de plantillas de /files/templates y /templates dentro del war
+- Añadido API("api/actions/versions") para obtener versionado de API_IDEE. Con etiquetas actuales de "versions.names=legacy,1.0.0,latest". (Sería necesario actualizar esta lista en cada actualización de API_IDEE)
+- Añadido API("api/actions/resourcesPlugins") para obtener "Tabla de compatibilidad de versiones" de cada plugin con filtrado por "name", "version" y "type". (Sería necesario actualizar este archivo en cada actualización de API_IDEE o cambio de un plugin)
+- Actualizado página test de plugins para que muestre las versiones correctas de "v1.0" de los plugins y ordenados alfabéticamente. (Sería necesario actualizar este archivo tras cambiar cualquier versión de un plugin)
+- Añadido a cada README.md de los plugins no obsoletos referencia a su "Tabla de compatibilidad de versiones".

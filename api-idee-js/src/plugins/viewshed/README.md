@@ -49,3 +49,6 @@ const mp = new IDEE.plugin.ViewShed({
 
 map.addPlugin(mp);
 ```
+
+## Tabla de compatibilidad de versiones   
+[Consulta el api resourcePlugin](https://componentes-desarrollo.idee.es/api-idee/api/actions/resourcesPlugins?name=viewshed)
