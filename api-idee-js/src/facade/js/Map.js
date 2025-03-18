@@ -4124,12 +4124,10 @@ class Map extends Base {
   }
 
   /**
-   * This function assigns a color to the map container
+   * Este método aplica un color al fondo del mapa
    *
-   * @function
    * @public
-   * @api
-   * @param {String}
+   * @param {String} color Color para aplicar en el fondo del mapa
    */
   setBGColorContainer(color) {
     if (!isNullOrEmpty(color)) {
@@ -4137,6 +4135,16 @@ class Map extends Base {
       containerStyle.backgroundColor = color;
       containerStyle.backgroundImage = 'unset';
     }
+  }
+
+  /**
+   * Este método devuelve el color del fondo del mapa
+   *
+   * @public
+   * @returns {String} Devuelve el color del fondo del mapa
+   */
+  getBGColorContainer() {
+    return this.getContainer().closest('.m-api-idee-container').style.backgroundColor;
   }
 
   /**
