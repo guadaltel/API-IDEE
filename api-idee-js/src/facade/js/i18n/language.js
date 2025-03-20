@@ -49,14 +49,9 @@ export const addTranslation = (lang, json) => {
 export const getTranslation = (lang) => {
   if (lang === 'es') {
     configuration.translations[lang].backimglayer = pluginsLanguage.backimglayer.esBackimglayer;
-    configuration.translations[lang].beautytoc = pluginsLanguage.beautytoc.esBeautytoc;
-    configuration.translations[lang].calendar = pluginsLanguage.calendar.esCalendar;
     configuration.translations[lang].comparators = pluginsLanguage.comparators.esComparators;
     configuration.translations[lang].contactlink = pluginsLanguage.contactlink.esContactlink;
     configuration.translations[lang].help = pluginsLanguage.help.esHelp;
-    configuration.translations[lang].iberpixcompare = pluginsLanguage.iberpixcompare
-      .esIberpixcompare;
-    configuration.translations[lang].ignsearch = pluginsLanguage.ignsearch.esIgnsearch;
     configuration.translations[lang].incicarto = pluginsLanguage.incicarto.esIncicarto;
     configuration.translations[lang].infocoordinates = pluginsLanguage.infocoordinates
       .esInfocoordinates;
@@ -75,7 +70,6 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.esSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.esStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.esTimeline;
-    configuration.translations[lang].viewshed = pluginsLanguage.viewshed.esViewshed;
     configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
       .esViewmanagement;
     configuration.translations[lang].locator = pluginsLanguage.locator.esLocator;
@@ -84,14 +78,9 @@ export const getTranslation = (lang) => {
       .esVectorsmanagement;
   } else if (lang === 'en') {
     configuration.translations[lang].backimglayer = pluginsLanguage.backimglayer.enBackimglayer;
-    configuration.translations[lang].beautytoc = pluginsLanguage.beautytoc.enBeautytoc;
-    configuration.translations[lang].calendar = pluginsLanguage.calendar.enCalendar;
     configuration.translations[lang].comparators = pluginsLanguage.comparators.enComparators;
     configuration.translations[lang].contactlink = pluginsLanguage.contactlink.enContactlink;
     configuration.translations[lang].help = pluginsLanguage.help.enHelp;
-    configuration.translations[lang].iberpixcompare = pluginsLanguage.iberpixcompare
-      .enIberpixcompare;
-    configuration.translations[lang].ignsearch = pluginsLanguage.ignsearch.enIgnsearch;
     configuration.translations[lang].incicarto = pluginsLanguage.incicarto.enIncicarto;
     configuration.translations[lang].infocoordinates = pluginsLanguage.infocoordinates
       .enInfocoordinates;
@@ -108,7 +97,6 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.enSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.enStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.enTimeline;
-    configuration.translations[lang].viewshed = pluginsLanguage.viewshed.enViewshed;
     configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
       .enViewmanagement;
     configuration.translations[lang].locator = pluginsLanguage.locator.enLocator;

@@ -8,14 +8,6 @@
 import esBackimglayer from '../../../plugins/backimglayer/src/facade/js/i18n/es';
 import enBackimglayer from '../../../plugins/backimglayer/src/facade/js/i18n/en';
 
-// Beautytoc
-import esBeautytoc from '../../../plugins/beautytoc/src/facade/js/i18n/es';
-import enBeautytoc from '../../../plugins/beautytoc/src/facade/js/i18n/en';
-
-// Calendar
-import esCalendar from '../../../plugins/calendar/src/facade/js/i18n/es';
-import enCalendar from '../../../plugins/calendar/src/facade/js/i18n/en';
-
 // Comparators
 import esComparators from '../../../plugins/comparators/src/facade/js/i18n/es';
 import enComparators from '../../../plugins/comparators/src/facade/js/i18n/en';
@@ -27,14 +19,6 @@ import enContactlink from '../../../plugins/contactlink/src/facade/js/i18n/en';
 // Help
 import esHelp from '../../../plugins/help/src/facade/js/i18n/es';
 import enHelp from '../../../plugins/help/src/facade/js/i18n/en';
-
-// Iberpixcompare
-import esIberpixcompare from '../../../plugins/iberpixcompare/src/facade/js/i18n/es';
-import enIberpixcompare from '../../../plugins/iberpixcompare/src/facade/js/i18n/en';
-
-// Ignsearch
-import esIgnsearch from '../../../plugins/ignsearch/src/facade/js/i18n/es';
-import enIgnsearch from '../../../plugins/ignsearch/src/facade/js/i18n/en';
 
 // Incicarto
 import esIncicarto from '../../../plugins/incicarto/src/facade/js/i18n/es';
@@ -96,10 +80,6 @@ import enStylemanager from '../../../plugins/stylemanager/src/facade/js/i18n/en'
 import esTimeline from '../../../plugins/timeline/src/facade/js/i18n/es';
 import enTimeline from '../../../plugins/timeline/src/facade/js/i18n/en';
 
-// Viewshed
-import esViewshed from '../../../plugins/viewshed/src/facade/js/i18n/es';
-import enViewshed from '../../../plugins/viewshed/src/facade/js/i18n/en';
-
 // Viewmanagement
 import esViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/es';
 import enViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/en';
@@ -129,14 +109,6 @@ const pluginsLanguage = {
     esBackimglayer,
     enBackimglayer,
   },
-  beautytoc: {
-    esBeautytoc,
-    enBeautytoc,
-  },
-  calendar: {
-    esCalendar,
-    enCalendar,
-  },
   comparators: {
     esComparators,
     enComparators,
@@ -148,14 +120,6 @@ const pluginsLanguage = {
   help: {
     esHelp,
     enHelp,
-  },
-  iberpixcompare: {
-    esIberpixcompare,
-    enIberpixcompare,
-  },
-  ignsearch: {
-    esIgnsearch,
-    enIgnsearch,
   },
   incicarto: {
     esIncicarto,
@@ -218,10 +182,6 @@ const pluginsLanguage = {
   timeline: {
     esTimeline,
     enTimeline,
-  },
-  viewshed: {
-    esViewshed,
-    enViewshed,
   },
   viewmanagement: {
     esViewmanagement,
