@@ -4,10 +4,6 @@
  * @example import pluginsLanguage from 'IDEE/i18n/plugins';
  */
 
-// Attributions
-import esAttributions from '../../../plugins/attributions/src/facade/js/i18n/es';
-import enAttributions from '../../../plugins/attributions/src/facade/js/i18n/en';
-
 // Backimglayer
 import esBackimglayer from '../../../plugins/backimglayer/src/facade/js/i18n/es';
 import enBackimglayer from '../../../plugins/backimglayer/src/facade/js/i18n/en';
@@ -15,10 +11,6 @@ import enBackimglayer from '../../../plugins/backimglayer/src/facade/js/i18n/en'
 // Beautytoc
 import esBeautytoc from '../../../plugins/beautytoc/src/facade/js/i18n/es';
 import enBeautytoc from '../../../plugins/beautytoc/src/facade/js/i18n/en';
-
-// Buffer
-import esBuffer from '../../../plugins/buffer/src/facade/js/i18n/es';
-import enBuffer from '../../../plugins/buffer/src/facade/js/i18n/en';
 
 // Calendar
 import esCalendar from '../../../plugins/calendar/src/facade/js/i18n/es';
@@ -28,29 +20,9 @@ import enCalendar from '../../../plugins/calendar/src/facade/js/i18n/en';
 import esComparators from '../../../plugins/comparators/src/facade/js/i18n/es';
 import enComparators from '../../../plugins/comparators/src/facade/js/i18n/en';
 
-// Comparepanel
-import esComparepanel from '../../../plugins/comparepanel/src/facade/js/i18n/es';
-import enComparepanel from '../../../plugins/comparepanel/src/facade/js/i18n/en';
-
 // Contactlink
 import esContactlink from '../../../plugins/contactlink/src/facade/js/i18n/es';
 import enContactlink from '../../../plugins/contactlink/src/facade/js/i18n/en';
-
-// Fulltoc
-import esFulltoc from '../../../plugins/fulltoc/src/facade/js/i18n/es';
-import enFulltoc from '../../../plugins/fulltoc/src/facade/js/i18n/en';
-
-// Geometrydraw
-import esGeometrydraw from '../../../plugins/geometrydraw/src/facade/js/i18n/es';
-import enGeometrydraw from '../../../plugins/geometrydraw/src/facade/js/i18n/en';
-
-// Georefimage
-import esGeorefimage from '../../../plugins/georefimage/src/facade/js/i18n/es';
-import enGeorefimage from '../../../plugins/georefimage/src/facade/js/i18n/en';
-
-// Georefimage2
-import esGeorefimage2 from '../../../plugins/georefimage2/src/facade/js/i18n/es';
-import enGeorefimage2 from '../../../plugins/georefimage2/src/facade/js/i18n/en';
 
 // Help
 import esHelp from '../../../plugins/help/src/facade/js/i18n/es';
@@ -64,17 +36,9 @@ import enIberpixcompare from '../../../plugins/iberpixcompare/src/facade/js/i18n
 import esIgnsearch from '../../../plugins/ignsearch/src/facade/js/i18n/es';
 import enIgnsearch from '../../../plugins/ignsearch/src/facade/js/i18n/en';
 
-// Ignsearchlocator
-import esIgnsearchlocator from '../../../plugins/ignsearchlocator/src/facade/js/i18n/es';
-import enIgnsearchlocator from '../../../plugins/ignsearchlocator/src/facade/js/i18n/en';
-
 // Incicarto
 import esIncicarto from '../../../plugins/incicarto/src/facade/js/i18n/es';
 import enIncicarto from '../../../plugins/incicarto/src/facade/js/i18n/en';
-
-// Infocatastro
-import esInfocatastro from '../../../plugins/infocatastro/src/facade/js/i18n/es';
-import enInfocatastro from '../../../plugins/infocatastro/src/facade/js/i18n/en';
 
 // Infocoordinates
 import esInfocoordinates from '../../../plugins/infocoordinates/src/facade/js/i18n/es';
@@ -88,17 +52,9 @@ import enInformation from '../../../plugins/information/src/facade/js/i18n/en';
 import esLayerswitcher from '../../../plugins/layerswitcher/src/facade/js/i18n/es';
 import enLayerswitcher from '../../../plugins/layerswitcher/src/facade/js/i18n/en';
 
-// Lyrcompare
-import esLyrcompare from '../../../plugins/lyrcompare/src/facade/js/i18n/es';
-import enLyrcompare from '../../../plugins/lyrcompare/src/facade/js/i18n/en';
-
 // Measurebar
 import esMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/es';
 import enMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/en';
-
-// Mirrorpanel
-import esMirrorpanel from '../../../plugins/mirrorpanel/src/facade/js/i18n/es';
-import enMirrorpanel from '../../../plugins/mirrorpanel/src/facade/js/i18n/en';
 
 // Mousesrs
 import esMousesrs from '../../../plugins/mousesrs/src/facade/js/i18n/es';
@@ -217,10 +173,6 @@ import enVectorsmanagement from '../../../plugins/vectorsmanagement/src/facade/j
  * @api
  */
 const pluginsLanguage = {
-  attributions: {
-    esAttributions,
-    enAttributions,
-  },
   backimglayer: {
     esBackimglayer,
     enBackimglayer,
@@ -228,10 +180,6 @@ const pluginsLanguage = {
   beautytoc: {
     esBeautytoc,
     enBeautytoc,
-  },
-  buffer: {
-    esBuffer,
-    enBuffer,
   },
   calendar: {
     esCalendar,
@@ -241,29 +189,9 @@ const pluginsLanguage = {
     esComparators,
     enComparators,
   },
-  comparepanel: {
-    esComparepanel,
-    enComparepanel,
-  },
   contactlink: {
     esContactlink,
     enContactlink,
-  },
-  fulltoc: {
-    esFulltoc,
-    enFulltoc,
-  },
-  geometrydraw: {
-    esGeometrydraw,
-    enGeometrydraw,
-  },
-  georefimage: {
-    esGeorefimage,
-    enGeorefimage,
-  },
-  georefimage2: {
-    esGeorefimage2,
-    enGeorefimage2,
   },
   help: {
     esHelp,
@@ -277,17 +205,9 @@ const pluginsLanguage = {
     esIgnsearch,
     enIgnsearch,
   },
-  ignsearchlocator: {
-    esIgnsearchlocator,
-    enIgnsearchlocator,
-  },
   incicarto: {
     esIncicarto,
     enIncicarto,
-  },
-  infocatastro: {
-    esInfocatastro,
-    enInfocatastro,
   },
   infocoordinates: {
     esInfocoordinates,
@@ -301,17 +221,9 @@ const pluginsLanguage = {
     esLayerswitcher,
     enLayerswitcher,
   },
-  lyrcompare: {
-    esLyrcompare,
-    enLyrcompare,
-  },
   measurebar: {
     esMeasurebar,
     enMeasurebar,
-  },
-  mirrorpanel: {
-    esMirrorpanel,
-    enMirrorpanel,
   },
   mousesrs: {
     esMousesrs,
