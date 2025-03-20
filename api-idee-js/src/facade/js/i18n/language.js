@@ -64,10 +64,6 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].layerswitcher = pluginsLanguage.layerswitcher.esLayerswitcher;
     configuration.translations[lang].measurebar = pluginsLanguage.measurebar.esMeasurebar;
     configuration.translations[lang].mousesrs = pluginsLanguage.mousesrs.esMousesrs;
-    configuration.translations[lang].popup = pluginsLanguage.popup.esPopup;
-    configuration.translations[lang].predefinedzoom = pluginsLanguage.predefinedzoom
-      .esPredefinedzoom;
-    configuration.translations[lang].printermap = pluginsLanguage.printermap.esPrintermap;
     configuration.translations[lang].printviewmanagement = pluginsLanguage.printviewmanagement
       .esPrintviewmanagement;
     configuration.translations[lang].queryattributes = pluginsLanguage.queryattributes
@@ -75,20 +71,10 @@ export const getTranslation = (lang) => {
     // configuration.translations[lang].querydatabase = pluginsLanguage
     // .querydatabase.esQuerydatabase;
     configuration.translations[lang].rescale = pluginsLanguage.rescale.esRescale;
-    configuration.translations[lang].selectiondraw = pluginsLanguage.selectiondraw.esSelectiondraw;
     configuration.translations[lang].selectionzoom = pluginsLanguage.selectionzoom.esSelectionzoom;
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.esSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.esStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.esTimeline;
-    configuration.translations[lang].toc = pluginsLanguage.toc.esToc;
-    configuration.translations[lang].topographicprofile = pluginsLanguage.topographicprofile
-      .esTopographicprofile;
-    configuration.translations[lang].transparency = pluginsLanguage.transparency.esTransparency;
-    configuration.translations[lang].vectors = pluginsLanguage.vectors.esVectors;
-    configuration.translations[lang].viewhistory = pluginsLanguage.viewhistory.esViewhistory;
-    configuration.translations[lang].xylocator = pluginsLanguage.xylocator.esXylocator;
-    configuration.translations[lang].zoomextent = pluginsLanguage.zoomextent.esZoomextent;
-    configuration.translations[lang].zoompanel = pluginsLanguage.zoompanel.esZoompanel;
     configuration.translations[lang].viewshed = pluginsLanguage.viewshed.esViewshed;
     configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
       .esViewmanagement;
@@ -113,29 +99,15 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].layerswitcher = pluginsLanguage.layerswitcher.enLayerswitcher;
     configuration.translations[lang].measurebar = pluginsLanguage.measurebar.enMeasurebar;
     configuration.translations[lang].mousesrs = pluginsLanguage.mousesrs.enMousesrs;
-    configuration.translations[lang].popup = pluginsLanguage.popup.enPopup;
-    configuration.translations[lang].predefinedzoom = pluginsLanguage.predefinedzoom
-      .enPredefinedzoom;
-    configuration.translations[lang].printermap = pluginsLanguage.printermap.enPrintermap;
     // configuration.translations[lang].querydatabase = pluginsLanguage
     // .querydatabase.enQuerydatabase;
     configuration.translations[lang].rescale = pluginsLanguage.rescale.enRescale;
-    configuration.translations[lang].selectiondraw = pluginsLanguage.selectiondraw.enSelectiondraw;
     configuration.translations[lang].queryattributes = pluginsLanguage.queryattributes
       .enQueryattributes;
     configuration.translations[lang].selectionzoom = pluginsLanguage.selectionzoom.enSelectionzoom;
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.enSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.enStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.enTimeline;
-    configuration.translations[lang].toc = pluginsLanguage.toc.enToc;
-    configuration.translations[lang].topographicprofile = pluginsLanguage.topographicprofile
-      .enTopographicprofile;
-    configuration.translations[lang].transparency = pluginsLanguage.transparency.enTransparency;
-    configuration.translations[lang].vectors = pluginsLanguage.vectors.enVectors;
-    configuration.translations[lang].viewhistory = pluginsLanguage.viewhistory.enViewhistory;
-    configuration.translations[lang].xylocator = pluginsLanguage.xylocator.enXylocator;
-    configuration.translations[lang].zoomextent = pluginsLanguage.zoomextent.enZoomextent;
-    configuration.translations[lang].zoompanel = pluginsLanguage.zoompanel.enZoompanel;
     configuration.translations[lang].viewshed = pluginsLanguage.viewshed.enViewshed;
     configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
       .enViewmanagement;

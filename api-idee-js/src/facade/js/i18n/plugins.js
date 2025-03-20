@@ -64,18 +64,6 @@ import enMousesrs from '../../../plugins/mousesrs/src/facade/js/i18n/en';
 import esOverviewmap from '../../../plugins/overviewmap/src/facade/js/i18n/es';
 import enOverviewmap from '../../../plugins/overviewmap/src/facade/js/i18n/en';
 
-// Popup
-import esPopup from '../../../plugins/popup/src/facade/js/i18n/es';
-import enPopup from '../../../plugins/popup/src/facade/js/i18n/en';
-
-// Predefinedzoom
-import esPredefinedzoom from '../../../plugins/predefinedzoom/src/facade/js/i18n/es';
-import enPredefinedzoom from '../../../plugins/predefinedzoom/src/facade/js/i18n/en';
-
-// Printermap
-import esPrintermap from '../../../plugins/printermap/src/facade/js/i18n/es';
-import enPrintermap from '../../../plugins/printermap/src/facade/js/i18n/en';
-
 // Printviewmanagement
 import esPrintviewmanagement from '../../../plugins/printviewmanagement/src/facade/js/i18n/es';
 import enPrintviewmanagement from '../../../plugins/printviewmanagement/src/facade/js/i18n/en';
@@ -92,10 +80,6 @@ import enQueryattributes from '../../../plugins/queryattributes/src/facade/js/i1
 import esRescale from '../../../plugins/rescale/src/facade/js/i18n/es';
 import enRescale from '../../../plugins/rescale/src/facade/js/i18n/en';
 
-// Selectiondraw
-import esSelectiondraw from '../../../plugins/selectiondraw/src/facade/js/i18n/es';
-import enSelectiondraw from '../../../plugins/selectiondraw/src/facade/js/i18n/en';
-
 // Selectionzoom
 import esSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/es';
 import enSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/en';
@@ -111,38 +95,6 @@ import enStylemanager from '../../../plugins/stylemanager/src/facade/js/i18n/en'
 // Timeline
 import esTimeline from '../../../plugins/timeline/src/facade/js/i18n/es';
 import enTimeline from '../../../plugins/timeline/src/facade/js/i18n/en';
-
-// Toc
-import esToc from '../../../plugins/toc/src/facade/js/i18n/es';
-import enToc from '../../../plugins/toc/src/facade/js/i18n/en';
-
-// topographicprofile
-import esTopographicprofile from '../../../plugins/topographicprofile/src/facade/js/i18n/es';
-import enTopographicprofile from '../../../plugins/topographicprofile/src/facade/js/i18n/en';
-
-// Transparency
-import esTransparency from '../../../plugins/transparency/src/facade/js/i18n/es';
-import enTransparency from '../../../plugins/transparency/src/facade/js/i18n/en';
-
-// Vectors
-import esVectors from '../../../plugins/vectors/src/facade/js/i18n/es';
-import enVectors from '../../../plugins/vectors/src/facade/js/i18n/en';
-
-// Viewhistory
-import esViewhistory from '../../../plugins/viewhistory/src/facade/js/i18n/es';
-import enViewhistory from '../../../plugins/viewhistory/src/facade/js/i18n/en';
-
-// Xylocator
-import esXylocator from '../../../plugins/xylocator/src/facade/js/i18n/es';
-import enXylocator from '../../../plugins/xylocator/src/facade/js/i18n/en';
-
-// Zoomextent
-import esZoomextent from '../../../plugins/zoomextent/src/facade/js/i18n/es';
-import enZoomextent from '../../../plugins/zoomextent/src/facade/js/i18n/en';
-
-// Zoompanel
-import esZoompanel from '../../../plugins/zoompanel/src/facade/js/i18n/es';
-import enZoompanel from '../../../plugins/zoompanel/src/facade/js/i18n/en';
 
 // Viewshed
 import esViewshed from '../../../plugins/viewshed/src/facade/js/i18n/es';
@@ -233,21 +185,9 @@ const pluginsLanguage = {
     esOverviewmap,
     enOverviewmap,
   },
-  popup: {
-    esPopup,
-    enPopup,
-  },
-  predefinedzoom: {
-    esPredefinedzoom,
-    enPredefinedzoom,
-  },
   printviewmanagement: {
     esPrintviewmanagement,
     enPrintviewmanagement,
-  },
-  printermap: {
-    esPrintermap,
-    enPrintermap,
   },
   queryattributes: {
     esQueryattributes,
@@ -262,10 +202,6 @@ const pluginsLanguage = {
   rescale: {
     esRescale,
     enRescale,
-  },
-  selectiondraw: {
-    esSelectiondraw,
-    enSelectiondraw,
   },
   selectionzoom: {
     esSelectionzoom,
@@ -282,38 +218,6 @@ const pluginsLanguage = {
   timeline: {
     esTimeline,
     enTimeline,
-  },
-  toc: {
-    esToc,
-    enToc,
-  },
-  topographicprofile: {
-    esTopographicprofile,
-    enTopographicprofile,
-  },
-  transparency: {
-    esTransparency,
-    enTransparency,
-  },
-  vectors: {
-    esVectors,
-    enVectors,
-  },
-  viewhistory: {
-    esViewhistory,
-    enViewhistory,
-  },
-  xylocator: {
-    esXylocator,
-    enXylocator,
-  },
-  zoomextent: {
-    esZoomextent,
-    enZoomextent,
-  },
-  zoompanel: {
-    esZoompanel,
-    enZoompanel,
   },
   viewshed: {
     esViewshed,
