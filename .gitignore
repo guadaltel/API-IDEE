@@ -24,4 +24,4 @@ entry-points-plugins.json
 /.sonarlint/
 package-lock.json
 bin/
-docker
+
