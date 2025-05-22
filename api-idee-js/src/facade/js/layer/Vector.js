@@ -204,15 +204,17 @@ class Vector extends LayerBase {
    * se incluirán a la capa.
    * @param {Boolean} update Verdadero se vuelve a cargar la capa,
    * falso no la vuelve a cargar.
+   * @param {Boolean} checkDuplicate Verdadero para no añadir objetos
+   * geográficos duplicados, falso en caso contrario.
    * @api
    */
-  addFeatures(featuresParam, update = false) {
+  addFeatures(featuresParam, update = false, checkDuplicate = false) {
     let features = featuresParam;
     if (!isNullOrEmpty(features)) {
       if (!isArray(features)) {
         features = [features];
       }
-      this.getImpl().addFeatures(features, update);
+      this.getImpl().addFeatures(features, update, checkDuplicate);
     }
   }
 

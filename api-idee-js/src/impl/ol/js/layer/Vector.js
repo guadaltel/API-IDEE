@@ -218,15 +218,21 @@ class Vector extends Layer {
    * @public
    * @param {Array<IDEE.feature>} features Objetos geográficos.
    * @param {Boolean} update Actualiza la capa.
+   * @param {Boolean} checkDuplicate Filtra los objetos geográficos duplicados.
    * @api stable
    */
-  addFeatures(features, update) {
-    features.forEach((newFeature) => {
-      const feature = this.features_.find((feature2) => feature2.equals(newFeature));
-      if (isNullOrEmpty(feature)) {
-        this.features_.push(newFeature);
-      }
-    });
+  addFeatures(features, update, checkDuplicate = false) {
+    if (checkDuplicate === true) {
+      features.forEach((newFeature) => {
+        const feature = this.features_.find((feature2) => feature2.equals(newFeature));
+        if (isNullOrEmpty(feature)) {
+          this.features_.push(newFeature);
+        }
+      });
+    } else {
+      this.features_.push(...features);
+    }
+
     if (update) {
       this.updateLayer_();
     }
