@@ -7,9 +7,9 @@ import OLLayerVectorTile from 'ol/layer/VectorTile';
 import { compileSync as compileTemplate } from 'IDEE/util/Template';
 import geojsonPopupTemplate from 'templates/geojson_popup';
 import Popup from 'IDEE/Popup';
-import { isNullOrEmpty, extend } from 'IDEE/util/Utils';
+import { isNullOrEmpty, extend, isObject } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
-import TileEventType from 'ol/source/TileEventType';
+// import TileEventType from 'ol/source/TileEventType';
 import TileState from 'ol/TileState';
 import MVTFormatter from 'ol/format/MVT';
 import Feature from 'ol/Feature';
@@ -152,7 +152,7 @@ class MVT extends Vector {
     });
 
     // register events in order to fire the LOAD event
-    source.on(TileEventType.TILELOADERROR, (evt) => this.checkAllTilesLoaded_(evt));
+    // source.on(TileEventType.TILELOADERROR, (evt) => this.checkAllTilesLoaded_(evt));
     // source.on(TileEventType.TILELOADEND, (evt) => this.checkAllTilesLoaded_(evt));
 
     this.olLayer = new OLLayerVectorTile(extend({
@@ -170,6 +170,10 @@ class MVT extends Vector {
 
     if (addLayer) {
       this.map.getMapImpl().addLayer(this.olLayer);
+      this.facadeVector_.setStyle(this.options.style);
+      console.log(this.options.style);
+      // this.loaded_ = true;
+      // this.facadeVector_.fire(EventType.LOAD);
     }
 
     // clear features when zoom changes
@@ -195,21 +199,21 @@ class MVT extends Vector {
       }
     });
 
-    setTimeout(() => {
-      const allLayers = [...this.map.getImpl().getAllLayerInGroup(), ...this.map.getLayers()];
-      const filtered = allLayers.filter((l) => {
-        const checkLayers = l.getImpl().layers_ !== undefined
-          ? l.getImpl().layers_ === this.layers_
-          : true;
-        return l.url === this.url && checkLayers && l.idLayer === this.facadeVector_.idLayer;
-      });
+    // setTimeout(() => {
+    //   const allLayers = [...this.map.getImpl().getAllLayerInGroup(), ...this.map.getLayers()];
+    //   const filtered = allLayers.filter((l) => {
+    //     const checkLayers = l.getImpl().layers_ !== undefined
+    //       ? l.getImpl().layers_ === this.layers_
+    //       : true;
+    //     return l.url === this.url && checkLayers && l.idLayer === this.facadeVector_.idLayer;
+    //   });
 
-      if (filtered.length > 0) {
-        if (filtered[0].getStyle() !== null) {
-          filtered[0].setStyle(filtered[0].getStyle());
-        }
-      }
-    }, 10);
+    //   if (filtered.length > 0) {
+    //     if (filtered[0].getStyle() !== null) {
+    //       filtered[0].setStyle(filtered[0].getStyle());
+    //     }
+    //   }
+    // }, 10);
   }
 
   /**
@@ -367,7 +371,10 @@ class MVT extends Vector {
   checkAllTilesLoaded_(evt) {
     const currTileCoord = evt.tile.getTileCoord();
     // eslint-disable-next-line no-underscore-dangle
-    const tileImages = this.olLayer.getSource().sourceTiles_;
+    let tileImages = this.olLayer.getSource().sourceTiles_;
+    if (isObject(tileImages)) {
+      tileImages = Object.values(tileImages);
+    }
     if (Array.isArray(tileImages)) {
       const loaded = tileImages.every((tile) => {
         const tileCoord = tile.getTileCoord();
@@ -431,7 +438,7 @@ class MVT extends Vector {
    * @api stable
    */
   isLoaded() {
-    return true;
+    return this.loaded_;
   }
 
   /**
