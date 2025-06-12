@@ -45,7 +45,7 @@
 - Se mueve el parámetro styles de WMS al primer objeto.
 - Se implementa el parámetro styles de WMS en API REST.
 - Se implementa el parámetro sldVersion en WMS tanto por constructor como por API REST.
-- Se modifica selectFeatures en Vector y en todas las capas que sustituyan dicho método para que muestre el nombre de la capa en el popup.
+- Se modifica selectFeatures en Vector y en todas las capas que sustituyan dicho método para que muestre la leyenda de la capa en el popup. Aparte, se le añade un estilo personalizado a dicha leyenda.
 - Se añaden métodos setURL y setName para capas WMTS.
 - Se implementa métodos setURL y recreateLayer en capas KML.
 - Eliminado el metodo getMaxExtent de la implementación de Layer.
