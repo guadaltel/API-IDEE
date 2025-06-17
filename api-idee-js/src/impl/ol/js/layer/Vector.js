@@ -305,8 +305,10 @@ class Vector extends Layer {
         olSource = olSource.getSource();
       }
       // remove all features from ol vector
-      const olFeatures = [...olSource.getFeatures()];
-      olFeatures.forEach(olSource.removeFeature, olSource);
+      const olFeatures = olSource.getFeatures();
+      if (olFeatures.length > 0) {
+        olSource.clear();
+      }
 
       const features = this.facadeVector_.getFeatures();
       olSource.addFeatures(features.map(Feature.facade2Feature));
