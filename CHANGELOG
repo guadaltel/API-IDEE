@@ -46,3 +46,4 @@
 - Se implementa el parámetro styles de WMS en API REST.
 - Se implementa el parámetro sldVersion en WMS tanto por constructor como por API REST.
 - Se implementa en WMTS el parámetro tileLoadFunction en el vendors, ademas de setTileLoadFunction.
+- Se soluciona un error al devolver el legendURL de una capa Vector con estilos cluster composite.
