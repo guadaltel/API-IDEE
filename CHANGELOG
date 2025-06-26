@@ -83,3 +83,5 @@
 - Se modifica el evento ADDED_TO_MAP de las capas MVT para que se dispare desde fachada.
 - Se implementa funcionalidad "takeMeThere" en popups.
 - Se modifica el evento ADDED_TO_MAP de las capas OSM para que se dispare desde fachada.
+- Se crean set/get multiWorld.
+- Se solucionan bugs que no persistia correctamente el zoomConstrain del mapa.

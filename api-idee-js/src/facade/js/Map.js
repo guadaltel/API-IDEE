@@ -3221,6 +3221,56 @@ class Map extends Base {
   }
 
   /**
+   * Este método establece el estado de multiWorld
+   * instancia del mapa.
+   *
+   * @public
+   * @function
+   * @param {Boolean} multiWorld Nuevo valor.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  setMultiWorld(multiWorld) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(multiWorld)) {
+      Exception(getValue('exception').no_multiWorld);
+    }
+
+    if (isUndefined(MapImpl.prototype.setMultiWorld)) {
+      Exception(getValue('exception').setMultiWorld_method);
+    }
+
+    try {
+      const multiWorldParam = parameter.multiWorld(multiWorld);
+      this.getImpl().setMultiWorld(multiWorldParam);
+    } catch (err) {
+      Dialog.error(err.toString());
+      throw err;
+    }
+
+    return this;
+  }
+
+  /**
+   * Este método obtiene el estado actual de
+   * multiWorld de la instancia del mapa.
+   *
+   * @public
+   * @function
+   * @returns {Boolean} Valor actual.
+   * @api
+   */
+  getMultiWorld() {
+    if (isUndefined(MapImpl.prototype.getMultiWorld)) {
+      Exception(getValue('exception').getMultiWorld_method);
+    }
+
+    const multiWorld = this.getImpl().getMultiWorld();
+
+    return multiWorld;
+  }
+
+  /**
    * Este método establece el centro para esta
    * instancia del mapa.
    *
