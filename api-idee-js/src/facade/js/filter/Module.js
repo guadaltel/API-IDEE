@@ -8,6 +8,9 @@ import { isArray, isObject } from '../util/Utils';
 import Vector from '../layer/Vector';
 import Feature from '../feature/Feature';
 
+const GeoJSONReader = jsts.io.GeoJSONReader;
+const RelateOp = jsts.operation.relate.RelateOp;
+
 /**
   * Transforma parámetros a geometrías.
   *
@@ -79,11 +82,11 @@ const toCQLFilter = (operation, geometries) => {
 export const CONTAIN = (param) => {
   const geometries = parseParamToGeometries(param);
   return new Spatial((geometryToFilter, index) => {
-    const geojsonParser = new jsts.io.GeoJSONReader();
+    const geojsonParser = new GeoJSONReader();
     const jtsGeomToFilter = geojsonParser.read(geometryToFilter);
     return geometries.some((geom) => {
       const jtsGeom = geojsonParser.read(geom);
-      return jsts.operation.relate.RelateOp.contains(jtsGeom, jtsGeomToFilter);
+      return RelateOp.contains(jtsGeom, jtsGeomToFilter);
     });
   }, {
     cqlFilter: toCQLFilter('CONTAINS', geometries),
@@ -102,11 +105,11 @@ export const CONTAIN = (param) => {
 export const DISJOINT = (param) => {
   const geometries = parseParamToGeometries(param);
   return new Spatial((geometryToFilter, index) => {
-    const geojsonParser = new jsts.io.GeoJSONReader();
+    const geojsonParser = new GeoJSONReader();
     const jtsGeomToFilter = geojsonParser.read(geometryToFilter);
     return geometries.some((geom) => {
       const jtsGeom = geojsonParser.read(geom);
-      return !(jsts.operation.relate.RelateOp.intersects(jtsGeomToFilter, jtsGeom));
+      return !(RelateOp.intersects(jtsGeomToFilter, jtsGeom));
     });
   }, {
     cqlFilter: toCQLFilter('DISJOINT', geometries),
@@ -125,11 +128,11 @@ export const DISJOINT = (param) => {
 export const WITHIN = (param) => {
   const geometries = parseParamToGeometries(param);
   return new Spatial((geometryToFilter, index) => {
-    const geojsonParser = new jsts.io.GeoJSONReader();
+    const geojsonParser = new GeoJSONReader();
     const jtsGeomToFilter = geojsonParser.read(geometryToFilter);
     return geometries.some((geom) => {
       const jtsGeom = geojsonParser.read(geom);
-      return jsts.operation.relate.RelateOp.contains(jtsGeom, jtsGeomToFilter);
+      return RelateOp.contains(jtsGeom, jtsGeomToFilter);
     });
   }, {
     cqlFilter: toCQLFilter('WITHIN', geometries),
@@ -149,11 +152,11 @@ export const WITHIN = (param) => {
 export const INTERSECT = (param) => {
   const geometries = parseParamToGeometries(param);
   return new Spatial((geometryToFilter, index) => {
-    const geojsonParser = new jsts.io.GeoJSONReader();
+    const geojsonParser = new GeoJSONReader();
     const jtsGeomToFilter = geojsonParser.read(geometryToFilter);
     return geometries.some((geom) => {
       const jtsGeom = geojsonParser.read(geom);
-      return jsts.operation.relate.RelateOp.intersects(jtsGeomToFilter, jtsGeom);
+      return RelateOp.intersects(jtsGeomToFilter, jtsGeom);
     });
   }, {
     cqlFilter: toCQLFilter('INTERSECTS', geometries),
