@@ -26,9 +26,9 @@ test.describe('IDEE.layer.KML', () => {
       });
 
       await page.waitForTimeout(5000);
-      await page.evaluate(() => window.kml_001.setURL('https://componentes.idee.es/estaticos/Datos/KML/las_huertas_n1.kml'));
+      await page.evaluate(() => window.kml_001.setURL(`${IDEE.config.RECURSOS_ESTATICOS}/Datos/KML/las_huertas_n1.kml`));
       const urlKML = await page.evaluate(() => window.kml_001.url);
-      expect(urlKML).toEqual('https://componentes.idee.es/estaticos/Datos/KML/las_huertas_n1.kml');
+      expect(urlKML).toEqual(`${IDEE.config.RECURSOS_ESTATICOS}/Datos/KML/las_huertas_n1.kml`);
     });
   });
 });

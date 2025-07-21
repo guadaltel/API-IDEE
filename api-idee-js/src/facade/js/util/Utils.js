@@ -1062,7 +1062,7 @@ export const isDynamic = (obj) => {
  * @const
  * @type {string}
  */
-let dynamicLegend = 'https://componentes.idee.es/estaticos/imagenes/leyenda/dynamic_legend.jpg';
+let dynamicLegend = `${IDEE.config.RECURSOS_ESTATICOS}/imagenes/leyenda/dynamic_legend.jpg`;
 
 /**
  * Esta función establece la leyenda dinámica constante.

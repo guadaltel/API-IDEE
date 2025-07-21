@@ -68,7 +68,7 @@ class Attributions extends ControlBase {
     this.urlAttribute = options.urlAttribute || 'Gobierno de España';
     this.options = options;
 
-    this.url_ = options.url || 'https://componentes.idee.es/estaticos/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml';
+    this.url_ = options.url || `${IDEE.config.RECURSOS_ESTATICOS}/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml`;
     this.type_ = options.type || 'kml';
     this.layerName_ = options.layerName || 'attributions';
     this.layer_ = options.layer;
@@ -534,7 +534,7 @@ class Attributions extends ControlBase {
       content: new Promise((success) => {
         const html = compileTemplate(myhelp, {
           vars: {
-            urlImages: 'https://componentes.idee.es/estaticos/imagenes/controles',
+            urlImages: `${IDEE.config.RECURSOS_ESTATICOS}/imagenes/controles`,
             translations: {
               help1: textHelp.text1,
               help2: textHelp.text2,

@@ -339,4 +339,12 @@ params.forEach((param) => {
     },
   });
   window.M = IDEE;
+
+  /**
+   * URL de los recursos estaticos
+   *
+   * @private
+   * @type {string}
+   */
+  IDEE.config('RECURSOS_ESTATICOS', 'https://componentes.idee.es/estaticos');
 }(window.IDEE));

@@ -196,7 +196,7 @@ function fun(IDEE_) {
   IDEE_.config('attributions', {
     defaultAttribution: 'Instituto Geográfico Nacional',
     defaultURL: 'https://www.ign.es/',
-    url: 'https://componentes.idee.es/estaticos/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml',
+    url: `${IDEE.config.RECURSOS_ESTATICOS}/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml`,
     type: 'kml',
   });
 
@@ -273,6 +273,14 @@ function fun(IDEE_) {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * URL de los recursos estaticos
+   *
+   * @private
+   * @type {string}
+   */
+  IDEE.config('RECURSOS_ESTATICOS', 'https://componentes.idee.es/estaticos');
 }
 
 fun(window.IDEE);
