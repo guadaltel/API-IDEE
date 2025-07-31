@@ -284,7 +284,7 @@ export default class IGNSearchLocatorscnControl extends IDEE.Control {
       this.reverseActivated = true;
       this.html_.querySelector('#m-ignsearchlocatorscn-locate-button').style.color = '#71a7d3';
       document.addEventListener('keyup', this.checkEscKey.bind(this));
-      document.getElementsByTagName('body')[0].style.cursor = `url(${IDEE.config.RECURSOS_ESTATICOS}/Simbologia/svg/marcadores/pushpin.svg) 0 20, auto';
+      document.getElementsByTagName('body')[0].style.cursor = `url(${IDEE.config.RECURSOS_ESTATICOS}/Simbologia/svg/marcadores/pushpin.svg) 0 20, auto`;
     } else {
       this.reverseActivated = false;
       this.html_.querySelector('#m-ignsearchlocatorscn-locate-button').style.color = '#7A7A73';

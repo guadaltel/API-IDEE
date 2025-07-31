@@ -338,13 +338,16 @@ params.forEach((param) => {
       audios: ['250px', '40px'],
     },
   });
-  window.M = IDEE;
 
   /**
    * URL de los recursos estaticos
    *
    * @private
-   * @type {string}
+   * @type {object}
    */
-  IDEE.config('RECURSOS_ESTATICOS', 'https://componentes.idee.es/estaticos');
+  IDEE.config('RECURSOS_ESTATICOS', {
+    url: 'https://componentes.idee.es/estaticos',
+  });
+
+  window.M = IDEE;
 }(window.IDEE));
