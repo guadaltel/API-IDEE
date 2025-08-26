@@ -251,11 +251,14 @@ export default class AnalysisControl extends IDEE.Control {
       if (selectedFeatures.length > 1) {
         IDEE.dialog.info(getValue('exception.topographic_one_element'));
       } else {
+        const infoLine3D = document.querySelector('#ellipsoidal3DLength');
         this.feature = selectedFeatures[0];
-        if (this.feature.getGeometry().type === 'Point') {
-          this.getImpl().calculatePoint(this.feature);
-        } else {
-          this.getImpl().calculateProfile(this.feature);
+        if (infoLine3D) {
+          if (this.feature.getGeometry().type === 'Point') {
+            this.getImpl().calculatePoint(this.feature);
+          } else {
+            this.getImpl().calculateProfile(infoLine3D, this.feature);
+          }
         }
       }
     } else {
