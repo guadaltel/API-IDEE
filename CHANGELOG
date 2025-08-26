@@ -97,3 +97,4 @@
 - Se elimina método cloneOLLayer de MBTiles
 - Se elimina el parámetro implementación en constructor en WFS
 - Se elimina el parámetro implParam de la fachada de WFS
+- Soluciona error en el que se duplicaban las features al añadir una capa GeoJSON basada en un source.
