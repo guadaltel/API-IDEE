@@ -762,9 +762,13 @@ export const getOpacityFromRgba = (rgbaColor) => {
   const rgbaRegExp = /^rgba\s*\((\s*\d+\s*,){3}\s*([\d.]+)\s*\)$/;
   if (rgbaRegExp.test(rgbaColor)) {
     opacity = rgbaColor.replace(rgbaRegExp, '$2');
+    // eslint-disable-next-line no-useless-catch
+    try {
     opacity = parseFloat(opacity);
+    } catch (err) {
+      throw err;
   }
-
+  }
   return opacity;
 };
 
