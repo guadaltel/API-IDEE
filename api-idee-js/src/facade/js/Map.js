@@ -29,6 +29,7 @@ import Panzoom from './control/Panzoom';
 import Panzoombar from './control/Panzoombar';
 import BackgroundLayers from './control/BackgroundLayers';
 import WMCSelector from './control/WMCSelector';
+import Movement from './control/Movement';
 import Layer from './layer/Layer';
 import * as LayerType from './layer/Type';
 import Vector from './layer/Vector';
@@ -3055,6 +3056,23 @@ class Map extends Base {
                   });
                 }
                 panel.addClassName('m-with-wmcselector');
+                break;
+              case Movement.NAME:
+                const paramsMovement = {};
+                controlParam.forEach((p) => {
+                  if (!isUndefined(p)) {
+                    const bbox = p.split(',');
+                    if (bbox.length === 4) {
+                      paramsMovement.viewInitial = bbox;
+                    }
+                  }
+                });
+                control = new Movement(paramsMovement);
+                panel = new Panel(Movement.NAME, {
+                  collapsible: false,
+                  className: 'm-movement',
+                  position: Position.TL,
+                });
                 break;
               default:
                 if (/backgroundlayers\*([0-9])+\*(true|false)/.test(controlParam)) {

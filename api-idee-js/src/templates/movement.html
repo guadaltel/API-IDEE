@@ -1,0 +1,17 @@
+<div class="m-control m-movement-container" title="{{title}}">
+  <div class="m-movement-compass">
+    <button id="m-movement-help" class="m-movement-help-button" title="{{title_help}}">?</button>
+    <svg class="m-movement-background-exterior" width="100" height="100" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="hole">
+          <rect width="64" height="64" fill="white"/>
+          <circle cx="32" cy="32" r="20" fill="black"/>
+        </mask>
+      </defs>
+      <circle cx="32" cy="32" r="30" fill="#4caf50" mask="url(#hole)"/>
+    </svg>
+    <img class="m-movement-exterior-svg" src="../facade/assets/images/exterior.svg" draggable="false">
+    <img id="m-movement-giroscopio" class="m-movement-giroscopio-svg" src="../facade/assets/images/giroscopio.svg" draggable="false">
+  </div>
+  <div></div>
+</div>

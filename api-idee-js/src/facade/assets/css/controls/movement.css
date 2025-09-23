@@ -1,0 +1,52 @@
+.m-areas > div.m-area > div.m-panel.opened.m-movement {
+  background-color: transparent !important;
+  border-radius: 50%;
+}
+
+.m-movement-compass {
+  position: relative;
+  width: 130px;
+  height: 100px;
+  margin-left: 15px;
+}
+
+.m-movement-background-exterior {
+  position: absolute;
+}
+
+.m-movement-exterior-svg {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+}
+
+.m-movement-giroscopio-svg {
+  position: absolute;
+  top: 50%;
+  right: 46%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  box-sizing: content-box;
+}
+
+.m-movement-help-button {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  background-color: #4caf50;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  text-align: center;
+  font-family: 'Muli', 'sans-serif';
+  font-size: 24px;
+}

@@ -104,6 +104,18 @@
   "popup": {
     "msg": "Take me there"
   },
+  "movement": {
+    "title": "Movement control",
+    "title_help": "Help",
+    "textHelp": {
+      "text1": "This tool allows you to control camera movement in a 3D environment.",
+      "text2": "Using the navigation buttons you can move the camera up, down, left and right.",
+      "text3": "Using the zoom buttons you can zoom in and out of the camera.",
+      "text4": "Using the rotation buttons you can rotate the camera left and right.",
+      "text5": "Using the tilt buttons you can tilt the camera up and down.",
+      "text6": "You can also return to the initial camera position using the 'Reset View' button."
+    }
+  },
   "exception": {
     "addto_method": "The used implementation does not have the addTo method",
     "no_get_rotation_method": "The used implementation does not have the getRotation method",
@@ -305,6 +317,7 @@
     "setminzoom_no_apply": "It is not possible to apply minimum zoom to the WMC layer.",
     "setmaxzoom_no_apply": "It is not possible to apply maximum zoom to the WMC layer.",
     "setminscale_no_apply": "It is not possible to apply minimum scale to the WMC layer.",
-    "setmaxscale_no_apply": "It is not possible to apply maximum scale to the WMC layer."
+    "setmaxscale_no_apply": "It is not possible to apply maximum scale to the WMC layer.",
+    "movement_method": "The used implementation can not create Movement controls."
   }
 }

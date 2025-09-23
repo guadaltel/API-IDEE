@@ -105,6 +105,18 @@
   "popup": {
     "msg": "Llévame allí"
   },
+  "movement": {
+    "title": "Control de movimiento",
+    "title_help": "Ayuda",
+    "textHelp": {
+      "text1": "Esta herramienta permite controlar el movimiento de la cámara en un entorno 3D.",
+      "text2": "Con los botones de navegación se puede mover la cámara hacia arriba, abajo, izquierda y derecha.",
+      "text3": "Con los botones de zoom se puede acercar y alejar la cámara.",
+      "text4": "Con los botones de rotación se puede girar la cámara hacia la izquierda y derecha.",
+      "text5": "Con los botones de inclinación se puede inclinar la cámara hacia arriba y abajo.",
+      "text6": "También se puede volver a la posición inicial de la cámara con el botón 'Resetear Vista'."
+    }
+  },
   "exception": {
     "addto_method": "La implementación usada no posee el método addTo",
     "no_get_rotation_method": "La implementación usada no posee el método getRotation",
@@ -306,6 +318,7 @@
     "setminzoom_no_apply": "No es posible aplicar el mínimo zoom a la capa WMC.",
     "setmaxzoom_no_apply": "No es posible aplicar el máximo zoom a la capa WMC.",
     "setminscale_no_apply": "No es posible aplicar la mínima escala a la capa WMC.",
-    "setmaxscale_no_apply": "No es posible aplicar la máxima escala a la capa WMC."
+    "setmaxscale_no_apply": "No es posible aplicar la máxima escala a la capa WMC.",
+    "movement_method": "La implementación usada no puede crear controles Movement."
   }
 }
