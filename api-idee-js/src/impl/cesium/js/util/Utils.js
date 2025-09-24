@@ -20,9 +20,9 @@ import {
   Ellipsoid,
   SceneTransforms,
   Cartesian2,
-  SceneMode,
   defined,
   Ray,
+  SceneMode,
 } from 'cesium';
 import proj4 from 'proj4';
 
@@ -1109,8 +1109,8 @@ class Utils {
    * en caso contrario en coordenadas del mapa específicas de la proyección, en metros.
    * @return {Cartesian3} Punto de enfoque de la cámara.
    */
-  static getCameraFocus(map, inWorldCoordinates) {
-    let result;
+  static getCameraFocus(map, inWorldCoordinates, result) {
+    /* eslint-disable no-param-reassign */
     const unprojectedScratch = new Cartographic();
     const rayScratch = new Ray();
     const scene = map.scene;
@@ -1124,9 +1124,13 @@ class Utils {
       result = new Cartesian3();
     }
 
-    rayScratch.origin = camera.positionWC;
-    rayScratch.direction = camera.directionWC;
-    result = scene.globe.pick(rayScratch, scene, result);
+    if (defined(map.trackedEntity)) {
+      result = map.trackedEntity.position.getValue(map.clock.currentTime, result);
+    } else {
+      rayScratch.origin = camera.positionWC;
+      rayScratch.direction = camera.directionWC;
+      result = scene.globe.pick(rayScratch, scene, result);
+    }
 
     if (!defined(result)) {
       return undefined;
@@ -1146,6 +1150,7 @@ class Utils {
     }
 
     return result;
+    /* eslint-enable no-param-reassign */
   }
 }
 

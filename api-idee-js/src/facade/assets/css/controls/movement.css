@@ -1,17 +1,25 @@
 .m-areas > div.m-area > div.m-panel.opened.m-movement {
   background-color: transparent !important;
-  border-radius: 50%;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .m-movement-compass {
   position: relative;
   width: 130px;
   height: 100px;
-  margin-left: 15px;
+  margin-left: 15px; 
 }
 
-.m-movement-background-exterior {
+.m-movement-background-exterior,
+.m-movement-svgPath-svg {
   position: absolute;
+  width: calc(100% - 30px);
+  height: 100%;
+}
+
+.m-movement-svgPath-svg {
+  width: 100px;
 }
 
 .m-movement-exterior-svg {
@@ -37,7 +45,7 @@
   top: 50%;
   right: 4px;
   transform: translateY(-50%);
-  background-color: #4caf50;
+  background-color: #66bb6a; 
   color: white;
   font-weight: bold;
   border: none;
@@ -49,4 +57,28 @@
   text-align: center;
   font-family: 'Muli', 'sans-serif';
   font-size: 24px;
+}
+
+.m-movement-help-button:hover {
+  background-color: #1b5e20;
+}
+
+.m-movement-rotation-maker {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  fill: #1b5e20;
+  display: none;
+}
+
+.m-movement-help-container {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: #fff;
+  opacity: 0.7;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  display: none;
 }

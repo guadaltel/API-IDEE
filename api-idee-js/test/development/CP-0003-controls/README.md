@@ -30,3 +30,6 @@ Pruebas de funciones de los controles
 
 CP-011
 Control Implementation Switcher
+
+CP-012
+Control Movimiento 3D

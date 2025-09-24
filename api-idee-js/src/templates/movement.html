@@ -1,17 +1,53 @@
 <div class="m-control m-movement-container" title="{{title}}">
   <div class="m-movement-compass">
     <button id="m-movement-help" class="m-movement-help-button" title="{{title_help}}">?</button>
-    <svg class="m-movement-background-exterior" width="100" height="100" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg class="m-movement-background-exterior" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <mask id="hole">
           <rect width="64" height="64" fill="white"/>
           <circle cx="32" cy="32" r="20" fill="black"/>
         </mask>
       </defs>
-      <circle cx="32" cy="32" r="30" fill="#4caf50" mask="url(#hole)"/>
+      <circle cx="32" cy="32" r="30" fill="#66bb6a" mask="url(#hole)"/>
     </svg>
+    <div class="m-movement-rotation-maker">
+      <svg class="m-movement-svgPath-svg" width="64" height="64" viewBox="0 0 64 64">
+        <defs>
+          <mask id="donut-mask">
+            <rect width="64" height="64" fill="white"/>
+            <circle cx="32" cy="32" r="20" fill="black"/>
+          </mask>
+        </defs>
+        <path
+          d="M32,32 L32,2 A30,30 0 0,1 58,16 L32,32 Z"
+          mask="url(#donut-mask)"
+        />
+      </svg>
+    </div>
     <img class="m-movement-exterior-svg" src="../facade/assets/images/exterior.svg" draggable="false">
     <img id="m-movement-giroscopio" class="m-movement-giroscopio-svg" src="../facade/assets/images/giroscopio.svg" draggable="false">
   </div>
-  <div></div>
+  <div class="m-movement-help-container">
+    <div>Control del giroscopio</div>
+    <div>
+      <div></div>
+      <div>
+        <p>Girar la vista</p>
+        <p>Arrastra el anillo circular exterior para rotar el mapa 360º.</p>
+      </div>
+    </div>
+    <div>
+      <div></div>
+      <div>
+        <p>Inclinar la vista</p>
+        <p>Selecciona el círculo interior y arrastralo lentamente hacia cualquier lado para inclinar y/o girar el mapa.</p>
+        <p>TAmbién, si haces doble click vuelves a la vista inicial.</p>
+      </div>
+    </div>
+    <div>
+      <div>
+        <p>Además si bloqueas la tecla <b>CTRL</b> y arrastras sobre el mapa, puedes inclinar o girar el mapa.</p>
+      </div>
+    </div>
+  </div>
 </div>

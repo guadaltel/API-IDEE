@@ -16,6 +16,11 @@ import { isUndefined } from 'IDEE/util/Utils';
 import Control from './Control';
 import ImplUtils from '../util/Utils';
 
+const oldTransformScratch = new Matrix4();
+const newTransformScratch = new Matrix4();
+const centerScratch = new Cartesian3();
+const vectorScratch = new Cartesian2();
+
 /**
  *  @classdesc
  *  Control de movimiento 3D.
@@ -40,6 +45,7 @@ class Movement extends Control {
     this.handleResetView = this.resetView.bind(this);
     this.handleClickHelp = this.handleClickHelp.bind(this);
 
+    this.navigationLocked = false;
     this.isOrbiting = false;
     this.orbitMouseMoveFunction = undefined;
     this.orbitMouseUpFunction = undefined;
@@ -56,10 +62,6 @@ class Movement extends Control {
     this.rotateInitialCursorAngle = undefined;
     this.rotateFrame = undefined;
     this.rotateIsLook = false;
-
-    this.vectorScratch = new Cartesian2();
-    this.newTransformScratch = new Matrix4();
-    this.oldTransformScratch = new Matrix4();
   }
 
   /**
@@ -149,22 +151,34 @@ class Movement extends Control {
    * @api
    */
   orbit(compassElement, cursorVector) {
-    const scene = this.facadeMap_.getMapImpl().scene;
+    const cesiumMap = this.facadeMap_.getMapImpl();
+    const scene = cesiumMap.scene;
     const sscc = scene.screenSpaceCameraController;
 
-    if (!sscc.enableInputs) {
+    if (scene.mode === SceneMode.MORPHING || !sscc.enableInputs) {
       return;
     }
 
-    if (scene.mode === SceneMode.SCENE3D && (!sscc.enableTilt || !sscc.enableRotate)) {
-      return;
+    // eslint-disable-next-line default-case
+    switch (scene.mode) {
+      case SceneMode.COLUMBUS_VIEW:
+        if (sscc.enableLook) break;
+        if (!sscc.enableTranslate || !sscc.enableTilt) return;
+        break;
+      case SceneMode.SCENE3D:
+        if (sscc.enableLook) break;
+        if (!sscc.enableTilt || !sscc.enableRotate) return;
+        break;
+      case SceneMode.SCENE2D:
+        if (!sscc.enableTranslate) return;
+        break;
     }
 
     document.removeEventListener('mousemove', this.orbitMouseMoveFunction, false);
     document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
 
     if (defined(this.orbitTickFunction)) {
-      this.facadeMap_.getMapImpl().clock.onTick.removeEventListener(this.orbitTickFunction);
+      cesiumMap.clock.onTick.removeEventListener(this.orbitTickFunction);
     }
 
     this.orbitMouseMoveFunction = undefined;
@@ -176,28 +190,34 @@ class Movement extends Control {
 
     const camera = scene.camera;
 
-    const centerCamera = ImplUtils.getCameraFocus(this.facadeMap_.getMapImpl(), true);
-
-    if (!defined(centerCamera)) {
-      this.orbitFrame = Transforms.eastNorthUpToFixedFrame(
-        camera.positionWC,
-        scene.globe.ellipsoid,
-        this.newTransformScratch,
-      );
-      this.orbitIsLook = true;
-    } else {
-      this.orbitFrame = Transforms.eastNorthUpToFixedFrame(
-        centerCamera,
-        scene.globe.ellipsoid,
-        this.newTransformScratch,
-      );
+    if (defined(cesiumMap.trackedEntity)) {
+      this.orbitFrame = undefined;
       this.orbitIsLook = false;
+    } else {
+      const center = ImplUtils.getCameraFocus(cesiumMap, true, centerScratch);
+
+      if (!defined(center)) {
+        this.orbitFrame = Transforms.eastNorthUpToFixedFrame(
+          camera.positionWC,
+          scene.globe.ellipsoid,
+          newTransformScratch,
+        );
+        this.orbitIsLook = true;
+      } else {
+        this.orbitFrame = Transforms.eastNorthUpToFixedFrame(
+          center,
+          scene.globe.ellipsoid,
+          newTransformScratch,
+        );
+        this.orbitIsLook = false;
+      }
     }
 
     this.orbitTickFunction = (e) => {
       const timestamp = getTimestamp();
       const deltaT = timestamp - this.orbitLastTimestamp;
-      const rate = ((this.orbitCursorOpacity - 0.5) * 2.5) / 1000;
+      // eslint-disable-next-line no-mixed-operators
+      const rate = (this.orbitCursorOpacity - 0.5) * 2.5 / 1000;
       const distance = deltaT * rate;
 
       const angle = this.orbitCursorAngle + CesiumMath.PI_OVER_TWO;
@@ -207,12 +227,21 @@ class Movement extends Control {
       let oldTransform;
 
       if (defined(this.orbitFrame)) {
-        oldTransform = Matrix4.clone(camera.transform, this.oldTransformScratch);
+        oldTransform = Matrix4.clone(camera.transform, oldTransformScratch);
 
         camera.lookAtTransform(this.orbitFrame);
       }
 
-      if (this.orbitIsLook) {
+      if (scene.mode === SceneMode.SCENE2D) {
+        camera.move(
+          new Cartesian3(x, y, 0),
+          Math.max(
+            scene.canvas.clientWidth,
+            scene.canvas.clientHeight,
+          // eslint-disable-next-line no-mixed-operators
+          ) / 100 * camera.positionCartographic.height * distance,
+        );
+      } else if (this.orbitIsLook) {
         camera.look(Cartesian3.UNIT_Z, -x);
         camera.look(camera.right, -y);
       } else {
@@ -236,6 +265,9 @@ class Movement extends Control {
       const distanceFraction = Math.min(distance / maxDistance, 1.0);
       const easedOpacity = 0.5 * distanceFraction * distanceFraction + 0.5;
       this.orbitCursorOpacity = easedOpacity;
+      this.panel.querySelector('.m-movement-rotation-maker').style.transform = `rotate(-${this.orbitCursorAngle}rad)`;
+      this.panel.querySelector('.m-movement-rotation-maker').style.opacity = this.orbitCursorOpacity;
+      this.panel.querySelector('.m-movement-rotation-maker').style.display = 'block';
     };
 
     this.orbitMouseMoveFunction = (e) => {
@@ -248,7 +280,7 @@ class Movement extends Control {
         e.clientX - compassRectangle.left,
         e.clientY - compassRectangle.top,
       );
-      const vector = Cartesian2.subtract(clickLocation, center, this.vectorScratch);
+      const vector = Cartesian2.subtract(clickLocation, center, vectorScratch);
       updateAngleAndOpacity(vector, compassRectangle.width);
     };
 
@@ -258,17 +290,18 @@ class Movement extends Control {
       document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
 
       if (defined(this.orbitTickFunction)) {
-        this.facadeMap_.getMapImpl().clock.onTick.removeEventListener(this.orbitTickFunction);
+        cesiumMap.clock.onTick.removeEventListener(this.orbitTickFunction);
       }
 
       this.orbitMouseMoveFunction = undefined;
       this.orbitMouseUpFunction = undefined;
       this.orbitTickFunction = undefined;
+      this.panel.querySelector('.m-movement-rotation-maker').style.display = 'none';
     };
 
     document.addEventListener('mousemove', this.orbitMouseMoveFunction, false);
     document.addEventListener('mouseup', this.orbitMouseUpFunction, false);
-    this.facadeMap_.getMapImpl().clock.onTick.addEventListener(this.orbitTickFunction);
+    cesiumMap.clock.onTick.addEventListener(this.orbitTickFunction);
 
     updateAngleAndOpacity(cursorVector, compassElement.getBoundingClientRect().width);
   }
@@ -285,15 +318,18 @@ class Movement extends Control {
    * @api
    */
   rotate(compassElement, cursorVector) {
-    const scene = this.facadeMap_.getMapImpl().scene;
+    const cesiumMap = this.facadeMap_.getMapImpl();
+    const scene = cesiumMap.scene;
     const camera = scene.camera;
 
     const sscc = scene.screenSpaceCameraController;
-    if (!sscc.enableInputs) {
+    if (scene.mode === SceneMode.MORPHING || scene.mode === SceneMode.SCENE2D
+      || !sscc.enableInputs) {
       return;
     }
 
-    if (!sscc.enableLook && (scene.mode === SceneMode.SCENE3D && !sscc.enableRotate)) {
+    if (!sscc.enableLook && (scene.mode === SceneMode.COLUMBUS_VIEW
+      || (scene.mode === SceneMode.SCENE3D && !sscc.enableRotate))) {
       return;
     }
 
@@ -306,34 +342,40 @@ class Movement extends Control {
     this.isRotating = true;
     this.rotateInitialCursorAngle = Math.atan2(-cursorVector.y, cursorVector.x);
 
-    const viewCenter = ImplUtils.getCameraFocus(this.facadeMap_.getMapImpl(), true);
-
-    if (!defined(viewCenter)) {
-      this.rotateFrame = Transforms.eastNorthUpToFixedFrame(
-        camera.positionWC,
-        scene.globe.ellipsoid,
-        this.newTransformScratch,
-      );
-      this.rotateIsLook = true;
-    } else {
-      this.rotateFrame = Transforms.eastNorthUpToFixedFrame(
-        viewCenter,
-        scene.globe.ellipsoid,
-        this.newTransformScratch,
-      );
+    if (defined(cesiumMap.trackedEntity)) {
+      this.rotateFrame = undefined;
       this.rotateIsLook = false;
+    } else {
+      const viewCenter = ImplUtils.getCameraFocus(cesiumMap, true, centerScratch);
+
+      if (!defined(viewCenter)
+        || (scene.mode === SceneMode.COLUMBUS_VIEW && !sscc.enableLook && !sscc.enableTranslate)) {
+        this.rotateFrame = Transforms.eastNorthUpToFixedFrame(
+          camera.positionWC,
+          scene.globe.ellipsoid,
+          newTransformScratch,
+        );
+        this.rotateIsLook = true;
+      } else {
+        this.rotateFrame = Transforms.eastNorthUpToFixedFrame(
+          viewCenter,
+          scene.globe.ellipsoid,
+          newTransformScratch,
+        );
+        this.rotateIsLook = false;
+      }
     }
 
-    let oldTransform;
+    let oldTransformAux;
     if (defined(this.rotateFrame)) {
-      oldTransform = Matrix4.clone(camera.transform, this.oldTransformScratch);
+      oldTransformAux = Matrix4.clone(camera.transform, oldTransformScratch);
       camera.lookAtTransform(this.rotateFrame);
     }
 
     this.rotateInitialCameraAngle = -camera.heading;
 
     if (defined(this.rotateFrame)) {
-      camera.lookAtTransform(oldTransform);
+      camera.lookAtTransform(oldTransformAux);
     }
 
     this.rotateMouseMoveFunction = (e) => {
@@ -346,7 +388,7 @@ class Movement extends Control {
         e.clientX - compassRectangle.left,
         e.clientY - compassRectangle.top,
       );
-      const vector = Cartesian2.subtract(clickLocation, center, this.vectorScratch);
+      const vector = Cartesian2.subtract(clickLocation, center, vectorScratch);
       const angle = Math.atan2(-vector.y, vector.x);
 
       const angleDifference = angle - this.rotateInitialCursorAngle;
@@ -354,8 +396,9 @@ class Movement extends Control {
         this.rotateInitialCameraAngle - angleDifference,
       );
 
+      let oldTransform;
       if (defined(this.rotateFrame)) {
-        oldTransform = Matrix4.clone(camera.transform, this.oldTransformScratch);
+        oldTransform = Matrix4.clone(camera.transform, oldTransformScratch);
         camera.lookAtTransform(this.rotateFrame);
       }
 
@@ -372,7 +415,7 @@ class Movement extends Control {
       }
     };
 
-    this.rotateMouseUpFunction = () => {
+    this.rotateMouseUpFunction = (e) => {
       this.isRotating = false;
       document.removeEventListener('mousemove', this.rotateMouseMoveFunction, false);
       document.removeEventListener('mouseup', this.rotateMouseUpFunction, false);
@@ -412,7 +455,11 @@ class Movement extends Control {
    * @api
    */
   handleClickHelp(e) {
-    //
+    const isOpen = this.panel.querySelector('.m-movement-help-container').style.display;
+
+    if (!isOpen) {
+      this.panel.querySelector('.m-movement-help-container').style.display = 'block';
+    }
   }
 
   /**
