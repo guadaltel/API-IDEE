@@ -764,10 +764,10 @@ export const getOpacityFromRgba = (rgbaColor) => {
     opacity = rgbaColor.replace(rgbaRegExp, '$2');
     // eslint-disable-next-line no-useless-catch
     try {
-    opacity = parseFloat(opacity);
+      opacity = parseFloat(opacity);
     } catch (err) {
       throw err;
-  }
+    }
   }
   return opacity;
 };
