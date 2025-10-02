@@ -107,13 +107,14 @@
   "movement": {
     "title": "Movement control",
     "title_help": "Help",
-    "textHelp": {
-      "text1": "This tool allows you to control camera movement in a 3D environment.",
-      "text2": "Using the navigation buttons you can move the camera up, down, left and right.",
-      "text3": "Using the zoom buttons you can zoom in and out of the camera.",
-      "text4": "Using the rotation buttons you can rotate the camera left and right.",
-      "text5": "Using the tilt buttons you can tilt the camera up and down.",
-      "text6": "You can also return to the initial camera position using the 'Reset View' button."
+    "help": {
+      "title": "Gyroscope control",
+      "title1": "Rotate the view",
+      "text1": "Drag the outer circular ring to rotate the map 360º",
+      "title2": "Tilt the view",
+      "text2": "Select the inner circle and slowly drag it to either side to tilt and/or rotate the map.",
+      "text3": "Also, if you double click you return to the initial view.",
+      "text4": "Additionally, if you hold the CTRL key and drag on the map, you can tilt or rotate the map."
     }
   },
   "exception": {

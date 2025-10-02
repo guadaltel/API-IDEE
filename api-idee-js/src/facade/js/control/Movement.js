@@ -3,7 +3,6 @@
  */
 import MovementImpl from 'impl/control/Movement';
 import movementTemplate from 'templates/movement';
-import myhelp from 'templates/movementhelp';
 import 'assets/css/controls/movement';
 import { getValue } from '../i18n/language';
 import ControlBase from './Control';
@@ -48,42 +47,20 @@ class Movement extends ControlBase {
    * @api
    */
   createView(map) {
+    const textHelp = getValue('movement').help;
     return compileTemplate(movementTemplate, {
       vars: {
         title: getValue('movement').title,
         title_help: getValue('movement').title_help,
+        title_help_container: textHelp.title,
+        title1: textHelp.title1,
+        text1: textHelp.text1,
+        title2: textHelp.title2,
+        text2: textHelp.text2,
+        text3: textHelp.text3,
+        text4: textHelp.text4,
       },
     });
-  }
-
-  /**
-   * Obtiene la ayuda del control
-   *
-   * @function
-   * @public
-   * @api
-  */
-  getHelp() {
-    const textHelp = getValue('movement').textHelp;
-    return {
-      title: Movement.NAME,
-      content: new Promise((success) => {
-        const html = compileTemplate(myhelp, {
-          vars: {
-            urlImages: 'https://componentes.idee.es/estaticos/imagenes/controles',
-            translations: {
-              help1: textHelp.text1,
-              help2: textHelp.text2,
-              help3: textHelp.text3,
-              help4: textHelp.text4,
-              help5: textHelp.text5,
-              help6: textHelp.text6,
-            },
-          },
-        });
-        success(html);
-      }),
-    };
   }
 
   /**

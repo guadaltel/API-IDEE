@@ -8,7 +8,7 @@
           <circle cx="32" cy="32" r="20" fill="black"/>
         </mask>
       </defs>
-      <circle cx="32" cy="32" r="30" fill="#66bb6a" mask="url(#hole)"/>
+      <circle cx="32" cy="32" r="30"  mask="url(#hole)"/>
     </svg>
     <div class="m-movement-rotation-maker">
       <svg class="m-movement-svgPath-svg" width="64" height="64" viewBox="0 0 64 64">
@@ -24,29 +24,39 @@
         />
       </svg>
     </div>
-    <img class="m-movement-exterior-svg" src="../facade/assets/images/exterior.svg" draggable="false">
-    <img id="m-movement-giroscopio" class="m-movement-giroscopio-svg" src="../facade/assets/images/giroscopio.svg" draggable="false">
+    <div class="m-movement-exterior-svg g-cartografia-exterior" draggable="false"></div>
+    <div id="m-movement-giroscopio" class="m-movement-giroscopio-svg g-cartografia-giroscopio" draggable="false"></div>
   </div>
   <div class="m-movement-help-container">
-    <div>Control del giroscopio</div>
-    <div>
-      <div></div>
-      <div>
-        <p>Girar la vista</p>
-        <p>Arrastra el anillo circular exterior para rotar el mapa 360º.</p>
-      </div>
+    <div class="m-movement-help-header">
+      <h3>{{title_help_container}}</h3>
+      <button class="m-movement-help-close g-cartografia-cancelar"></button>
     </div>
-    <div>
-      <div></div>
-      <div>
-        <p>Inclinar la vista</p>
-        <p>Selecciona el círculo interior y arrastralo lentamente hacia cualquier lado para inclinar y/o girar el mapa.</p>
-        <p>TAmbién, si haces doble click vuelves a la vista inicial.</p>
+    <div class="m-movement-help-section">
+      <div class="m-movement-help-option">
+        <div>
+          <img class="dot" src="../facade/assets/images/girar-vista.svg">
+        </div>
+        <div>
+          <b>{{title1}}</b>
+          <p>{{text1}}</p>
+        </div>
       </div>
-    </div>
-    <div>
-      <div>
-        <p>Además si bloqueas la tecla <b>CTRL</b> y arrastras sobre el mapa, puedes inclinar o girar el mapa.</p>
+      <div class="m-movement-help-option">
+        <div>
+          <img class="dot" src="../facade/assets/images/inclinar-vista.svg">
+        </div>
+        <div>
+          <b>{{title2}}</b>
+          <p>{{text2}}</p>
+          <p>{{text3}}</p>
+        </div>
+      </div>
+      <div class="m-movement-help-ctrl">
+        <div>
+          <span class="key">CTRL</span>
+        </div>
+        <p>{{text4}}</p>
       </div>
     </div>
   </div>

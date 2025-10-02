@@ -11,6 +11,10 @@
   margin-left: 15px; 
 }
 
+.m-movement-background-exterior {
+  fill: #71a7d3;
+}
+
 .m-movement-background-exterior,
 .m-movement-svgPath-svg {
   position: absolute;
@@ -29,6 +33,11 @@
   overflow: hidden;
 }
 
+.m-movement-exterior-svg.g-cartografia-exterior:before {
+  color: #fff;
+  font-size: 100px;
+}
+
 .m-movement-giroscopio-svg {
   position: absolute;
   top: 50%;
@@ -36,8 +45,14 @@
   transform: translateY(-50%);
   width: 40px;
   height: 40px;
-  border-radius: 40px;
   box-sizing: content-box;
+}
+
+.m-movement-giroscopio-svg.g-cartografia-giroscopio:before {
+  font-size: 40px;
+  background-color: white;
+  border-radius: 40px;
+  color: #71a7d3;
 }
 
 .m-movement-help-button {
@@ -45,7 +60,7 @@
   top: 50%;
   right: 4px;
   transform: translateY(-50%);
-  background-color: #66bb6a; 
+  background-color: #71a7d3; 
   color: white;
   font-weight: bold;
   border: none;
@@ -60,25 +75,89 @@
 }
 
 .m-movement-help-button:hover {
-  background-color: #1b5e20;
+  background-color: #2d5e87;
 }
 
 .m-movement-rotation-maker {
   position: absolute;
   width: 100px;
   height: 100px;
-  fill: #1b5e20;
+  fill: #2d5e87;
   display: none;
 }
 
 .m-movement-help-container {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  background: #fff;
+  width: 260px;
+  /* height: 50px; */
+  background: rgba(255, 255, 255, 0.9);
   opacity: 0.7;
   top: 50%;
   left: calc(100% + 8px);
-  transform: translateY(-50%);
+  transform: translateY(-12%);
   display: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+  color: #000;
+}
+
+.m-movement-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.m-movement-help-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.m-movement-help-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+button.m-movement-help-close.g-cartografia-cancelar:before {
+  color: #000;
+}
+
+.m-movement-help-option {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.m-movement-help-option .dot {
+  width: 43px;
+}
+
+.m-movement-help-option p {
+  font-size: 13px;
+}
+
+.m-movement-help-ctrl {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.m-movement-help-ctrl .key {
+  color: #524F4F;
+  background: white;
+  font-weight: bold;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid #524F4F;
+}
+
+.m-movement-help-ctrl p {
+  font-size: 13px;
+  margin: 0;
 }

@@ -62,6 +62,8 @@ class Movement extends Control {
     this.rotateInitialCursorAngle = undefined;
     this.rotateFrame = undefined;
     this.rotateIsLook = false;
+
+    this.boundCloseHelp = this.closeHelp.bind(this);
   }
 
   /**
@@ -455,11 +457,25 @@ class Movement extends Control {
    * @api
    */
   handleClickHelp(e) {
-    const isOpen = this.panel.querySelector('.m-movement-help-container').style.display;
+    const isOpen = this.panel.querySelector('.m-movement-help-container').style.display
+      && this.panel.querySelector('.m-movement-help-container').style.display === 'block';
 
     if (!isOpen) {
       this.panel.querySelector('.m-movement-help-container').style.display = 'block';
+      this.panel.querySelector('.m-movement-help-close').addEventListener('click', this.boundCloseHelp);
     }
+  }
+
+  /**
+   * Cierra la ayuda del control.
+   *
+   * @function
+   * @public
+   * @api
+   */
+  closeHelp() {
+    this.panel.querySelector('.m-movement-help-close').removeEventListener('click', this.boundCloseHelp);
+    this.panel.querySelector('.m-movement-help-container').style.display = 'none';
   }
 
   /**
