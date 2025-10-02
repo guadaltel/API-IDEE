@@ -379,7 +379,7 @@ export const fillResolutions = (minResolutionParam, maxResolutionParam, numZoomL
  *
  * @function
  * @param {Number} scale Escala.
- * @param {String} units Unidades.
+ * @param {String} unitsParam Unidades.
  * @returns {Number} La resolución para la escala especificada.
  * @api
  */
@@ -973,6 +973,7 @@ export const setEquals = (array, array2) => {
  * @function
  * @param {Object} destParam Parámetro.
  * @param {Object} src Objeto con los índices.
+ * @returns {Object}
  * @api
  */
 export const extendsObj = (destParam = {}, src = {}) => {
