@@ -99,7 +99,11 @@ class MVT extends Vector {
     /**
      * MVT visibility_. Indica si la capa es visible.
      */
-    this.visibility_ = parameters.visibility !== false;
+    if (parameters.visibility === undefined) {
+      this.visibility_ = parameters.isBase !== true;
+    } else {
+      this.visibility_ = parameters.visibility;
+    }
 
     /**
      * MVT tileLoadFunction. Función de carga de tiles.
