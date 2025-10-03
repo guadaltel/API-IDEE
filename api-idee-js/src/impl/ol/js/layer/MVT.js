@@ -4,6 +4,7 @@
  */
 import OLSourceVectorTile from 'ol/source/VectorTile';
 import OLLayerVectorTile from 'ol/layer/VectorTile';
+// import { get as getProj } from 'ol/proj';
 import { isNullOrEmpty, extend, isObject } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import TileEventType from 'ol/source/TileEventType';
@@ -368,16 +369,16 @@ class MVT extends Vector {
   getFeaturesExtentPromise(skipFilter, filter) {
     return new Promise((resolve) => {
       const codeProj = this.map.getProjection().code;
-      if (this.isLoaded() === true) {
-        const features = this.getFeatures(skipFilter, filter);
-        const extent = ImplUtils.getFeaturesExtent(features, codeProj);
-        resolve(extent);
-      } else {
-        this.requestFeatures_().then((features) => {
-          const extent = ImplUtils.getFeaturesExtent(features, codeProj);
-          resolve(extent);
-        });
-      }
+      // if (this.isLoaded() === true) {
+      const features = this.getFeatures(skipFilter, filter);
+      const extent = ImplUtils.getFeaturesExtent(features, codeProj);
+      resolve(extent);
+      // } else {
+      //   this.requestFeatures_().then((features) => {
+      //     const extent = ImplUtils.getFeaturesExtent(features, codeProj);
+      //     resolve(extent);
+      //   });
+      // }
     });
   }
 
