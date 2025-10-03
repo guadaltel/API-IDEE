@@ -405,7 +405,7 @@ export const getResolutionFromScale = (scale, unitsParam) => {
  * @function
  * @param {Number} maxScale Escala máxima.
  * @param {Number} minScale Escala mínima.
- * @param {Number} zoomLevels Números de zoom.
+ * @param {Number} zoomLevels Niveles de zoom.
  * @param {String} units Unidades.
  * @returns {Array<Number>} Resolución.
  * @api
@@ -634,7 +634,7 @@ export const concatUrlPaths = (paths) => {
  * @param {Array} array Matriz.
  * @param {*} searchElement Elemento que se quiere buscar.
  * @param {Number} fromIndex Indice a partir del que se quiere buscar.
- * @returns {Boolean} Elemento.
+ * @returns {Boolean} Elemento encontrado.
  * @api
  */
 export const includes = (array, searchElement, fromIndex) => {
@@ -669,7 +669,7 @@ export const includes = (array, searchElement, fromIndex) => {
  * @function
  * @param {Object} targetParam Objeto.
  * @param {Object} source Donde se encuentra el prototipo.
- * @param {Boolean} override Anular, (verdadero o falso).
+ * @param {Boolean} override Sobreescribir el prototipo (verdadero o falso).
  * @returns {Object} Objeto extendido.
  * @api
  */
@@ -1450,9 +1450,10 @@ export const dragElement = (elmntID, buttonID) => {
 };
 
 /**
- * Esta función codifica un objeto JSON en base64
+ * Esta función codifica un objeto JSON en base64.
  * @function
- * @param {Object} JSON
+ * @param {Object} JSON JSON.
+ * @returns {String}
  * @api
  */
 export const encodeBase64 = (json) => {
@@ -1463,9 +1464,10 @@ export const encodeBase64 = (json) => {
 
 /**
  * Esta función decodifica un objeto en base64 a un
- * objeto JSON
+ * objeto JSON.
  * @function
- * @param {String} base64
+ * @param {String} base64 base64.
+ * @returns {Object}
  * @api
  */
 export const decodeBase64 = (base64) => {
@@ -1477,9 +1479,9 @@ export const decodeBase64 = (base64) => {
  * Esta función proporciona movimiento a un plugin.
  *
  * @function
- * @param {IDEE.ui.Panel} panel Panel del "plugin"
+ * @param {IDEE.ui.Panel} panel Panel del "plugin".
  * @param {String} handleEl Elemento o selector en el que
- * comienza la interacción del arrastre
+ * comienza la interacción del arrastre.
  * @api
  */
 export const draggabillyPlugin = (panel, handleEl) => {
@@ -1515,9 +1517,9 @@ export const draggabillyPlugin = (panel, handleEl) => {
  * Esta función proporciona movimiento a un dialog.
  *
  * @function
- * @param {String} element Selector del elemento a mover
- * @param {String} handleEl Selemento del elemento iniciador del movimiento
- * @param {String} containmentEl Selector del elemento contenedor
+ * @param {String} element Selector del elemento a mover.
+ * @param {String} handleEl Selemento del elemento iniciador del movimiento.
+ * @param {String} containmentEl Selector del elemento contenedor.
  * @api
  */
 export const draggabillyElement = (elem, handleEl, containmentEl = 'body') => {
@@ -1540,8 +1542,9 @@ export const draggabillyElement = (elem, handleEl, containmentEl = 'body') => {
  * que se encuentra en el mapa (ol-overlay-container).
  *
  * @function
- * @param {String} className Clase del elemento HTML
- * @param {Array<Number>} position Coordenadas del elemento HTML
+ * @param {String} className Clase del elemento HTML.
+ * @param {Array<Number>} position Coordenadas del elemento HTML.
+ * @returns {Array<Number>} Posición del elemento HTML.
  * @api
  */
 export const returnPositionHtmlElement = (className, map) => {
@@ -1562,10 +1565,10 @@ export const returnPositionHtmlElement = (className, map) => {
 };
 
 /**
- * Esta funcion fusiona todos los canvas del mapa en uno solo
- * @param {IDEE.map} map objeto mapa
- * @param {String} imageType formato de imagen resultante
- * @returns {HTMLCanvasElement} canvas resultante
+ * Esta funcion fusiona todos los canvas del mapa en uno solo.
+ * @param {IDEE.map} map Objeto mapa.
+ * @param {String} imageType Formato de imagen resultante.
+ * @returns {HTMLCanvasElement} Canvas resultante.
  */
 export const joinCanvas = (map, imageType = 'image/jpeg') => {
   const canvasList = map.getMapImpl().getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-layer');
@@ -1612,12 +1615,12 @@ export const joinCanvas = (map, imageType = 'image/jpeg') => {
 };
 
 /**
- * Esta función devuelve una captura de pantalla del mapa en una promesa
+ * Esta función devuelve una captura de pantalla del mapa en una promesa.
  * @function
- * @param {IDEE.Map} map mapa del que se obtiene el canvas
- * @param {String} type formato de la imagen resultante
+ * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+ * @param {String} type Formato de la imagen resultante.
  * @api
- * @returns {String} Imagen en base64 o Promesa con esta
+ * @returns {String} Imagen en base64 o Promesa con esta.
  */
 const getImageMapReplacementWithJoin = (map, type = 'image/jpeg') => { // getImageMap and joinCanvas combined
   return new Promise((resolve) => {
@@ -1703,14 +1706,14 @@ const getImageMapReplacementWithJoin = (map, type = 'image/jpeg') => { // getIma
 };
 
 /**
- * Esta función devuelve una captura de pantalla del mapa
+ * Esta función devuelve una captura de pantalla del mapa.
  * @function
- * @param {IDEE.Map} map mapa del que se obtiene el canvas
- * @param {String} type formato de la imagen resultante
- * @param {HTMLCanvasElement} canva elemento canvas
- * @param {Boolean} isPromise si tiene que devolver una promesa (MapLibre)
+ * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+ * @param {String} type Formato de la imagen resultante.
+ * @param {HTMLCanvasElement} canva Elemento canvas.
+ * @param {Boolean} isPromise Si tiene que devolver una promesa (MapLibre).
  * @api
- * @returns {String} Imagen en base64 o Promesa con la imagen en base64
+ * @returns {String} Imagen en base64 o Promesa con la imagen en base64.
  */
 export const getImageMap = (map, type = 'image/jpeg', canva = undefined, isPromise = false) => {
   if (isPromise) return getImageMapReplacementWithJoin(map, type); // Promise
@@ -1724,10 +1727,10 @@ export const getImageMap = (map, type = 'image/jpeg', canva = undefined, isPromi
 };
 
 /**
- * Esta función copia una imagen en el portapapeles
+ * Esta función copia una imagen en el portapapeles.
  * @function
- * @param {IDEE.Map} map mapa del que se obtiene el canvas
- * @param {HTMLCanvasElement} canva elemento canvas
+ * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+ * @param {HTMLCanvasElement} canva Elemento canvas.
  * @api
  */
 export const copyImageClipBoard = (map, canva) => {
@@ -1844,7 +1847,7 @@ export const transfomContent = (text, pSizes = {}) => {
  * @param {Object} bbox Bbox.
  * @param {String} epsg EPSG del bbox.
  * @function
- * @returns {Array} bbox
+ * @returns {Array} Bbox.
  * @api
  */
 export const ObjectToArrayExtent = (bbox, epsg) => {
@@ -1888,7 +1891,7 @@ export const getSystem = () => {
  * @function
  * @public
  * @param {String} url URL del servicio WMTS (debe incluir el parámetro service=WMTS y
- *  request=GetCapabilities)
+ *  request=GetCapabilities).
  * @returns {Promise<Object>} Promesa que se resuelve con un objeto que contiene
  *  las capacidades del servicio WMTS.
  * @api
