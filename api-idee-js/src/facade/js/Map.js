@@ -4710,6 +4710,33 @@ class Map extends Base {
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
   }
+
+  /**
+   * Este método controla si la interacción DragPan está activa o no.
+   *
+   * @function
+   * @param { Boolean } active determina si se activa o desactiva el panneo.
+   * El valor por defecto es true.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enableDrag(active);
+  }
+
+  /**
+   * Este método controla si la interacción DragPan está activa o no.
+   *
+   * @function
+   * @param { Boolean } active determina si se activa o desactiva el panneo.
+   * El valor por defecto es true.
+   * @public
+   * @api
+   * @deprecated usar enablePan en vez enableDrag.
+   */
+  enableDrag(active) {
+    this.enablePan(active);
+  }
 }
 
 /**

@@ -6,6 +6,7 @@ import { get as getProj, transform } from 'ol/proj';
 import OLFormatWMTSCapabilities from 'ol/format/WMTSCapabilities';
 import OLProjection from 'ol/proj/Projection';
 import OLInteraction from 'ol/interaction/Interaction';
+import { DragPan } from 'ol/interaction';
 import MObject from 'IDEE/Object';
 import FacadePanzoombar from 'IDEE/control/Panzoombar';
 import * as LayerType from 'IDEE/layer/Type';
@@ -270,6 +271,18 @@ class Map extends MObject {
         return true;
       },
     }));
+
+    const interactions = this.map_.getInteractions().getArray();
+
+    /**
+     * DragPan - Interacción.
+     * @private
+     * @type {ol.Interaction}
+     * @returns {ol.Interaction} DragPan.
+     */
+    this.dragPan_ = interactions.find((interaction) => {
+      return interaction instanceof DragPan;
+    });
   }
 
   /**
@@ -3337,6 +3350,21 @@ class Map extends MObject {
    */
   setFacadeMap(facadeMap) {
     this.facadeMap_ = facadeMap;
+  }
+
+  /**
+   * Este método controla si la interacción DragPan está activa o no.
+   *
+   * @function
+   * @param { Boolean } active determina si se activa o desactiva el panneo.
+   * El valor por defecto es true.
+   * @public
+   * @api
+   */
+  enableDrag(active = true) {
+    if (!isNullOrEmpty(this.dragPan_)) {
+      this.dragPan_.setActive(active);
+    }
   }
 
   /**
