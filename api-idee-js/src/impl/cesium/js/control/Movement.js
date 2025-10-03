@@ -64,6 +64,12 @@ class Movement extends Control {
     this.rotateIsLook = false;
 
     this.boundCloseHelp = this.closeHelp.bind(this);
+
+    if ('ontouchstart' in window && window.navigator.maxTouchPoints > 0) {
+      this.useTouch = true;
+    } else {
+      this.useTouch = false;
+    }
   }
 
   /**
@@ -102,8 +108,13 @@ class Movement extends Control {
     this.svgExterior = this.panel.querySelector('.m-movement-exterior-svg');
     this.svgGiroscopio = this.panel.querySelector('.m-movement-giroscopio-svg');
 
-    this.svgExterior.addEventListener('mousedown', this.handleExteriorMouseDown);
-    this.svgGiroscopio.addEventListener('mousedown', this.handleGiroscopioMouseDown);
+    if (this.useTouch) {
+      this.svgExterior.addEventListener('touchstart', this.handleExteriorMouseDown);
+      this.svgGiroscopio.addEventListener('touchstart', this.handleGiroscopioMouseDown);
+    } else {
+      this.svgExterior.addEventListener('mousedown', this.handleExteriorMouseDown);
+      this.svgGiroscopio.addEventListener('mousedown', this.handleGiroscopioMouseDown);
+    }
 
     this.panel.querySelector('#m-movement-giroscopio').addEventListener('dblclick', this.handleResetView);
     this.panel.querySelector('#m-movement-help').addEventListener('click', this.handleClickHelp);
@@ -119,6 +130,10 @@ class Movement extends Control {
    * @api
    */
   handleMouseDown(name, e) {
+    const clientX = this.useTouch && e.touches && e.touches.length > 0
+      ? e.touches[0].clientX : e.clientX;
+    const clientY = this.useTouch && e.touches && e.touches.length > 0
+      ? e.touches[0].clientY : e.clientY;
     const compassElement = e.currentTarget;
     const compassRectangle = e.currentTarget.getBoundingClientRect();
     const center = new Cartesian2(
@@ -126,8 +141,8 @@ class Movement extends Control {
       (compassRectangle.bottom - compassRectangle.top) / 2.0,
     );
     const clickLocation = new Cartesian2(
-      e.clientX - compassRectangle.left,
-      e.clientY - compassRectangle.top,
+      clientX - compassRectangle.left,
+      clientY - compassRectangle.top,
     );
     const vector = Cartesian2.subtract(clickLocation, center, new Cartesian2());
 
@@ -176,8 +191,13 @@ class Movement extends Control {
         break;
     }
 
-    document.removeEventListener('mousemove', this.orbitMouseMoveFunction, false);
-    document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
+    if (this.useTouch) {
+      document.removeEventListener('touchmove', this.orbitMouseMoveFunction, false);
+      document.removeEventListener('touchend', this.orbitMouseUpFunction, false);
+    } else {
+      document.removeEventListener('mousemove', this.orbitMouseMoveFunction, false);
+      document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
+    }
 
     if (defined(this.orbitTickFunction)) {
       cesiumMap.clock.onTick.removeEventListener(this.orbitTickFunction);
@@ -273,14 +293,18 @@ class Movement extends Control {
     };
 
     this.orbitMouseMoveFunction = (e) => {
+      const clientX = this.useTouch && e.touches && e.touches.length > 0
+        ? e.touches[0].clientX : e.clientX;
+      const clientY = this.useTouch && e.touches && e.touches.length > 0
+        ? e.touches[0].clientY : e.clientY;
       const compassRectangle = compassElement.getBoundingClientRect();
       const center = new Cartesian2(
         (compassRectangle.right - compassRectangle.left) / 2.0,
         (compassRectangle.bottom - compassRectangle.top) / 2.0,
       );
       const clickLocation = new Cartesian2(
-        e.clientX - compassRectangle.left,
-        e.clientY - compassRectangle.top,
+        clientX - compassRectangle.left,
+        clientY - compassRectangle.top,
       );
       const vector = Cartesian2.subtract(clickLocation, center, vectorScratch);
       updateAngleAndOpacity(vector, compassRectangle.width);
@@ -288,8 +312,14 @@ class Movement extends Control {
 
     this.orbitMouseUpFunction = (e) => {
       this.isOrbiting = false;
-      document.removeEventListener('mousemove', this.orbitMouseMoveFunction, false);
-      document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
+
+      if (this.useTouch) {
+        document.removeEventListener('touchmove', this.orbitMouseMoveFunction, false);
+        document.removeEventListener('touchend', this.orbitMouseUpFunction, false);
+      } else {
+        document.removeEventListener('mousemove', this.orbitMouseMoveFunction, false);
+        document.removeEventListener('mouseup', this.orbitMouseUpFunction, false);
+      }
 
       if (defined(this.orbitTickFunction)) {
         cesiumMap.clock.onTick.removeEventListener(this.orbitTickFunction);
@@ -301,8 +331,13 @@ class Movement extends Control {
       this.panel.querySelector('.m-movement-rotation-maker').style.display = 'none';
     };
 
-    document.addEventListener('mousemove', this.orbitMouseMoveFunction, false);
-    document.addEventListener('mouseup', this.orbitMouseUpFunction, false);
+    if (this.useTouch) {
+      document.addEventListener('touchmove', this.orbitMouseMoveFunction, false);
+      document.addEventListener('touchend', this.orbitMouseUpFunction, false);
+    } else {
+      document.addEventListener('mousemove', this.orbitMouseMoveFunction, false);
+      document.addEventListener('mouseup', this.orbitMouseUpFunction, false);
+    }
     cesiumMap.clock.onTick.addEventListener(this.orbitTickFunction);
 
     updateAngleAndOpacity(cursorVector, compassElement.getBoundingClientRect().width);
@@ -335,8 +370,13 @@ class Movement extends Control {
       return;
     }
 
-    document.removeEventListener('mousemove', this.rotateMouseMoveFunction, false);
-    document.removeEventListener('mouseup', this.rotateMouseUpFunction, false);
+    if (this.useTouch) {
+      document.removeEventListener('touchmove', this.rotateMouseMoveFunction, false);
+      document.removeEventListener('touchend', this.rotateMouseUpFunction, false);
+    } else {
+      document.removeEventListener('mousemove', this.rotateMouseMoveFunction, false);
+      document.removeEventListener('mouseup', this.rotateMouseUpFunction, false);
+    }
 
     this.rotateMouseMoveFunction = undefined;
     this.rotateMouseUpFunction = undefined;
@@ -381,14 +421,18 @@ class Movement extends Control {
     }
 
     this.rotateMouseMoveFunction = (e) => {
+      const clientX = this.useTouch && e.touches && e.touches.length > 0
+        ? e.touches[0].clientX : e.clientX;
+      const clientY = this.useTouch && e.touches && e.touches.length > 0
+        ? e.touches[0].clientY : e.clientY;
       const compassRectangle = compassElement.getBoundingClientRect();
       const center = new Cartesian2(
         (compassRectangle.right - compassRectangle.left) / 2.0,
         (compassRectangle.bottom - compassRectangle.top) / 2.0,
       );
       const clickLocation = new Cartesian2(
-        e.clientX - compassRectangle.left,
-        e.clientY - compassRectangle.top,
+        clientX - compassRectangle.left,
+        clientY - compassRectangle.top,
       );
       const vector = Cartesian2.subtract(clickLocation, center, vectorScratch);
       const angle = Math.atan2(-vector.y, vector.x);
@@ -419,15 +463,25 @@ class Movement extends Control {
 
     this.rotateMouseUpFunction = (e) => {
       this.isRotating = false;
-      document.removeEventListener('mousemove', this.rotateMouseMoveFunction, false);
-      document.removeEventListener('mouseup', this.rotateMouseUpFunction, false);
+      if (this.useTouch) {
+        document.removeEventListener('touchmove', this.rotateMouseMoveFunction, false);
+        document.removeEventListener('touchend', this.rotateMouseUpFunction, false);
+      } else {
+        document.removeEventListener('mousemove', this.rotateMouseMoveFunction, false);
+        document.removeEventListener('mouseup', this.rotateMouseUpFunction, false);
+      }
 
       this.rotateMouseMoveFunction = undefined;
       this.rotateMouseUpFunction = undefined;
     };
 
-    document.addEventListener('mousemove', this.rotateMouseMoveFunction, false);
-    document.addEventListener('mouseup', this.rotateMouseUpFunction, false);
+    if (this.useTouch) {
+      document.addEventListener('touchmove', this.rotateMouseMoveFunction, false);
+      document.addEventListener('touchend', this.rotateMouseUpFunction, false);
+    } else {
+      document.addEventListener('mousemove', this.rotateMouseMoveFunction, false);
+      document.addEventListener('mouseup', this.rotateMouseUpFunction, false);
+    }
   }
 
   /**
@@ -499,8 +553,13 @@ class Movement extends Control {
    * @api stable
    */
   destroy() {
-    this.svgExterior.removeEventListener('mousedown', this.handleExteriorMouseDown);
-    this.svgGiroscopio.removeEventListener('mousedown', this.handleGiroscopioMouseDown);
+    if (this.useTouch) {
+      this.svgExterior.removeEventListener('touchstart', this.handleExteriorMouseDown);
+      this.svgGiroscopio.removeEventListener('touchstart', this.handleGiroscopioMouseDown);
+    } else {
+      this.svgExterior.removeEventListener('mousedown', this.handleExteriorMouseDown);
+      this.svgGiroscopio.removeEventListener('mousedown', this.handleGiroscopioMouseDown);
+    }
     this.panel.querySelector('#m-movement-giroscopio')
       .removeEventListener('dblclick', this.handleResetView);
     this.panel.querySelector('#m-movement-help').removeEventListener('click', this.handleClickHelp);

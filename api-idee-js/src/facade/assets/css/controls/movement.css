@@ -102,6 +102,15 @@
   color: #000;
 }
 
+@media(max-width: 465px){
+  .m-movement-help-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
 .m-movement-help-header {
   display: flex;
   justify-content: space-between;
