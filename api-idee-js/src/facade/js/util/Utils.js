@@ -194,7 +194,7 @@ export const normalize = (stringToNormalize, upperCase) => {
  * @function
  * @param {String} paramName Nombre del parámetro.
  * @param {String} url URL.
- * @returns {String} Parámetros de una URL.
+ * @returns {String} Valor del parametro de la URL.
  * @api
  */
 export const getParameterValue = (paramName, url) => {
@@ -221,8 +221,8 @@ export const getParameterValue = (paramName, url) => {
 /**
  * Añade parámetros a una URL.
  * @function
- * @param {String} params Parámetros.
  * @param {String} url URL.
+ * @param {String|Object} params Parámetros.
  * @returns {String} URL con parámetros.
  * @api
  */
@@ -425,11 +425,10 @@ export const generateResolutionsFromScales = (maxScale, minScale, zoomLevels, un
  * @param {Number} extentParam Extensión.
  * @param {Number} size Tamaño.
  * @param {Number} zoomLevels Niveles de zoom.
- * @param {String} units Unidades.
  * @returns {Array<Number>} Resolución.
  * @api
  */
-export const generateResolutionsFromExtent = (extentParam, size, zoomLevels, units) => {
+export const generateResolutionsFromExtent = (extentParam, size, zoomLevels) => {
   let extent = extentParam;
   let [wExtent, hExtent] = [null, null];
   if (isArray(extent)) {
@@ -483,6 +482,7 @@ export const getScaleFromResolution = (resolution, unitsParam, decimals = -1) =>
  * código HTML.
  * @function
  * @param {String} htmlTxt Cadena.
+ * @returns {HTMLElement} Elemento HTML.
  * @api
  */
 export const stringToHtml = (htmlTxt) => {
@@ -502,6 +502,7 @@ export const stringToHtml = (htmlTxt) => {
  * cadena de texto.
  * @function
  * @param {HTMLElement} html Contenido HTML.
+ * @returns {String} Cadena de texto.
  * @api
  */
 export const htmlToString = (html) => {
@@ -562,7 +563,7 @@ export const beautifyString = (text) => {
  *
  *
  * @function
- * @param {attributeName} String Atributo.
+ * @param {attributeName} String Valor:Atributo.
  * @returns {String} Atributo formateado.
  * @api
  */
@@ -603,10 +604,10 @@ export const beautifyAttributeName = (rawAttributeName) => {
 };
 
 /**
- * Devuelve una ruta.
+ * Esta función concatena una ruta.
  * @function
- * @param {String} paths Ruta.
- * @returns {String} Ruta formateada.
+ * @param {Array<String>} paths Array con url más rutas a concatenar.
+ * @returns {String} Ruta concatenada.
  * @api
  */
 export const concatUrlPaths = (paths) => {
@@ -628,12 +629,12 @@ export const concatUrlPaths = (paths) => {
 };
 
 /**
- * Comprueba que en un matriz contenga un determinado elemento.
+ * Esta función comprueba que en un matriz contenga un determinado elemento.
  * @function
  * @param {Array} array Matriz.
  * @param {*} searchElement Elemento que se quiere buscar.
- * @param {Number} fromIndex Indice.
- * @returns {*} Elemento.
+ * @param {Number} fromIndex Indice a partir del que se quiere buscar.
+ * @returns {Boolean} Elemento.
  * @api
  */
 export const includes = (array, searchElement, fromIndex) => {
@@ -664,7 +665,7 @@ export const includes = (array, searchElement, fromIndex) => {
 };
 
 /**
- * Extiende los prototipos de un objeto.
+ * Esta función extiende los prototipos de un objeto.
  * @function
  * @param {Object} targetParam Objeto.
  * @param {Object} source Donde se encuentra el prototipo.
@@ -688,7 +689,7 @@ export const extend = (targetParam, source, override) => {
 };
 
 /**
- * Remplaza los caracteres de tipo XSS.
+ * Esta función remplaza los caracteres de tipo XSS.
  *
  * @function
  * @param {String} xssValue Valor XSS.
@@ -720,7 +721,7 @@ export const escapeXSS = (xssValue) => {
 };
 
 /**
- * Remplaza el código de JavaScript.
+ * Esta función elimina el código de JavaScript.
  *
  * @function
  * @param {String} jsCode Código de JavaScript.
@@ -882,7 +883,7 @@ export const isGeometryType = (type) => {
 };
 
 /**
- * Decodifica el HTML y devuelve su contenido.
+ * Esta función decodifica el HTML y devuelve su contenido.
  *
  * @function
  * @param {String} encodedHtml Texto codificado con entidades HTML.
@@ -920,8 +921,8 @@ export const getTextFromHtml = (html) => {
  * y el valor hexadecimal del color.
  * @function
  * @public
- * @param {string} color Color.
- * @return {string} Color inverso en formato hexadecimal.
+ * @param {String} color Color.
+ * @return {String} Color inverso en formato hexadecimal.
  * @api
  */
 export const inverseColor = (color) => {
@@ -938,9 +939,9 @@ export const inverseColor = (color) => {
  * Esta función devuelve el color RGBA.
  * @function
  * @public
- * @param {string} color Color.
- * @param {number} opacity Opacidad.
- * @return {string}
+ * @param {String} color Color.
+ * @param {Number} opacity Opacidad.
+ * @return {String} Color RGBA.
  * @api
  */
 export const getRgba = (color, opacity) => {
@@ -955,7 +956,7 @@ export const getRgba = (color, opacity) => {
  * @public
  * @param {Array} array Primer array a comparar.
  * @param {Array} array2 Segundo array a comparar.
- * @return {Boolean}
+ * @return {Boolean} Resultado de la comparación.
  * @api
  */
 export const setEquals = (array, array2) => {
@@ -973,7 +974,7 @@ export const setEquals = (array, array2) => {
  * @function
  * @param {Object} destParam Parámetro.
  * @param {Object} src Objeto con los índices.
- * @returns {Object}
+ * @returns {Object} Objeto extendido.
  * @api
  */
 export const extendsObj = (destParam = {}, src = {}) => {
@@ -997,12 +998,12 @@ export const extendsObj = (destParam = {}, src = {}) => {
 };
 
 /**
- * Esta función devuelve una matriz con rupturas entre el principio y el final de una matriz.
+ * Esta función devuelve una matriz con intervalos entre el principio y el final de dicha matriz.
  * @function
  * @public
- * @param {array} array Matriz.
- * @param {number} breaks Punto de ruptura.
- * @return {array} Intervalo.
+ * @param {Array} array Matriz.
+ * @param {Number} breaks Numero de elementos.
+ * @return {Array} Intervalo.
  * @api
  */
 export const generateIntervals = (array, breaks) => {
@@ -1018,12 +1019,12 @@ export const generateIntervals = (array, breaks) => {
 };
 
 /**
- * Esta función devuelve la diferencia en el orden de estilos.
+ * Esta función devuelve la diferencia en la propiedad order de los estilos.
  * @function
  * @public
  * @param {IDEE.Style} style Estilo.
  * @param {IDEE.Style} style2 Estilo.
- * @return {number} Orden de estilos, 0 si tienen el mismo.
+ * @return {Number} Diferencia, 0 si tienen el mismo.
  * @api
  */
 export const styleComparator = (style, style2) => {
@@ -1031,11 +1032,11 @@ export const styleComparator = (style, style2) => {
 };
 
 /**
- * Esta función devuelve el tamaño de una imagen.
+ * Esta función devuelve una imagen para comparar su tamaño.
  * @function
  * @public
- * @param {string} url URL.
- * @return {Array<number>} Promesa, array con el tamaño de la imagen.
+ * @param {String} url URL.
+ * @return {String} Promesa, url de la imagen.
  * @api
  */
 export const getImageSize = (url) => {
@@ -1047,11 +1048,11 @@ export const getImageSize = (url) => {
 };
 
 /**
- * Esta función remplaza funciones en cadenas de texto.
+ * Esta función convierte funciones en cadenas de texto.
  * @function
  * @public
- * @param {object} objParam Objeto con cadenas de texto.
- * @return {obj} Devuelve las funciones.
+ * @param {Object} objParam Objeto con función.
+ * @return {Object} Devuelve las funciones.
  * @api
  */
 export const stringifyFunctions = (objParam) => {
@@ -1082,7 +1083,7 @@ export const stringifyFunctions = (objParam) => {
  * @function
  * @public
  * @param {String} objParam Cadena con la función.
- * @return {obj}
+ * @return {Object} Objeto con la función.
  * @api
  */
 export const defineFunctionFromString = (objParam) => {
@@ -1127,8 +1128,8 @@ export const removeHTML = (element) => {
  * Esta función añade o elimina una clase a un elemento html
  * @function
  * @public
- * @param {htmlElement} htmlElement Elemento html para añadir/eliminar la clase
- * @param {string} className Clase a añadir/eliminar
+ * @param {HTMLElement} htmlElement Elemento html para añadir/eliminar la clase
+ * @param {String} className Clase a añadir/eliminar
  * @api
  */
 export const classToggle = (htmlElement, className) => {
@@ -1158,9 +1159,9 @@ export const replaceNode = (newNode, oldNode) => {
  * Esta función devuelve verdadero si algún valor de objeto es función o "{{*}}".
  * @function
  * @public
- * @param {object} obj Valor.
- * @param {Array<string>} namesToSkip Nombres a omitir.
- * @return {bool} Verdadero si algún valor de objeto es función o "{{*}}".
+ * @param {Object} obj Valor.
+ * @param {Array<String>} namesToSkip Nombres a omitir.
+ * @return {Boolean} Verdadero si algún valor de objeto es función o "{{*}}".
  * @api
  */
 export const isDynamic = (obj, namesToSkip = []) => {
@@ -1179,7 +1180,7 @@ export const isDynamic = (obj, namesToSkip = []) => {
 /**
  * Este parámetro representa la imagen src de la leyenda dinámica.
  * @const
- * @type {string}
+ * @type {String}
  */
 let dynamicLegend = 'https://componentes.idee.es/estaticos/imagenes/leyenda/dynamic_legend.png';
 
@@ -1309,7 +1310,7 @@ export const getUint8ArrayFromData = (data) => {
 /**
  * Esta función lee un JSON.
  * @param {Object} file JSON.
- * @return {Object} Devuelve el JSON leído, promesa.
+ * @return {Promise<Object>} Devuelve una promesa con el JSON leído.
  */
 export const readJSON = (file) => {
   return new Promise((resolve, reject) => {
@@ -1327,12 +1328,12 @@ export const readJSON = (file) => {
 };
 
 /**
- * Esta función obtiene un color de escala de matriz en formato hexadecimal.
+ * Esta función obtiene un array de escala de colores en formato hexadecimal.
  * @function
  * @public
- * @param {String} colors Color.
- * @param {String} numberClasses Número del color.
- * @return {Array<string>} Color de escala de matriz en formato hexadecimal.
+ * @param {String} colors Colores.
+ * @param {String} numberClasses Número de colores.
+ * @return {Array<string>} Escala de colores en formato hexadecimal.
  * @api
  */
 export const generateColorScale = (colors, numberClasses) => {
@@ -1464,7 +1465,7 @@ export const encodeBase64 = (json) => {
  * Esta función decodifica un objeto en base64 a un
  * objeto JSON
  * @function
- * @param {string} base64
+ * @param {String} base64
  * @api
  */
 export const decodeBase64 = (base64) => {
@@ -1477,7 +1478,7 @@ export const decodeBase64 = (base64) => {
  *
  * @function
  * @param {IDEE.ui.Panel} panel Panel del "plugin"
- * @param {string} handleEl Elemento o selector en el que
+ * @param {String} handleEl Elemento o selector en el que
  * comienza la interacción del arrastre
  * @api
  */
@@ -1514,9 +1515,9 @@ export const draggabillyPlugin = (panel, handleEl) => {
  * Esta función proporciona movimiento a un dialog.
  *
  * @function
- * @param {string} element Selector del elemento a mover
- * @param {string} handleEl Selemento del elemento iniciador del movimiento
- * @param {string} containmentEl Selector del elemento contenedor
+ * @param {String} element Selector del elemento a mover
+ * @param {String} handleEl Selemento del elemento iniciador del movimiento
+ * @param {String} containmentEl Selector del elemento contenedor
  * @api
  */
 export const draggabillyElement = (elem, handleEl, containmentEl = 'body') => {
@@ -1748,7 +1749,7 @@ export const copyImageClipBoard = (map, canva) => {
 };
 
 /**
- * Esta función detecta en un texto los enlaces.
+ * Esta función detecta los enlaces en un texto.
  * @param {String} text Texto donde se detectará los enlaces.
  * @returns {Array<String>} Matriz de enlaces.
  * @function
@@ -1863,7 +1864,7 @@ export const ObjectToArrayExtent = (bbox, epsg) => {
  *
  * @function
  * @public
- * @returns {string} El sistema operativo móvil detectado ('iOS', 'Android',
+ * @returns {String} El sistema operativo móvil detectado ('iOS', 'Android',
  * 'Windows Phone', or 'unknown').
  * @api
  */
@@ -1886,7 +1887,7 @@ export const getSystem = () => {
  *
  * @function
  * @public
- * @param {string} url URL del servicio WMTS (debe incluir el parámetro service=WMTS y
+ * @param {String} url URL del servicio WMTS (debe incluir el parámetro service=WMTS y
  *  request=GetCapabilities)
  * @returns {Promise<Object>} Promesa que se resuelve con un objeto que contiene
  *  las capacidades del servicio WMTS.
@@ -1902,8 +1903,8 @@ export const getWMTSCapabilities = (url) => {
  * @ublic
  * @function
  * @param {Array<number>} coordinates Coordenadas a reproyectar.
- * @param {string} sourceProj EPSG del sistema de referencia de origen.
- * @param {string} destProj EPSG del sistema de referencia de destino.
+ * @param {String} sourceProj EPSG del sistema de referencia de origen.
+ * @param {String} destProj EPSG del sistema de referencia de destino.
  * @returns {Array<number>} Coordenadas reproyectadas.
  * @api
  */
@@ -1923,7 +1924,7 @@ export const reproject = (coordinates, sourceProj, destProj) => {
  *
  * @public
  * @function
- * @param {string} wkt Cadena WKT que representa un sistema de referencia de coordenadas.
+ * @param {String} wkt Cadena WKT que representa un sistema de referencia de coordenadas.
  * @returns {Object} Objeto JSON estructurado equivalente al WKT.
  * @api
  */
@@ -2016,7 +2017,7 @@ export const parseCRSWKTtoJSON = (wkt) => {
 };
 
 /**
- * Esta función filtra una lista de elementos en base al valor del input.
+ * Esta función filtra una lista html en base al valor del input.
  *
  * @param {String} inputId ID del input que contiene el filtro.
  * @param {String} listId ID de la lista que se va a filtrar.
