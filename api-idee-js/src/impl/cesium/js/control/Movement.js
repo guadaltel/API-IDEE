@@ -65,6 +65,9 @@ class Movement extends Control {
 
     this.boundCloseHelp = this.closeHelp.bind(this);
 
+    this.saveHeading = undefined;
+    this.isInitial = true;
+
     if ('ontouchstart' in window && window.navigator.maxTouchPoints > 0) {
       this.useTouch = true;
     } else {
@@ -87,27 +90,32 @@ class Movement extends Control {
     // panel
     this.panel = element;
 
-    const scene = this.facadeMap_.getMapImpl().scene;
-
-    const saveInitialPosition = () => {
-      if (isUndefined(this.viewInitial)) {
-        this.position = Cartesian3.clone(scene.camera.position);
-      } else {
-        this.position = Rectangle.fromDegrees(
-          this.viewInitial[0],
-          this.viewInitial[1],
-          this.viewInitial[2],
-          this.viewInitial[3],
-        );
-      }
-      scene.postRender.removeEventListener(saveInitialPosition);
-    };
-    scene.postRender.addEventListener(saveInitialPosition);
-
-    // Registro eventos
     this.svgExterior = this.panel.querySelector('.m-movement-exterior-svg');
     this.svgGiroscopio = this.panel.querySelector('.m-movement-giroscopio-svg');
+    this.heading = this.facadeMap_.getMapImpl().scene.camera.heading;
 
+    if (!isUndefined(this.viewInitial)) {
+      this.position = Rectangle.fromDegrees(
+        this.viewInitial[0],
+        this.viewInitial[1],
+        this.viewInitial[2],
+        this.viewInitial[3],
+      );
+    }
+
+    this.saveHeading = () => {
+      if (isUndefined(this.viewInitial) && this.isInitial) {
+        this.position = Cartesian3.clone(this.facadeMap_.getMapImpl().scene.camera.position);
+        this.isInitial = false;
+      }
+      this.heading = this.facadeMap_.getMapImpl().scene.camera.heading;
+      this.svgExterior.style.transform = `rotate(${-this.heading}rad)`;
+    };
+
+    this._unsubcribeFromPostRender = this.facadeMap_.getMapImpl()
+      .scene.postRender.addEventListener(this.saveHeading);
+
+    // Registro eventos
     if (this.useTouch) {
       this.svgExterior.addEventListener('touchstart', this.handleExteriorMouseDown);
       this.svgGiroscopio.addEventListener('touchstart', this.handleGiroscopioMouseDown);
@@ -450,11 +458,6 @@ class Movement extends Control {
 
       const currentCameraAngle = -camera.heading;
       camera.rotateRight(newCameraAngle - currentCameraAngle);
-      const headingDeg = CesiumMath.toDegrees(
-        this.facadeMap_.getMapImpl().scene.camera.heading,
-      );
-      const exteriorElement = compassElement;
-      exteriorElement.style.transform = `rotate(${-headingDeg}deg)`;
 
       if (defined(this.rotateFrame)) {
         camera.lookAtTransform(oldTransform);
@@ -563,6 +566,11 @@ class Movement extends Control {
     this.panel.querySelector('#m-movement-giroscopio')
       .removeEventListener('dblclick', this.handleResetView);
     this.panel.querySelector('#m-movement-help').removeEventListener('click', this.handleClickHelp);
+
+    if (this._unsubcribeFromPostRender) {
+      this._unsubcribeFromPostRender();
+      this._unsubcribeFromPostRender = undefined;
+    }
     super.destroy();
   }
 }

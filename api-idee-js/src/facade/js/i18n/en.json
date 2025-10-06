@@ -115,6 +115,13 @@
       "text2": "Select the inner circle and slowly drag it to either side to tilt and/or rotate the map.",
       "text3": "Also, if you double click you return to the initial view.",
       "text4": "Additionally, if you hold the CTRL key and drag on the map, you can tilt or rotate the map."
+    },
+    "textHelp": {
+      "text1": "This tool allows you to move and control the camera in a 3D environment, exploring the map from different angles.",
+      "text2": "To rotate the map 360º, click and drag the outer circular ring around the control.",
+      "text3": "To tilt and/or rotate the map, select the inner circle and drag it in any direction. You can also hold the CTRL key and drag the map to achieve the same effect.",
+      "text4": "Double-click the inner circle to quickly return to the initial view.",
+      "text5": "If you need help, click the '?' button located on the right side of the control to open a panel with detailed instructions."
     }
   },
   "exception": {

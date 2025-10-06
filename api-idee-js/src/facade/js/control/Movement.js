@@ -3,6 +3,7 @@
  */
 import MovementImpl from 'impl/control/Movement';
 import movementTemplate from 'templates/movement';
+import myhelp from 'templates/movementhelp';
 import 'assets/css/controls/movement';
 import { getValue } from '../i18n/language';
 import ControlBase from './Control';
@@ -64,6 +65,35 @@ class Movement extends ControlBase {
   }
 
   /**
+    * Obtiene la ayuda del control
+    *
+    * @function
+    * @public
+    * @api
+    */
+  getHelp() {
+    const textHelp = getValue('movement').textHelp;
+    return {
+      title: Movement.NAME,
+      content: new Promise((success) => {
+        const html = compileTemplate(myhelp, {
+          vars: {
+            urlImages: 'https://componentes.idee.es/estaticos/imagenes/controles',
+            translations: {
+              help1: textHelp.text1,
+              help2: textHelp.text2,
+              help3: textHelp.text3,
+              help4: textHelp.text4,
+              help5: textHelp.text5,
+            },
+          },
+        });
+        success(html);
+      }),
+    };
+  }
+
+  /**
    * Esta función comprueba si un objeto es igual
    * a este control.
    *
@@ -76,6 +106,17 @@ class Movement extends ControlBase {
   equals(obj) {
     const equals = (obj instanceof Movement);
     return equals;
+  }
+
+  /**
+   * Esta función destruye este control y limpia el HTML.
+   *
+   * @public
+   * @function
+   * @api stable
+   */
+  destroy() {
+    this.getImpl().destroy();
   }
 }
 

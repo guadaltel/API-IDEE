@@ -142,7 +142,7 @@ button.m-movement-help-close.g-cartografia-cancelar:before {
   margin-bottom: 12px;
 }
 
-.m-movement-help-option .dot {
+.m-movement-help-option .m-movement-dot {
   width: 43px;
 }
 
@@ -156,7 +156,7 @@ button.m-movement-help-close.g-cartografia-cancelar:before {
   margin-top: 8px;
 }
 
-.m-movement-help-ctrl .key {
+.m-movement-help-ctrl .m-movement-key {
   color: #524F4F;
   background: white;
   font-weight: bold;

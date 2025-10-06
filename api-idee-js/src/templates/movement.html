@@ -3,24 +3,24 @@
     <button id="m-movement-help" class="m-movement-help-button" title="{{title_help}}">?</button>
     <svg class="m-movement-background-exterior" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <mask id="hole">
+        <mask id="m-movement-hole">
           <rect width="64" height="64" fill="white"/>
           <circle cx="32" cy="32" r="20" fill="black"/>
         </mask>
       </defs>
-      <circle cx="32" cy="32" r="30"  mask="url(#hole)"/>
+      <circle cx="32" cy="32" r="30"  mask="url(#m-movement-hole)"/>
     </svg>
     <div class="m-movement-rotation-maker">
       <svg class="m-movement-svgPath-svg" width="64" height="64" viewBox="0 0 64 64">
         <defs>
-          <mask id="donut-mask">
+          <mask id="m-movement-donut-mask">
             <rect width="64" height="64" fill="white"/>
             <circle cx="32" cy="32" r="20" fill="black"/>
           </mask>
         </defs>
         <path
           d="M32,32 L32,2 A30,30 0 0,1 58,16 L32,32 Z"
-          mask="url(#donut-mask)"
+          mask="url(#m-movement-donut-mask)"
         />
       </svg>
     </div>
@@ -35,7 +35,7 @@
     <div class="m-movement-help-section">
       <div class="m-movement-help-option">
         <div>
-          <img class="dot" src="../facade/assets/images/girar-vista.svg">
+          <img class="m-movement-dot" src="../facade/assets/images/girar-vista.svg">
         </div>
         <div>
           <b>{{title1}}</b>
@@ -44,7 +44,7 @@
       </div>
       <div class="m-movement-help-option">
         <div>
-          <img class="dot" src="../facade/assets/images/inclinar-vista.svg">
+          <img class="m-movement-dot" src="../facade/assets/images/inclinar-vista.svg">
         </div>
         <div>
           <b>{{title2}}</b>
@@ -54,7 +54,7 @@
       </div>
       <div class="m-movement-help-ctrl">
         <div>
-          <span class="key">CTRL</span>
+          <span class="m-movement-key">CTRL</span>
         </div>
         <p>{{text4}}</p>
       </div>

@@ -116,6 +116,13 @@
       "text2": "Selecciona el círculo interior y arrastralo lentamente hacia cualquier lado para inclinar y/o girar el mapa.",
       "text3": "También, si haces doble click vuelves a la vista inicial.",
       "text4": "Además si bloqueas la tecla CTRL y arrastras sobre el mapa, puedes inclinar o girar el mapa."
+    },
+    "textHelp": {
+      "text1": "Esta herramienta te permite mover y controlar la cámara en un entorno 3D, explorando el mapa desde diferentes ángulos.",
+      "text2": "Para rotar el mapa 360º, haz clic y arrastra el anillo circular exterior alrededor del control.",
+      "text3": "Para inclinar y/o girar el mapa, selecciona el círculo interior y arrástralo en cualquier dirección. También puedes mantener pulsada la tecla CTRL y arrastrar el mapa para lograr el mismo efecto.",
+      "text4": "Haz doble clic en el círculo interior para volver rápidamente a la vista inicial.",
+      "text5": "Si necesitas ayuda, pulsa el botón '?' ubicado a la derecha del control para abrir un panel con instrucciones detalladas."
     }
   },
   "exception": {
