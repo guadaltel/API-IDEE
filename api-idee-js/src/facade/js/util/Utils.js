@@ -668,7 +668,7 @@ export const includes = (array, searchElement, fromIndex) => {
  * Esta función extiende los prototipos de un objeto.
  * @function
  * @param {Object} targetParam Objeto.
- * @param {Object} source Donde se encuentra el prototipo.
+ * @param {Object} source Atributos para extender el objeto.
  * @param {Boolean} override Sobreescribir el prototipo (verdadero o falso).
  * @returns {Object} Objeto extendido.
  * @api
@@ -802,7 +802,7 @@ export const rgbaToHex = (rgbaColor) => {
  *
  * @function
  * @param {String} rgbaColor Color RGBA.
- * @returns {String} Opacidad.
+ * @returns {Number} Opacidad.
  * @api
  */
 export const getOpacityFromRgba = (rgbaColor) => {
@@ -972,8 +972,8 @@ export const setEquals = (array, array2) => {
  *
  * @public
  * @function
- * @param {Object} destParam Parámetro.
- * @param {Object} src Objeto con los índices.
+ * @param {Object} destParam Objeto para extender.
+ * @param {Object} src Objeto atributos a extender.
  * @returns {Object} Objeto extendido.
  * @api
  */
@@ -998,7 +998,8 @@ export const extendsObj = (destParam = {}, src = {}) => {
 };
 
 /**
- * Esta función devuelve una matriz con intervalos entre el principio y el final de dicha matriz.
+ * Esta función devuelve una matriz con valores intermedios
+ * entre el principio y el final de dicha matriz.
  * @function
  * @public
  * @param {Array} array Matriz.
@@ -1035,8 +1036,8 @@ export const styleComparator = (style, style2) => {
  * Esta función devuelve una imagen para comparar su tamaño.
  * @function
  * @public
- * @param {String} url URL.
- * @return {String} Promesa, url de la imagen.
+ * @param {String} url URL de la imagen.
+ * @return {Promise} Promesa con el HTML de la imagen.
  * @api
  */
 export const getImageSize = (url) => {
@@ -1051,8 +1052,8 @@ export const getImageSize = (url) => {
  * Esta función convierte funciones en cadenas de texto.
  * @function
  * @public
- * @param {Object} objParam Objeto con función.
- * @return {Object} Devuelve las funciones.
+ * @param {Function} objParam Función.
+ * @return {String} Devuelve la función como cadena de texto.
  * @api
  */
 export const stringifyFunctions = (objParam) => {
@@ -1079,11 +1080,11 @@ export const stringifyFunctions = (objParam) => {
 };
 
 /**
- * Esta función crea funciones dentro de cadenas.
+ * Esta función genera una función a partir de una cadena de texto.
  * @function
  * @public
  * @param {String} objParam Cadena con la función.
- * @return {Object} Objeto con la función.
+ * @return {Function} Función.
  * @api
  */
 export const defineFunctionFromString = (objParam) => {
@@ -1196,14 +1197,13 @@ export const setDynamicLegend = (legend) => {
 };
 
 /**
- * Esta función dibuja en un "canvas" que es dinámico.
+ * Esta función devuelve la leyenda dinamica establecida.
  * @function
  * @public
- * @param {HTMLCanvasElement} canvas "Canvas".
- * @return {String} Devuelve el valor de "dynamicLegend".
+ * @return {URL} Devuelve el valor de "dynamicLegend".
  * @api
  */
-export const drawDynamicStyle = (canvas) => {
+export const drawDynamicStyle = () => {
   return dynamicLegend;
 };
 
@@ -1212,7 +1212,7 @@ export const drawDynamicStyle = (canvas) => {
  * de los alcances proporcionados por el usuario.
  * @function
  * @public
- * @param {Array<Array<Number>>} extents Extensión.
+ * @param {Array<Array<Number>>} extents Array de arrays de extensiones.
  * @return {Array<Number>} Alcance.
  * @api
  */
@@ -1308,8 +1308,8 @@ export const getUint8ArrayFromData = (data) => {
 };
 
 /**
- * Esta función lee un JSON.
- * @param {Object} file JSON.
+ * Esta función lee un fichero JSON.
+ * @param {File} file Fichero JSON.
  * @return {Promise<Object>} Devuelve una promesa con el JSON leído.
  */
 export const readJSON = (file) => {
@@ -1331,8 +1331,8 @@ export const readJSON = (file) => {
  * Esta función obtiene un array de escala de colores en formato hexadecimal.
  * @function
  * @public
- * @param {String} colors Colores.
- * @param {String} numberClasses Número de colores.
+ * @param {Array<String>} colors Colores.
+ * @param {Number} numberClasses Número de colores.
  * @return {Array<string>} Escala de colores en formato hexadecimal.
  * @api
  */
@@ -1543,7 +1543,7 @@ export const draggabillyElement = (elem, handleEl, containmentEl = 'body') => {
  *
  * @function
  * @param {String} className Clase del elemento HTML.
- * @param {Array<Number>} position Coordenadas del elemento HTML.
+ * @param {Map} map Elemento mapa donde buscar el elemento.
  * @returns {Array<Number>} Posición del elemento HTML.
  * @api
  */
