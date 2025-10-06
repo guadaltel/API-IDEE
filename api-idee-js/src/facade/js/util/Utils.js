@@ -1160,8 +1160,8 @@ export const replaceNode = (newNode, oldNode) => {
  * Esta función devuelve verdadero si algún valor de objeto es función o "{{*}}".
  * @function
  * @public
- * @param {Object} obj Valor.
- * @param {Array<String>} namesToSkip Nombres a omitir.
+ * @param {Object} obj Objeto con los valores.
+ * @param {Array<String>} namesToSkip Nombres de atributos omitir.
  * @return {Boolean} Verdadero si algún valor de objeto es función o "{{*}}".
  * @api
  */
@@ -1241,11 +1241,10 @@ export const getEnvolvedExtent = (extents) => {
 
 /**
  * Esta función transforma "bytes" a Base64.
- * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
  * @public
  * @function
  * @param {Array} bytes Matriz con "bytes".
- * @param {String} format Formato de la imagen, por defecto image/png.
+ * @param {String} format Formato de salida, por defecto image/png.
  * @return {String} Base64.
  * @api
  */
