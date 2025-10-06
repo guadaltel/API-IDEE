@@ -210,7 +210,6 @@ test.describe('IDEE.layer.WMS', () => {
         });
         window.wms_002 = wms_002;
       });
-      await page.evaluate(() => window.wms_002.setVisible(true));
       await page.evaluate(() => {
         return new Promise((resolve) => {
           let count = 0;
@@ -225,6 +224,7 @@ test.describe('IDEE.layer.WMS', () => {
           window.map.addLayers([wms_001, wms_002]);
         });
       });
+      await page.evaluate(() => window.wms_002.setVisible(true));
       await page.waitForTimeout(5000);
       await expect(page).toHaveScreenshot('snapshot.png', { maxDiffPixelRatio: 0.5 });
     });

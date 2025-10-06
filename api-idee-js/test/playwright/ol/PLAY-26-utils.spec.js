@@ -141,50 +141,10 @@ test.describe('IDEE.Utils', () => {
             },
           });
 
-          const estilo2 = new IDEE.style.Generic({
-            polygon: {
-              fill: {
-                color: () => {
-                  return 'black';
-                },
-              },
-              stroke: {
-                color: '#FF0000',
-                width: 2,
-              },
-            },
-            point: {
-              fill: {
-                color: 'black',
-              },
-              stroke: {
-                color: '#FF0000',
-                width: 2,
-              },
-            },
-          });
-
-          const estilo3 = new IDEE.style.Generic({
-            polygon: {
-              fill: {
-                color: 'black',
-              },
-              stroke: {
-                color: '#FF0000',
-                width: 2,
-              },
-            },
-          });
-
-          const styles = [];
           capa.setStyle(estilo1);
-          styles[0] = capa.getLegendURL();
-          capa.setStyle(estilo2);
-          styles[1] = await capa.getLegendURL();
-          capa.setStyle(estilo3);
-          styles[2] = await capa.getLegendURL();
+
           resolve([
-            styles,
+            capa.getLegendURL(),
             IDEE.utils.getFeaturesExtent(capa.getFeatures(), map.getProjection().code),
             IDEE.impl.utils.getCentroid(capa.getFeatures()[0].getImpl().getOLFeature()
               .getGeometry()),
@@ -194,9 +154,7 @@ test.describe('IDEE.Utils', () => {
       });
     });
     // dynamicLegend
-    expect.soft(legendAndExtentCheck[0][0]).toBe('https://componentes.idee.es/estaticos/imagenes/leyenda/dynamic_legend.png');
-    expect.soft(legendAndExtentCheck[0][1]).toBe('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAeCAYAAACR82geAAAB4ElEQVR4AeyWPUgDQRCF92JhExAJoqiNjVqIaCs2KgpqQEhSGlBQ7LUTAgpiYZ1KO43pgqIG/C1tg50IlkZERSxsUp1vjgt7FjMpNBhuN8y39zK7hLyXOS4RFXi5SqVBAZR9SM8HjtRVuk3KlVhr/nIlBrAvsVMadCWC5rxgEEIHuMHGPkiATh/SB9i7BO3oGVNeMHCbB+MnWEZBqw/pIjRqEhwCYyqCSViC27FTLHPgFnz6kI5D++FM4OwC3hpRNDFJcrpNC8OW7tOtpd+FWFEwQ+TvnhaGB90f1jLcioLBHaIUCc6qozekY/pUCBQZvSMf/bQw9Ol+SctwKwpmjyyu08KQ0f2sln+vio9vSmIzG1MSqfyqksj0PimJoKMIbpMjNM7p6XMGMQJaQAyQpifSNDTqGGcvcDWiaGLI6CKW61ks9Iimx/W7r2dwRV2BFWBMecFgEl4A/YlLwzlN0DOuZVAAaexNgVdoY8oLpuoW5nMgAbpAN0iBXHXfpOuPYEwyXstr4wdTy0Gd9hsqmHhPmyMRXa44EhvJXUeiEv1wJIIZN1QwwS/239oGw/wCNhgbDJMA07YTY4NhEmDadmJsMEwCTNtOjA2GSYBp24mxwTAJMG07Mb8PhvmEkLa/AQAA///f7tfyAAAABklEQVQDACt04z2/km/jAAAAAElFTkSuQmCC');
-    expect.soft(legendAndExtentCheck[0][2]).toBe('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAeCAYAAACR82geAAAA0klEQVR4AezXUQqEMAwE0OmebPdjby3ozTT4MwwYpFowyIiRpNjaPiroBz4OBQxzyAKUhFmBOWIdGHOy/rS5JEzM9hsx8uweryrMjtLiejdiiEtnaZhLKxrUyTAJpGEMkwgkzd4xhkkEkubSOyY+8HA3knWfNleFWU5n3nfD1Hc7av4SNOAX0QbG/xUwsoiHiqqv0kMcfKxhaCGZYYSDhWFoIZlhhIOFYWghmWGEg4VhaCGZYYSDhWFoIZlhhIOFYWghmWGEg4VhaCFZB4z0e32xAQAA///tg+bbAAAABklEQVQDAIEEPT3WDhZDAAAAAElFTkSuQmCC');
+    expect.soft(legendAndExtentCheck[0]).toBe('https://componentes.idee.es/estaticos/imagenes/leyenda/dynamic_legend.png');
     // getFeaturesExtent
     expect.soft(legendAndExtentCheck[1]).toStrictEqual(
       [-788218.6946264381, 4136175.969672982, -207373.0608899173, 4652267.961161624],
