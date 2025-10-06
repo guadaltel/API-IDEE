@@ -209,8 +209,6 @@ test.describe('IDEE.layer.WMS', () => {
           isBase: true,
         });
         window.wms_002 = wms_002;
-
-        window.map.addLayers([wms_001, wms_002]);
       });
       await page.evaluate(() => window.wms_002.setVisible(true));
       await page.evaluate(() => {
