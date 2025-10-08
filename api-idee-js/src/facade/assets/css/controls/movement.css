@@ -154,6 +154,7 @@ button.m-movement-help-close.g-cartografia-cancelar:before {
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .m-movement-help-ctrl .m-movement-key {
@@ -169,4 +170,23 @@ button.m-movement-help-close.g-cartografia-cancelar:before {
 .m-movement-help-ctrl p {
   font-size: 13px;
   margin: 0;
+}
+
+#m-movement-help-not-show-btn {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.m-movement-help-not-show-span {
+  display: block;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  color: rgb(53, 167, 196);
+  font-size: 13px;
+  line-height: normal;
 }

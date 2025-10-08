@@ -123,7 +123,8 @@
       "text3": "Para inclinar y/o girar el mapa, selecciona el círculo interior y arrástralo en cualquier dirección. También puedes mantener pulsada la tecla CTRL y arrastrar el mapa para lograr el mismo efecto.",
       "text4": "Haz doble clic en el círculo interior para volver rápidamente a la vista inicial.",
       "text5": "Si necesitas ayuda, pulsa el botón '?' ubicado a la derecha del control para abrir un panel con instrucciones detalladas."
-    }
+    },
+    "close_not_show_help": "Cerrar y no mostrar de nuevo"
   },
   "exception": {
     "addto_method": "La implementación usada no posee el método addTo",

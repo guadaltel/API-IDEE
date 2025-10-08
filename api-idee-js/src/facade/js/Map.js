@@ -3065,6 +3065,7 @@ class Map extends Base {
                     if (bbox.length === 4) {
                       paramsMovement.viewInitial = bbox;
                     }
+                    if (p === 'false') paramsMovement.help = false;
                   }
                 });
                 control = new Movement(paramsMovement);

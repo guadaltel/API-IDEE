@@ -23,6 +23,10 @@ class Movement extends ControlBase {
    * Constructor principal de la clase. Crea un control de movimiento 3D.
    *
    * @constructor
+   * @param {Object} options Opciones del control.
+   * - viewInitial: Vista inicial.
+   * - help: Indica si se muestra la ayuda al crear el control.
+   * Por defecto, verdadero.
    * @api
    */
   constructor(options = {}) {
@@ -31,11 +35,18 @@ class Movement extends ControlBase {
       Exception(getValue('exception').movement_method);
     }
 
+    const opts = {
+      help: isNullOrEmpty(options.help) || isUndefined(options.help) ? true : options.help,
+      ...options,
+    };
+
     // implementation of this control
-    const impl = new MovementImpl(options);
+    const impl = new MovementImpl(opts);
 
     // calls the super constructor
     super(impl, Movement.NAME);
+
+    this.help = opts.help;
   }
 
   /**
@@ -60,6 +71,8 @@ class Movement extends ControlBase {
         text2: textHelp.text2,
         text3: textHelp.text3,
         text4: textHelp.text4,
+        showHelp: this.help,
+        close_not_show_help: getValue('movement').close_not_show_help,
       },
     });
   }

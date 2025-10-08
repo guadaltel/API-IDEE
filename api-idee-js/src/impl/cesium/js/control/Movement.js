@@ -33,12 +33,15 @@ class Movement extends Control {
    * @constructor
    * @param {Object} options Opciones del control.
    * - viewInitial: Vista inicial.
+   * - help: Indica si se muestra la ayuda al crear el control.
+   * Por defecto, verdadero.
    * @api stable
    */
   constructor(options = {}) {
     super();
 
     this.viewInitial = options.viewInitial;
+    this.showHelp = options.help;
 
     this.handleExteriorMouseDown = (e) => this.handleMouseDown('exterior', e);
     this.handleGiroscopioMouseDown = (e) => this.handleMouseDown('giroscopio', e);
@@ -64,6 +67,7 @@ class Movement extends Control {
     this.rotateIsLook = false;
 
     this.boundCloseHelp = this.closeHelp.bind(this);
+    this.boundNotShowHelp = this.notShowHelp.bind(this);
 
     this.saveHeading = undefined;
     this.isInitial = true;
@@ -125,7 +129,10 @@ class Movement extends Control {
     }
 
     this.panel.querySelector('#m-movement-giroscopio').addEventListener('dblclick', this.handleResetView);
-    this.panel.querySelector('#m-movement-help').addEventListener('click', this.handleClickHelp);
+
+    if (this.showHelp) {
+      this.panel.querySelector('#m-movement-help').addEventListener('click', this.handleClickHelp);
+    }
   }
 
   /**
@@ -138,6 +145,8 @@ class Movement extends Control {
    * @api
    */
   handleMouseDown(name, e) {
+    e.stopPropagation();
+    e.preventDefault();
     const clientX = this.useTouch && e.touches && e.touches.length > 0
       ? e.touches[0].clientX : e.clientX;
     const clientY = this.useTouch && e.touches && e.touches.length > 0
@@ -510,16 +519,16 @@ class Movement extends Control {
    *
    * @function
    * @public
-   * @param {MouseEvent} e Evento.
    * @api
    */
-  handleClickHelp(e) {
+  handleClickHelp() {
     const isOpen = this.panel.querySelector('.m-movement-help-container').style.display
       && this.panel.querySelector('.m-movement-help-container').style.display === 'block';
 
     if (!isOpen) {
       this.panel.querySelector('.m-movement-help-container').style.display = 'block';
       this.panel.querySelector('.m-movement-help-close').addEventListener('click', this.boundCloseHelp);
+      this.panel.querySelector('#m-movement-help-not-show-btn').addEventListener('click', this.boundNotShowHelp);
     }
   }
 
@@ -532,7 +541,21 @@ class Movement extends Control {
    */
   closeHelp() {
     this.panel.querySelector('.m-movement-help-close').removeEventListener('click', this.boundCloseHelp);
+    this.panel.querySelector('#m-movement-help-not-show-btn').removeEventListener('click', this.boundNotShowHelp);
     this.panel.querySelector('.m-movement-help-container').style.display = 'none';
+  }
+
+  /**
+   * Elimina la ayuda del control y no la vuelve a mostrar.
+   *
+   * @function
+   * @public
+   * @api
+   */
+  notShowHelp() {
+    this.closeHelp();
+    this.panel.querySelector('#m-movement-help').removeEventListener('click', this.handleClickHelp);
+    this.panel.querySelector('.m-movement-help-button').style.display = 'none';
   }
 
   /**
@@ -565,7 +588,10 @@ class Movement extends Control {
     }
     this.panel.querySelector('#m-movement-giroscopio')
       .removeEventListener('dblclick', this.handleResetView);
-    this.panel.querySelector('#m-movement-help').removeEventListener('click', this.handleClickHelp);
+
+    if (this.panel.querySelector('#m-movement-help')) {
+      this.notShowHelp();
+    }
 
     if (this._unsubcribeFromPostRender) {
       this._unsubcribeFromPostRender();

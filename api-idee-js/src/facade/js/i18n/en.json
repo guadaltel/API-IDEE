@@ -122,7 +122,8 @@
       "text3": "To tilt and/or rotate the map, select the inner circle and drag it in any direction. You can also hold the CTRL key and drag the map to achieve the same effect.",
       "text4": "Double-click the inner circle to quickly return to the initial view.",
       "text5": "If you need help, click the '?' button located on the right side of the control to open a panel with detailed instructions."
-    }
+    },
+    "close_not_show_help": "Close and don't show again"
   },
   "exception": {
     "addto_method": "The used implementation does not have the addTo method",
