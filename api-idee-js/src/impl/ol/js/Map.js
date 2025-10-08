@@ -478,21 +478,21 @@ class Map extends MObject {
     });
 
     if (knowLayers.length > 0) {
-      this.removeWMC(knowLayers);
-      this.removeKML(knowLayers);
-      this.removeWMS(knowLayers);
-      this.removeGeoTIFF(knowLayers);
-      this.removeMapLibre(knowLayers);
-      this.removeWFS(knowLayers);
-      this.removeOGCAPIFeatures(knowLayers);
-      this.removeWMTS(knowLayers);
-      this.removeMVT(knowLayers);
-      this.removeMBTiles(knowLayers);
-      this.removeMBTilesVector(knowLayers);
-      this.removeXYZ(knowLayers);
-      this.removeTMS(knowLayers);
+      this.removeWMC(knowLayers, true);
+      this.removeKML(knowLayers, true);
+      this.removeWMS(knowLayers, true);
+      this.removeGeoTIFF(knowLayers, true);
+      this.removeMapLibre(knowLayers, true);
+      this.removeWFS(knowLayers, true);
+      this.removeOGCAPIFeatures(knowLayers, true);
+      this.removeWMTS(knowLayers, true);
+      this.removeMVT(knowLayers, true);
+      this.removeMBTiles(knowLayers, true);
+      this.removeMBTilesVector(knowLayers, true);
+      this.removeXYZ(knowLayers, true);
+      this.removeTMS(knowLayers, true);
       this.removeLayerGroups(knowLayers);
-      this.removeGeoPackageTile(knowLayers);
+      this.removeGeoPackageTile(knowLayers, true);
     }
 
     if (unknowLayers.length > 0) {
@@ -862,11 +862,12 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.WMC>} layers Capas WMC a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeWMC(layers) {
+  removeWMC(layers, suppressEvent = false) {
     const wmcMapLayers = this.getWMC(layers);
     wmcMapLayers.forEach((wmcLayer) => {
       if (wmcLayer.selected === true && wmcLayer.isLoaded() === false) {
@@ -882,6 +883,10 @@ class Map extends MObject {
       this.facadeMap_.refreshWMCSelectorControl();
       wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
     }, this);
+
+    if (!suppressEvent && wmcMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmcMapLayers]);
+    }
 
     return this;
   }
@@ -971,17 +976,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.KML>} layers Capas KML a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeKML(layers) {
+  removeKML(layers, suppressEvent = false) {
     const kmlMapLayers = this.getKML(layers);
     kmlMapLayers.forEach((kmlLayer) => {
       this.layers_ = this.layers_.filter((layer) => !kmlLayer.equals(layer));
       kmlLayer.getImpl().destroy();
       kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
     }, this);
+
+    if (!suppressEvent && kmlMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [kmlMapLayers]);
+    }
 
     return this;
   }
@@ -1091,17 +1101,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<FacadeWMS>} layers Capas WMS a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeWMS(layers) {
+  removeWMS(layers, suppressEvent = false) {
     const wmsMapLayers = this.getWMS(layers);
     wmsMapLayers.forEach((wmsLayer) => {
       wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
       this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
       wmsLayer.getImpl().destroy();
     });
+
+    if (!suppressEvent && wmsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmsMapLayers]);
+    }
 
     return this;
   }
@@ -1277,17 +1292,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.WFS>} layers Capas WFS a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeWFS(layers) {
+  removeWFS(layers, suppressEvent = false) {
     const wfsMapLayers = this.getWFS(layers);
     wfsMapLayers.forEach((wfsLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(wfsLayer));
       wfsLayer.getImpl().destroy();
       wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
     });
+
+    if (!suppressEvent && wfsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wfsMapLayers]);
+    }
 
     return this;
   }
@@ -1397,17 +1417,22 @@ class Map extends MObject {
  *
  * @function
  * @param {Array<IDEE.layer.GeoTIFF>} layers Capas GeoTIFF a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
  * @returns {Map} Mapa.
  * @public
  * @api
  */
-  removeGeoTIFF(layers) {
+  removeGeoTIFF(layers, suppressEvent = false) {
     const geotiffMapLayers = this.getGeoTIFF(layers);
     geotiffMapLayers.forEach((geotiffLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(geotiffLayer));
       geotiffLayer.getImpl().destroy();
       geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
     });
+
+    if (!suppressEvent && geotiffMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [geotiffMapLayers]);
+    }
 
     return this;
   }
@@ -1510,17 +1535,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.OGCAPIFeatures>} layers Capas OGCAPIFeatures a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeOGCAPIFeatures(layers) {
+  removeOGCAPIFeatures(layers, suppressEvent = false) {
     const ogcapifMapLayers = this.getOGCAPIFeatures(layers);
     ogcapifMapLayers.forEach((ogcapifLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(ogcapifLayer));
       ogcapifLayer.getImpl().destroy();
       ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
     });
+
+    if (!suppressEvent && ogcapifMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [ogcapifMapLayers]);
+    }
 
     return this;
   }
@@ -1615,17 +1645,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.WMTS>} layers Capas WMTS a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeWMTS(layers) {
+  removeWMTS(layers, suppressEvent = false) {
     const wmtsMapLayers = this.getWMTS(layers);
     wmtsMapLayers.forEach((wmtsLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(wmtsLayer));
       wmtsLayer.getImpl().destroy();
       wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
     });
+
+    if (!suppressEvent && wmtsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmtsMapLayers]);
+    }
 
     return this;
   }
@@ -1713,17 +1748,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.MBTiles>} layers Capas MBTiles a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeMBTiles(layers) {
+  removeMBTiles(layers, suppressEvent = false) {
     const mbtilesMapLayers = this.getMBTiles(layers);
     mbtilesMapLayers.forEach((mbtilesLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
       mbtilesLayer.getImpl().destroy();
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
+
+    if (!suppressEvent && mbtilesMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mbtilesMapLayers]);
+    }
 
     return this;
   }
@@ -1808,17 +1848,22 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.MBTilesVector>} layers Capas MBTilesVector a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  removeMBTilesVector(layers) {
+  removeMBTilesVector(layers, suppressEvent = false) {
     const mbtilesMapLayers = this.getMBTilesVector(layers);
     mbtilesMapLayers.forEach((mbtilesLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
       mbtilesLayer.getImpl().destroy();
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
+
+    if (!suppressEvent && mbtilesMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mbtilesMapLayers]);
+    }
     return this;
   }
 
@@ -1981,18 +2026,21 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.MVT>} layers Capas MVT a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {IDEE.impl.Map} Mapa.
    * @public
    * @api
    */
-  removeMVT(layers) {
+  removeMVT(layers, suppressEvent = false) {
     const mvtLayers = this.getMVT(layers);
     mvtLayers.forEach((mvtLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mvtLayer));
       mvtLayer.getImpl().destroy();
       mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
     });
-
+    if (!suppressEvent && mvtLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mvtLayers]);
+    }
     return this;
   }
 
@@ -2071,18 +2119,21 @@ class Map extends MObject {
      *
      * @function
      * @param {Array<IDEE.layer.MapLibre>} layers Capas MapLibre a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
      * @returns {IDEE.impl.Map} Mapa.
      * @public
      * @api
      */
-  removeMapLibre(layers) {
+  removeMapLibre(layers, suppressEvent = false) {
     const mapLibreLayers = this.getMapLibre(layers);
     mapLibreLayers.forEach((mapLibreLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mapLibreLayer));
       mapLibreLayer.getImpl().destroy();
       mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
     });
-
+    if (!suppressEvent && mapLibreLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mapLibreLayers]);
+    }
     return this;
   }
 
@@ -2177,18 +2228,21 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.XYZ>} layers Capas XYZ a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {IDEE.impl.Map} Mapa.
    * @public
    * @api
    */
-  removeXYZ(layers) {
+  removeXYZ(layers, suppressEvent = false) {
     const xyzMapLayers = this.getXYZs(layers);
     xyzMapLayers.forEach((xyzLayer) => {
       xyzLayer.getImpl().destroy();
       this.layers_ = this.layers_.filter((layer) => !layer.equals(xyzLayer));
       xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
     });
-
+    if (!suppressEvent && xyzMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [xyzMapLayers]);
+    }
     return this;
   }
 
@@ -2269,18 +2323,21 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.TMS>} layers Capas TMS a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {IDEE.impl.Map} Mapa.
    * @public
    * @api
    */
-  removeTMS(layers) {
+  removeTMS(layers, suppressEvent = false) {
     const tmsMapLayers = this.getTMS(layers);
     tmsMapLayers.forEach((tmsLayer) => {
       tmsLayer.getImpl().destroy();
       this.layers_ = this.layers_.filter((layer) => !layer.equals(tmsLayer));
       tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
     });
-
+    if (!suppressEvent && tmsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [tmsMapLayers]);
+    }
     return this;
   }
 
@@ -2357,18 +2414,21 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<IDEE.layer.GeoPackageTile>} layers Capas GeoPackageTile a eliminar.
+   * @param {boolean} [suppressEvent=false] Suprime el evento IDEE.evt.REMOVED_LAYER.
    * @returns {IDEE.impl.Map} Mapa.
    * @public
    * @api
    */
-  removeGeoPackageTile(layers) {
+  removeGeoPackageTile(layers, suppressEvent = false) {
     const tileLayers = this.getGeoPackageTile(layers);
     tileLayers.forEach((tileLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(tileLayer));
       tileLayer.getImpl().destroy();
       tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
     });
-
+    if (!suppressEvent && tileLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [tileLayers]);
+    }
     return this;
   }
 
