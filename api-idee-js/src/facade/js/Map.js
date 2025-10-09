@@ -6,7 +6,7 @@ import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
   isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  concatUrlPaths, escapeJSCode, getEnvolvedExtent, getImageMap,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
@@ -4709,6 +4709,18 @@ class Map extends Base {
       Exception(getValue('exception').no_set_rotation_method);
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
+  }
+
+  /**
+   * Este método devuelve una captura de pantalla del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @returns {String} Imagen en base64
+   */
+  getImageMap() {
+    return getImageMap(this);
   }
 }
 
