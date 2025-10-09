@@ -4710,6 +4710,18 @@ class Map extends Base {
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
   }
+
+  /**
+   * Método que devuelve las capas que no son base añadidas al mapa.
+   *
+   * @function
+   * @returns {Array<Layer>} capas
+   * @api
+   */
+  getOverlayLayers() {
+    const layers = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isBase === false);
+    return layers;
+  }
 }
 
 /**
