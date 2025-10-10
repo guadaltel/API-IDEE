@@ -88,9 +88,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HTTP;
 import org.apache.log4j.Logger;
 
-import es.guadaltel.framework.ticket.Ticket;
-import es.guadaltel.framework.ticket.TicketFactory;
-
 // PATCH import org.apache.log4j.PropertyConfigurator;
 @SuppressWarnings("serial")
 // PATCH
@@ -271,15 +268,8 @@ public void doPost(HttpServletRequest request, HttpServletResponse response) thr
                   if (ticketParameter != null) {
                     ticketParameter = ticketParameter.trim();
                     if (!ticketParameter.isEmpty()) {
-                      Ticket ticket = TicketFactory.createInstance();
                       try {
-                        Map<String, String> props = ticket.getProperties(ticketParameter);
-                        user = props.get("user");
-                        pass = props.get("pass");
-                        String userAndPass = user + ":" + pass;
-                        String encodedLogin = new String(org.apache.commons.codec.binary.Base64
-                          .encodeBase64(userAndPass.getBytes()));
-                        httppost.addHeader(AUTHORIZATION, "Basic " + encodedLogin);
+                    	httppost.addHeader("Authorization", "Bearer " + ticketParameter);
                       } catch (Exception e) {
                         log.info("-------------------------------------------");
                         log.info("EXCEPCTION THROWED BY PROXYREDIRECT CLASS");

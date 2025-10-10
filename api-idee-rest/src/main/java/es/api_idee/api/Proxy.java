@@ -39,8 +39,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import es.guadaltel.framework.ticket.Ticket;
-import es.guadaltel.framework.ticket.TicketFactory;
 import es.api_idee.bean.ProxyResponse;
 import es.api_idee.builder.JSBuilder;
 import es.api_idee.exception.InvalidResponseException;
@@ -193,15 +191,8 @@ public class Proxy {
 		if (ticketParameter != null) {
 			ticketParameter = ticketParameter.trim();
 			if (!ticketParameter.isEmpty()) {
-				Ticket ticket = TicketFactory.createInstance();
 				try {
-					Map<String, String> props = ticket.getProperties(ticketParameter);
-					String user = props.get("user");
-					String pass = props.get("pass");
-					String userAndPass = user + ":" + pass;
-					String encodedLogin = new String(
-							org.apache.commons.codec.binary.Base64.encodeBase64(userAndPass.getBytes()));
-					httpget.setHeader(AUTHORIZATION, "Basic " + encodedLogin);
+					httpget.setHeader("Authorization", "Bearer " + ticketParameter);
 				} catch (Exception e) {
 					System.out.println("-------------------------------------------");
 					System.out.println("EXCEPCTION THROWED BY PROXYREDIRECT CLASS");
