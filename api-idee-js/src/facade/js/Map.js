@@ -6,7 +6,7 @@ import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
   isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  concatUrlPaths, escapeJSCode, getEnvolvedExtent, generateResolutionsFromExtent,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
@@ -4645,6 +4645,32 @@ class Map extends Base {
    */
   isFinished() {
     return this._finishedMap;
+  }
+
+  /**
+   * Establece los niveles de zoom del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Number} zoomLevels Niveles de zoom.
+   */
+  setZoomLevels(zoomLevels) {
+    if (!isUndefined(zoomLevels) && !isNullOrEmpty(zoomLevels)) {
+      this.calculateMaxExtent().then((extent) => {
+        const zoom = this.getZoom();
+        const size = this.getMapImpl().getSize();
+        const units = this.getProjection().units;
+        const resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
+        this.setResolutions(resolutions, true);
+        IDEE.config.ZOOM_LEVELS = zoomLevels;
+        if (zoom < zoomLevels) {
+          this.setZoom(zoom);
+        }
+      }).catch((error) => {
+        throw error;
+      });
+    }
   }
 
   /**
