@@ -4,7 +4,9 @@
 import 'assets/css/controls/rotate';
 import RotateImpl from 'impl/control/Rotate';
 import template from 'templates/rotate';
+import templateCesium from 'templates/rotateCesium';
 import myhelp from 'templates/rotatehelp';
+import myhelpCesium from 'templates/rotatehelpCesium';
 import ControlBase from './Control';
 import { compileSync as compileTemplate } from '../util/Template';
 import { isUndefined, isNullOrEmpty, isObject } from '../util/Utils';
@@ -13,7 +15,7 @@ import { getValue } from '../i18n/language';
 
 /**
  * @classdesc
- * Agrega la funcionalidad para rotar el mapa para que el norte esté arriba.
+ * Agrega la funcionalidad para rotar el mapa.
  *
  * @api
  * @extends {IDEE.Control}
@@ -26,17 +28,24 @@ class Rotate extends ControlBase {
    * @param {String} format Formato de respuesta.
    * @api
    */
-  constructor() {
+  constructor(options = {}) {
     if (isUndefined(RotateImpl) || (isObject(RotateImpl)
       && isNullOrEmpty(Object.keys(RotateImpl)))) {
       Exception(getValue('exception').rotate_method);
     }
 
+    const opts = {
+      help: isNullOrEmpty(options.help) || isUndefined(options.help) ? true : options.help,
+      ...options,
+    };
+
     // implementation of this control
-    const impl = new RotateImpl();
+    const impl = new RotateImpl(opts);
 
     // calls the super constructor
     super(impl, Rotate.NAME);
+
+    this.help = opts.help;
   }
 
   /**
@@ -49,11 +58,34 @@ class Rotate extends ControlBase {
    * @api
    */
   createView(map) {
-    return compileTemplate(template, {
-      vars: {
-        title: getValue('rotate').title,
-      },
-    });
+    this.map = map;
+    let compTemplate;
+
+    if (this.map.getImplementation() === 'cesium') {
+      const textHelp = getValue('rotate').help;
+      compTemplate = compileTemplate(templateCesium, {
+        vars: {
+          title: getValue('rotate').titleCesium,
+          title_help: getValue('rotate').title_help,
+          title_help_container: textHelp.title,
+          title1: textHelp.title1,
+          text1: textHelp.text1,
+          title2: textHelp.title2,
+          text2: textHelp.text2,
+          text3: textHelp.text3,
+          text4: textHelp.text4,
+          showHelp: this.help,
+          close_not_show_help: getValue('rotate').close_not_show_help,
+        },
+      });
+    } else {
+      compTemplate = compileTemplate(template, {
+        vars: {
+          title: getValue('rotate').title,
+        },
+      });
+    }
+    return compTemplate;
   }
 
   /**
@@ -62,8 +94,30 @@ class Rotate extends ControlBase {
    * @function
    * @public
    * @api
-  */
+   */
   getHelp() {
+    if (!isNullOrEmpty(this.map) && this.map.getImplementation() === 'cesium') {
+      const textHelp = getValue('rotate').textHelp;
+      return {
+        title: Rotate.NAME,
+        content: new Promise((success) => {
+          const html = compileTemplate(myhelpCesium, {
+            vars: {
+              urlImages: 'https://componentes.idee.es/estaticos/imagenes/controles',
+              translations: {
+                help1: textHelp.text1,
+                help2: textHelp.text2,
+                help3: textHelp.text3,
+                help4: textHelp.text4,
+                help5: textHelp.text5,
+              },
+            },
+          });
+          success(html);
+        }),
+      };
+    }
+
     const textHelp = getValue('rotate').textHelp;
     return {
       title: Rotate.NAME,
@@ -94,6 +148,17 @@ class Rotate extends ControlBase {
   equals(obj) {
     const equals = (obj instanceof Rotate);
     return equals;
+  }
+
+  /**
+   * Esta función destruye este control y limpia el HTML.
+   *
+   * @public
+   * @function
+   * @api stable
+   */
+  destroy() {
+    this.getImpl().destroy();
   }
 }
 

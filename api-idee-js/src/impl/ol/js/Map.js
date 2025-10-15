@@ -3493,6 +3493,18 @@ class Map extends MObject {
       vendor: evt,
     }]);
   }
+
+  /**
+   * Función que obtiene el nombre de la implementación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {string} Devuelve el nombre de la implementación.
+   */
+  getImplementation() {
+    return 'ol';
+  }
 }
 
 /**

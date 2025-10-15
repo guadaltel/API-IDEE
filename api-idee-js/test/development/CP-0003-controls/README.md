@@ -32,4 +32,4 @@ CP-011
 Control Implementation Switcher
 
 CP-012
-Control Movimiento 3D
+Control Rotate para 3D
