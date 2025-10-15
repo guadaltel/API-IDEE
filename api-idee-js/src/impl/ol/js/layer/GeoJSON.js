@@ -8,7 +8,6 @@ import OLSourceVector from 'ol/source/Vector';
 import { get as getProj } from 'ol/proj';
 import Vector from './Vector';
 import JSONPLoader from '../loader/JSONP';
-// import ImplUtils from '../util/Utils';
 
 /**
  * @classdesc
