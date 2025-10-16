@@ -529,7 +529,7 @@ export const parseViewExtent = (parameter) => {
  * @returns {String} Devuelve el "bgColorContainer".
  * @function
  */
-const parseBGColorContainer = (parameter) => {
+export const parseBGColorContainer = (parameter) => {
   let bgColorContainer;
 
   if (isString(parameter)) {
