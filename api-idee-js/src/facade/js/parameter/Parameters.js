@@ -397,6 +397,26 @@ export const parseTicket = (parameter) => {
 };
 
 /**
+ * Esta funcion obtiene el parametro rotación definido por el usuario.
+ *
+ * @private
+ * @function
+ * @param {string|Mx.parameters.Map} parameter Parámetros.
+ * @returns {String} Devuelve el "ticket".
+ * @api
+ */
+const parseRotation = (parameter) => {
+  let rotation = parameter;
+
+  if (isString(parameter)) {
+    rotation = getParameterValue('rotation', parameter);
+  } else if (isObject(parameter)) {
+    rotation = parameter.rotation;
+  }
+  return rotation;
+};
+
+/**
  * Esta función analiza un parámetro de "zoomConstrains" en un formato legible.
  * parámetro a API-IDEE y chequea posibles errores.
  *
@@ -725,6 +745,13 @@ class Parameters {
      * @api
      */
     this.ticket = parseTicket(userParameters);
+
+    /**
+     * @public
+     * @type {number}
+     * @api
+     */
+    this.rotation = parseRotation(userParameters);
 
     /**
      * @public
