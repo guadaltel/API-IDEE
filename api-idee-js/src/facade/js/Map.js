@@ -4710,6 +4710,33 @@ class Map extends Base {
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
   }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enablePan(active);
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   * @deprecated
+   */
+  enableDrag(active) {
+    this.enablePan(active);
+  }
 }
 
 /**
