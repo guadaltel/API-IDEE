@@ -397,12 +397,15 @@ export const parseTicket = (parameter) => {
 };
 
 /**
- * Esta funcion obtiene el parametro rotación definido por el usuario.
+ * Esta función analiza un parámetro de rotación en un formato legible.
+ * parámetro a API-IDEE y chequea posibles errores.
  *
- * @private
+ * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+ *
+ * @public
  * @function
  * @param {string|Mx.parameters.Map} parameter Parámetros.
- * @returns {String} Devuelve el "ticket".
+ * @returns {String} Devuelve la rotación.
  * @api
  */
 const parseRotation = (parameter) => {
