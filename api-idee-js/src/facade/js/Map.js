@@ -91,6 +91,7 @@ class Map extends Base {
    * - viewExtent: Extensión de la vista.
    * - zoom: Zoom del mapa.
    * - zoomConstrains: Restricciones de zoom.
+   * - rotation: Rotación del mapa.
    * @param { Mx.parameters.MapOptions } options Opciones personalizadas para la implementación
    * proporcionado por el usuario.
    * - verticalExaggeration: Exageración vertical de la escena. Si se establece a 1 no se aplica
@@ -386,6 +387,13 @@ class Map extends Base {
     } else if (IDEE.config.MAX_ZOOM !== '') {
       const maxZoom = Number(IDEE.config.MAX_ZOOM);
       this.setMaxZoom(maxZoom);
+    }
+
+    // rotation
+    if (!isNullOrEmpty(params.rotation)) {
+      this.once(EventType.COMPLETED, () => {
+        this.setRotation(params.rotation);
+      });
     }
 
     // label
