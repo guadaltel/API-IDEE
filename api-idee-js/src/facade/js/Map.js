@@ -4723,6 +4723,33 @@ class Map extends Base {
   enableMouseWheel(active) {
     this.getImpl().enableMouseWheel(active);
   }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enablePan(active);
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   * @deprecated
+   */
+  enableDrag(active) {
+    this.enablePan(active);
+  }
 }
 
 /**

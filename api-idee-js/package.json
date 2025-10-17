@@ -49,7 +49,7 @@
     "@geoblocks/ol-maplibre-layer": "1.0.3",
     "@handlebars/allow-prototype-access": "1.0.5",
     "@ngageoint/geopackage": "4.2.6",
-    "cesium": "1.133.1",
+    "cesium": "1.134.0",
     "chroma-js": "1.4.1",
     "draggabilly": "3.0.0",
     "get-image-colors": "4.0.1",
@@ -94,6 +94,7 @@
     "start:test": "webpack-dev-server --config=webpack-config/webpack.playwright.config.js",
     "start:build": "npm run build && npm run debug:build",
     "test:playwright-ol": "playwright test --config=./playwright-config/playwright-ol.config.js",
+    "test:playwright-ol-slow": "playwright test --config=./playwright-config/playwright-ol-slow.config.js",
     "test:playwright-cesium": "playwright test --config=./playwright-config/playwright-cesium.config.js",
     "test:all": "npm run test:playwright-ol; npm run test:playwright-cesium"
   }
