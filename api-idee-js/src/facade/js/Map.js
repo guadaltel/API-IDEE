@@ -4725,6 +4725,33 @@ class Map extends Base {
   }
 
   /**
+   * Método que devuelve las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {Array<IDEE.Layers>} capas superpuestas.
+   * @api
+   */
+  getOverlayLayers() {
+    const layers = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isBase === false);
+    return layers;
+  }
+
+  /**
+   * Método que elimina todas las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {IDEE.Map} mapa
+   * @api
+   */
+  removeOverlayLayers() {
+    const layers = this.getOverlayLayers();
+    this.removeLayers(layers);
+    return this;
+  }
+    
+  /**
    * Este método permite activar o desactivar la interacción de panneo.
    * El valor por defecto es true.
    *
