@@ -2906,6 +2906,18 @@ class Map extends Base {
   }
 
   /**
+   * @private
+   * @function
+   */
+  addUpClass_(panel) {
+    panel.on(EventType.ADDED_TO_MAP, (html) => {
+      if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
+        this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
+      }
+    });
+  }
+
+  /**
    * Este método agrega controles especificados por el usuario.
    *
    * @public
@@ -2955,11 +2967,7 @@ class Map extends Base {
                     position: Position.BR,
                     order: (paramsScale.order) ? paramsScale.order : null,
                   });
-                  panel.on(EventType.ADDED_TO_MAP, (html) => {
-                    if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                      this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                    }
-                  });
+                  this.addUpClass_(panel);
                 }
                 panel.addClassName('m-with-scale');
                 break;
@@ -2971,11 +2979,7 @@ class Map extends Base {
                   position: Position.BL,
                   tooltip: 'Línea de escala',
                 });
-                panel.on(EventType.ADDED_TO_MAP, (html) => {
-                  if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                    this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                  }
-                });
+                this.addUpClass_(panel);
                 break;
               case Panzoombar.NAME:
                 control = new Panzoombar();
@@ -3048,11 +3052,7 @@ class Map extends Base {
                     position: Position.BR,
                     className: 'm-map-info',
                   });
-                  panel.on(EventType.ADDED_TO_MAP, () => {
-                    if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                      this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                    }
-                  });
+                  this.addUpClass_(panel);
                 }
                 panel.addClassName('m-with-wmcselector');
                 break;
