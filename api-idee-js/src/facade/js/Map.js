@@ -4750,7 +4750,7 @@ class Map extends Base {
     this.removeLayers(layers);
     return this;
   }
-    
+
   /**
    * Este método permite activar o desactivar la interacción de panneo.
    * El valor por defecto es true.
