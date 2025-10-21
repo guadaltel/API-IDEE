@@ -405,10 +405,10 @@ export const parseTicket = (parameter) => {
  * @public
  * @function
  * @param {string|Mx.parameters.Map} parameter Parámetros.
- * @returns {String} Devuelve la rotación.
+ * @returns {Number} Devuelve la rotación.
  * @api
  */
-const parseRotation = (parameter) => {
+export const parseRotation = (parameter) => {
   let rotation = parameter;
 
   if (isString(parameter)) {
@@ -751,7 +751,7 @@ class Parameters {
 
     /**
      * @public
-     * @type {number}
+     * @type {Number}
      * @api
      */
     this.rotation = parseRotation(userParameters);
