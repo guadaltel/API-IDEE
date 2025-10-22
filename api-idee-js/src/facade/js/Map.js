@@ -4726,6 +4726,73 @@ class Map extends Base {
   getImageMap(type = 'image/jpeg', canva = undefined, isPromise = false) {
     return getImageMap(this, type, canva, isPromise);
   }
+  
+  /**
+   * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
+   * El valor por defecto es true
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Boolean} active determina si se activa o desactiva el zoom.
+   */
+  enableMouseWheel(active) {
+    this.getImpl().enableMouseWheel(active);
+  }
+
+  /**
+   * Método que devuelve las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {Array<IDEE.Layers>} capas superpuestas.
+   * @api
+   */
+  getOverlayLayers() {
+    const layers = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isBase === false);
+    return layers;
+  }
+
+  /**
+   * Método que elimina todas las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {IDEE.Map} mapa
+   * @api
+   */
+  removeOverlayLayers() {
+    const layers = this.getOverlayLayers();
+    this.removeLayers(layers);
+    return this;
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enablePan(active);
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   * @deprecated
+   */
+  enableDrag(active) {
+    this.enablePan(active);
+  }
 }
 
 /**
