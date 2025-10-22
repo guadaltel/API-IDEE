@@ -4716,11 +4716,15 @@ class Map extends Base {
    *
    * @function
    * @public
+   * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+   * @param {String} type Formato de la imagen resultante.
+   * @param {HTMLCanvasElement} canva Elemento canvas.
+   * @param {Boolean} isPromise Si tiene que devolver una promesa (MapLibre).
    * @api
    * @returns {String} Imagen en base64
    */
-  getImageMap() {
-    return getImageMap(this);
+  getImageMap(type = 'image/jpeg', canva = undefined, isPromise = false) {
+    return getImageMap(this, type, canva, isPromise);
   }
 }
 
