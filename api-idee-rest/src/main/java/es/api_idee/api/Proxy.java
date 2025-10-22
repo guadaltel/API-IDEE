@@ -7,6 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
@@ -185,7 +187,7 @@ public class Proxy {
 		}
 
 		HttpClient client = clientBuilder.build();
-		HttpGet httpget = new HttpGet(url);
+		HttpGet httpget = new HttpGet(URLDecoder.decode(url, StandardCharsets.UTF_8));
 
 		// sets ticket if the user specified one
 		if (ticketParameter != null) {

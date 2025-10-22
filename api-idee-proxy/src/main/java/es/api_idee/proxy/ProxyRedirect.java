@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -138,7 +139,7 @@ public class ProxyRedirect extends HttpServlet {
 				HttpGet httpget = null;
 
         try {
-          httpget = new HttpGet(url);
+          httpget = new HttpGet(URLDecoder.decode(url, StandardCharsets.UTF_8));
           httpget.setConfig(RequestConfig.custom().setMaxRedirects(numMaxRedirects).build());
 
           HttpResponse httpResponse = client.execute(httpget);
@@ -250,7 +251,7 @@ public void doPost(HttpServletRequest request, HttpServletResponse response) thr
               }
             }
               HttpClient client = clientBuilder.build();
-              httppost = new HttpPost(serverUrl);
+              httppost = new HttpPost(URLDecoder.decode(serverUrl, StandardCharsets.UTF_8));
 
               // PATH_apiideeDITA_SECURITY - AP
               // PATCH_TICKET_MJM-20112405-POST
@@ -399,7 +400,7 @@ public void doPost(HttpServletRequest request, HttpServletResponse response) thr
             httppost.releaseConnection();
           }
         } else {
-          HttpPost pm = new HttpPost(serverUrl);
+          HttpPost pm = new HttpPost(URLDecoder.decode(serverUrl));
           String outputBody;
           HttpClient client = null;
           HttpResponse pmResp = null;
