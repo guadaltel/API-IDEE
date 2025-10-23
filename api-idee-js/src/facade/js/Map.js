@@ -360,7 +360,7 @@ class Map extends Base {
       }
       this.setZoom(zoom, inmeters);
     } else if (isNullOrEmpty(params.bbox)) {
-      this.setZoom(3);
+      this.setZoom(IDEE.config.DEFAULT_ZOOM);
     }
 
     // zoomConstrains
@@ -3703,9 +3703,9 @@ class Map extends Base {
    */
   setResolutions(resolutionsParam) {
     // checks if the param is null or empty
-    if (isNullOrEmpty(resolutionsParam)) {
-      Exception(getValue('exception').no_resolutions);
-    }
+    // if (isNullOrEmpty(resolutionsParam)) {
+    //   Exception(getValue('exception').no_resolutions);
+    // }
 
     // checks if the implementation can set the setResolutions
     if (isUndefined(MapImpl.prototype.setResolutions)) {

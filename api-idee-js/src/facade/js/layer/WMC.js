@@ -338,13 +338,13 @@ class WMC extends LayerBase {
    * @public
    * @api
    */
-  unselect() {
+  unselect(restoreResolutions = true) {
     // checks if the implementation can manage select method
     if (isUndefined(this.getImpl().unselect)) {
       Exception(getValue('exception').unselect_method);
     }
 
-    this.getImpl().unselect();
+    this.getImpl().unselect(restoreResolutions);
   }
 
   /**

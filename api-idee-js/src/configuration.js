@@ -317,6 +317,14 @@ params.forEach((param) => {
   IDEE.config('MIN_ZOOM', '${minZoom}');
 
   /**
+   * Zoom por defecto.
+   *
+   * @public
+   * @type {Number | String}
+   */
+  IDEE.config('DEFAULT_ZOOM', '${defaultZoom}');
+
+  /**
    * Hace el popup y dialog inteligente
    *
    * @private
