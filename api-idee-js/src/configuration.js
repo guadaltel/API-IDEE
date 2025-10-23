@@ -347,5 +347,13 @@ params.forEach((param) => {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location,
+   * 16 es el valor por defecto de API-IDEE, 12 es el de Mapea.
+   * @private
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', 16);
   window.M = IDEE;
 }(window.IDEE));
