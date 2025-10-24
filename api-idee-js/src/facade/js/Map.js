@@ -3097,7 +3097,7 @@ class Map extends Base {
   }
 
   /**
-   * Este método comprueba si el mapa tiene un control o no.
+   * Este método comprueba si el mapa tiene un control añadido o no.
    *
    * @function
    * @param {String} control nombre del control a buscar.
