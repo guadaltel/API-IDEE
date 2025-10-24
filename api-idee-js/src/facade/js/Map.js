@@ -6,7 +6,7 @@ import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
   isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  concatUrlPaths, escapeJSCode, getEnvolvedExtent, getImageMap,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
@@ -4711,6 +4711,22 @@ class Map extends Base {
     this.getImpl().setRotation(rotation * (Math.PI / 180));
   }
 
+  /**
+   * Este método devuelve una captura de pantalla del mapa.
+   *
+   * @function
+   * @public
+   * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+   * @param {String} type Formato de la imagen resultante.
+   * @param {HTMLCanvasElement} canva Elemento canvas.
+   * @param {Boolean} isPromise Si tiene que devolver una promesa (MapLibre).
+   * @api
+   * @returns {String} Imagen en base64
+   */
+  getImageMap(type = 'image/jpeg', canva = undefined, isPromise = false) {
+    return getImageMap(this, type, canva, isPromise);
+  }
+  
   /**
    * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
    * El valor por defecto es true
