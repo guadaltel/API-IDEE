@@ -1,6 +1,7 @@
 24/10/25 Versión 2.0.0
 - Se añade el método getImageMap para generar la imagen del mapa.
 - Se soluciona problemas con filtros espaciales en Cesium.
+- Se añaden a utilidades los métodos: getWMTSCapabilities
 
 01/01/25 - Versión 1.0.0
 - Se incluye implementación 3D con Cesium
