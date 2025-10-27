@@ -9,6 +9,7 @@
 - Se añade el método enableMouseWheel para controlar la interacción de zoom con la rueda del ratón.
 - Se añaden los métodos get y remove OverlayLayers.
 - Se añaden a utilidades los métodos: removeHTML, replaceNode, classToggle, setEquals
+- Mejoras sobre el método getWMSGetCapabilitiesUrl de utilidades
 
 
 01/01/25 - Versión 1.0.0
