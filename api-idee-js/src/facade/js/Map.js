@@ -3097,6 +3097,26 @@ class Map extends Base {
   }
 
   /**
+   * Este método comprueba si el mapa tiene un control añadido o no.
+   *
+   * @function
+   * @param {String} control nombre del control a buscar.
+   * @returns {Boolean} Devuelve si el mapa tiene o no el control.
+   * @api
+   */
+  hasControl(control) {
+    let controlName = control;
+    if (control instanceof Control) {
+      controlName = control.name;
+    }
+    const controls = this.getControls();
+    const controlFiltered = controls.find((ctrl) => ctrl.name === controlName);
+    const hasControl = !isNullOrEmpty(controlFiltered);
+
+    return hasControl;
+  }
+
+  /**
    * Este método elimina los controles especificados del mapa.
    *
    * @function
