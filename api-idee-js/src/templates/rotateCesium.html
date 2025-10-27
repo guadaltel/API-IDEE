@@ -1,25 +1,25 @@
 <div class="m-control m-rotate-container" title="{{title}}">
   <div class="m-rotate-compass">
     {{#if showHelp}}<button id="m-rotate-help" class="m-rotate-help-button" title="{{title_help}}">?</button>{{/if}}
-    <svg class="m-rotate-background-exterior" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg class="m-rotate-background-exterior" width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <mask id="m-rotate-hole">
-          <rect width="64" height="64" fill="white"/>
-          <circle cx="32" cy="32" r="20" fill="black"/>
+          <rect width="50" height="50" fill="white"/>
+          <circle cx="25" cy="25" r="18" fill="black"/>
         </mask>
       </defs>
-      <circle cx="32" cy="32" r="30"  mask="url(#m-rotate-hole)"/>
+      <circle cx="25" cy="25" r="25"  mask="url(#m-rotate-hole)"/>
     </svg>
     <div class="m-rotate-rotation-maker">
-      <svg class="m-rotate-svgPath-svg" width="64" height="64" viewBox="0 0 64 64">
+      <svg class="m-rotate-svgPath-svg" width="50" height="50" viewBox="0 0 50 50">
         <defs>
           <mask id="m-rotate-donut-mask">
-            <rect width="64" height="64" fill="white"/>
-            <circle cx="32" cy="32" r="20" fill="black"/>
+            <rect width="50" height="50" fill="white"/>
+            <circle cx="25" cy="25" r="18" fill="black"/>
           </mask>
         </defs>
         <path
-          d="M32,32 L32,2 A30,30 0 0,1 58,16 L32,32 Z"
+          d="M25,0 A25,25 0 0,1 50,25 L43,25 A18,18 0 0,0 25,7Z"
           mask="url(#m-rotate-donut-mask)"
         />
       </svg>

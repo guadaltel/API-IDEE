@@ -23,9 +23,11 @@
 
 .m-rotate-compass {
   position: relative;
-  width: 130px;
-  height: 100px;
-  margin-left: 15px; 
+  width: 150px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .m-rotate-background-exterior {
@@ -35,8 +37,8 @@
 .m-rotate-background-exterior,
 .m-rotate-svgPath-svg {
   position: absolute;
-  width: calc(100% - 30px);
-  height: 100%;
+  width: 99px;
+  height: 99px;
 }
 
 .m-rotate-svgPath-svg {
@@ -45,21 +47,18 @@
 
 .m-rotate-exterior-svg {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   overflow: hidden;
 }
 
-.m-rotate-exterior-svg.g-cartografia-exterior:before {
+.m-rotate-exterior-svg.g-cartografia-exterior-1:before {
   color: #fff;
   font-size: 100px;
 }
 
 .m-rotate-giroscopio-svg {
   position: absolute;
-  top: 50%;
-  right: 46%;
-  transform: translateY(-50%);
   width: 40px;
   height: 40px;
   box-sizing: content-box;
@@ -75,7 +74,7 @@
 .m-rotate-help-button {
   position: absolute;
   top: 50%;
-  right: 4px;
+  right: 0;
   transform: translateY(-50%);
   background-color: #71a7d3; 
   color: white;
@@ -97,8 +96,8 @@
 
 .m-rotate-rotation-maker {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 99px;
+  height: 99px;
   fill: #2d5e87;
   display: none;
 }
@@ -151,6 +150,11 @@
 
 button.m-rotate-help-close.g-cartografia-cancelar:before {
   color: #000;
+}
+
+.m-rotate-exterior-svg.g-cartografia-exterior:before {
+  color: #fff;
+  font-size: 120px;
 }
 
 .m-rotate-help-option {
