@@ -10,6 +10,7 @@
 - Se añaden los métodos get y remove OverlayLayers.
 - Se añaden a utilidades los métodos: removeHTML.
 - Se añaden a utilidades los métodos: replaceNode.
+- Se añaden a utilidades los métodos: classToggle.
 
 
 01/01/25 - Versión 1.0.0
