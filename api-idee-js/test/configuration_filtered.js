@@ -257,7 +257,7 @@ function fun(IDEE_) {
    * @private
    * @type {Number | String}
    */
-  IDEE_.config('DEFAULT_ZOOM', '');
+  IDEE_.config('DEFAULT_ZOOM', '3');
 
   /**
    * Hace el popup inteligente

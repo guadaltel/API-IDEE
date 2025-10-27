@@ -2,7 +2,7 @@
  * @module IDEE/impl/layer/WMC
  */
 import {
-  isNullOrEmpty, isFunction, fillResolutions, generateResolutionsFromExtent,
+  isNullOrEmpty, isFunction, fillResolutions, generateResolutionsFromExtent, getResolutionFromScale,
 } from 'IDEE/util/Utils';
 import { get as getRemote } from 'IDEE/util/Remote';
 import * as EventType from 'IDEE/event/eventtype';
@@ -154,12 +154,11 @@ class WMC extends Layer {
         // set projection with the wmc
         if (this.map.defaultProj) {
           const olproj = getProj(context.projection);
-          this.updateResolutionsFromBaseLayer();
+          this.updateResolutionsFromBaseLayer(context.layers);
           this.map.setProjection(`${olproj.getCode()}*${olproj.getUnits()}`, false);
         }
         // load layers
         this.loadLayers(context);
-        this.map.zoomToMaxExtent(false);
         this.map.fire(EventType.CHANGE_WMC, this);
       });
     }
@@ -171,11 +170,9 @@ class WMC extends Layer {
    *
    * @private
    * @function
+   * @param {Array} layers Capas.
    */
-  updateResolutionsFromBaseLayer() {
-    this.map.oldResolutions = this.map.getResolutions();
-    this.map.oldProjection = this.map.getProjection();
-
+  updateResolutionsFromBaseLayer(layers = []) {
     let resolutions = [];
 
     // zoom levels
@@ -189,7 +186,7 @@ class WMC extends Layer {
     this.map.getMapImpl().updateSize();
     const size = this.map.getMapImpl().getSize();
 
-    const baseLayer = this.map.getBaseLayers().filter((bl) => {
+    const baseLayer = (!isNullOrEmpty(layers) ? layers : this.map.getBaseLayers()).filter((bl) => {
       return bl.isVisible();
     })[0];
 
@@ -197,25 +194,30 @@ class WMC extends Layer {
     let maxResolution = null;
     let minResolution = null;
     if (!isNullOrEmpty(baseLayer)) {
-      minResolution = baseLayer.getImpl().getMinResolution !== undefined
-        ? baseLayer.getImpl().getMinResolution()
-        : null;
-      maxResolution = baseLayer.getImpl().getMaxResolution !== undefined
-        ? baseLayer.getImpl().getMaxResolution()
-        : null;
+      const baseImplOptions = baseLayer.getImpl().options;
+      if (baseImplOptions.minScale !== undefined) {
+        const minScaleRounded = Math.floor(baseImplOptions.minScale * 1000) / 1000;
+        minResolution = getResolutionFromScale(minScaleRounded, units);
+      } else {
+        minResolution = null;
+      }
+      if (baseImplOptions.maxScale !== undefined) {
+        const maxScaleRounded = Math.floor(baseImplOptions.maxScale * 1000) / 1000;
+        maxResolution = getResolutionFromScale(maxScaleRounded, units);
+      } else {
+        maxResolution = null;
+      }
       zoomLevels = baseLayer.getImpl().getNumZoomLevels();
     }
 
     zoomLevels = (isNullOrEmpty(zoomLevels) || zoomLevels <= 0)
-      ? IDEE.config.MAX_ZOOM - IDEE.config.MIN_ZOOM
+      ? (IDEE.config.MAX_ZOOM || 20) - (IDEE.config.MIN_ZOOM || 0)
       : zoomLevels;
 
     // eslint-disable-next-line no-underscore-dangle
     if (this.map.getImpl().userResolutions_ === null) {
       if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
         resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
-        this.map.newResolutions = resolutions;
-        this.map.newProjection = this.map.getProjection();
         this.map.setResolutions(resolutions, true);
 
         // eslint-disable-next-line no-underscore-dangle
@@ -235,8 +237,6 @@ class WMC extends Layer {
           // eslint-disable-next-line no-underscore-dangle
           if (!this.map._resolutionsBaseLayer && (this.map.getImpl().userResolutions_ === null)) {
             resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
-            this.map.newResolutions = resolutions;
-            this.map.newProjection = this.map.getProjection();
             this.map.setResolutions(resolutions, true);
 
             // eslint-disable-next-line no-underscore-dangle
@@ -260,36 +260,6 @@ class WMC extends Layer {
   }
 
   /**
-   * Este método restaura las resoluciones anteriores del mapa
-   * si las resoluciones actuales son las establecidas por la capa WMC.
-   *
-   * @private
-   * @function
-   */
-  restoreOldResolutions() {
-    if (this.map.newResolutions !== null
-      && JSON.stringify(this.map.newResolutions) === JSON.stringify(this.map.getResolutions())
-    ) {
-      this.map.setResolutions(this.map.oldResolutions ? this.map.oldResolutions : [], true);
-      // eslint-disable-next-line no-underscore-dangle
-      this.map._resolutionsBaseLayer = false;
-      // eslint-disable-next-line no-underscore-dangle
-      this.map._resolutionsEnvolvedExtent = false;
-      // eslint-disable-next-line no-underscore-dangle
-      this.map._calculatedResolutions = false;
-      // eslint-disable-next-line no-underscore-dangle
-      this.map.getImpl().userResolutions_ = null;
-    }
-    if (this.map.newProjection !== null
-      && this.map.newProjection.code === this.map.getProjection().code
-    ) {
-      // eslint-disable-next-line no-underscore-dangle
-      this.map._defaultProj = true;
-      this.map.setProjection(this.map.oldProjection.code, true);
-    }
-  }
-
-  /**
    * Este método deselecciona la capa WMC y
    * lanza el evento para borrarla.
    *
@@ -297,18 +267,13 @@ class WMC extends Layer {
    * @function
    * @api
    */
-  unselect(restoreResolutions = true) {
-    let restored = false;
+  unselect() {
     if (this.selected === true) {
       this.selected = false;
 
       // removes all loaded layers
       if (!isNullOrEmpty(this.layers)) {
         this.map.removeLayers(this.layers);
-        if (!restored && restoreResolutions) {
-          this.restoreOldResolutions();
-          restored = true;
-        }
       }
 
       // removes all sections
@@ -316,10 +281,6 @@ class WMC extends Layer {
         const aux = [...this.sections];
         this.sections = [];
         this.map.removeSections(aux);
-        if (!restored && restoreResolutions) {
-          this.restoreOldResolutions();
-          restored = true;
-        }
       }
     }
   }
@@ -426,7 +387,6 @@ class WMC extends Layer {
   destroy() {
     if (!isNullOrEmpty(this.layers)) {
       this.map.removeLayers(this.layers);
-      this.restoreOldResolutions();
     }
     this.map = null;
     this.layers.length = 0;
