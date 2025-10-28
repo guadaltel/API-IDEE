@@ -6,7 +6,7 @@ import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
   isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  concatUrlPaths, escapeJSCode, getEnvolvedExtent, getResolutionFromScale,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
@@ -4709,6 +4709,20 @@ class Map extends Base {
       Exception(getValue('exception').no_set_rotation_method);
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
+  }
+
+  /**
+   * Este método establece la escala más cercana para esta
+   * instancia del mapa.
+   *
+   * @public
+   * @function
+   * @param {Number} scale Escala.
+   * @api
+   */
+  setToClosestScale(scale) {
+    const resolution = getResolutionFromScale(scale, this.getProjection().units);
+    this.getImpl().setToClosestScale(resolution);
   }
 }
 

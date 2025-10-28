@@ -3493,6 +3493,18 @@ class Map extends MObject {
       vendor: evt,
     }]);
   }
+
+  /**
+   * Este método establece la resolución más cercana a la indicada.
+   *
+   * @function
+   * @param {number} resolution Resolución.
+   * @public
+   * @api
+   */
+  setToClosestScale(resolution) {
+    this.getMapImpl().getView().setResolution(resolution);
+  }
 }
 
 /**
