@@ -152,9 +152,9 @@ class WMC extends Layer {
       });
       this.loadContextPromise.then((context) => {
         // set projection with the wmc
+        this.updateResolutionsFromBaseLayer(context.layers);
         if (this.map.defaultProj) {
           const olproj = getProj(context.projection);
-          this.updateResolutionsFromBaseLayer(context.layers);
           this.map.setProjection(`${olproj.getCode()}*${olproj.getUnits()}`, false);
         }
         // load layers
@@ -196,14 +196,12 @@ class WMC extends Layer {
     if (!isNullOrEmpty(baseLayer)) {
       const baseImplOptions = baseLayer.getImpl().options;
       if (baseImplOptions.minScale !== undefined) {
-        const minScaleRounded = Math.floor(baseImplOptions.minScale * 1000) / 1000;
-        minResolution = getResolutionFromScale(minScaleRounded, units);
+        minResolution = getResolutionFromScale(baseImplOptions.minScale, units);
       } else {
         minResolution = null;
       }
       if (baseImplOptions.maxScale !== undefined) {
-        const maxScaleRounded = Math.floor(baseImplOptions.maxScale * 1000) / 1000;
-        maxResolution = getResolutionFromScale(maxScaleRounded, units);
+        maxResolution = getResolutionFromScale(baseImplOptions.maxScale, units);
       } else {
         maxResolution = null;
       }
@@ -211,7 +209,7 @@ class WMC extends Layer {
     }
 
     zoomLevels = (isNullOrEmpty(zoomLevels) || zoomLevels <= 0)
-      ? (IDEE.config.MAX_ZOOM || 20) - (IDEE.config.MIN_ZOOM || 0)
+      ? (IDEE.config.MAX_ZOOM || 28) - (IDEE.config.MIN_ZOOM || 0)
       : zoomLevels;
 
     // eslint-disable-next-line no-underscore-dangle
