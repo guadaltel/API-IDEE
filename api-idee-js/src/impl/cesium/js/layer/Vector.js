@@ -13,6 +13,7 @@ import Popup from 'IDEE/Popup';
 import geojsonPopupTemplate from 'templates/geojson_popup';
 import * as EventType from 'IDEE/event/eventtype';
 import Style from 'IDEE/style/Style';
+import StyleCluster from 'IDEE/style/Cluster';
 import {
   BillboardGraphics,
   Color,
@@ -280,7 +281,9 @@ class Vector extends Layer {
   setLayer(layer) {
     const cesiumMap = this.map.getMapImpl();
     if (this.cesiumLayer !== layer) {
-      this.facadeVector_.removeFeatures(this.facadeVector_.getFeatures());
+      if (!(layer instanceof CustomDataSource && layer.clustering.enabled)) {
+        this.facadeVector_.removeFeatures(this.facadeVector_.getFeatures());
+      }
       const oldzIndex = cesiumMap.dataSources.indexOf(this.cesiumLayer);
       cesiumMap.dataSources.remove(this.cesiumLayer);
       this.cesiumLayer = layer;
@@ -594,6 +597,10 @@ class Vector extends Layer {
   removeFeatures(features) {
     this.features_ = this.features_.filter((f) => !(features.includes(f)));
     this.redraw();
+    const style = this.facadeVector_.getStyle();
+    if (style instanceof StyleCluster) {
+      style.refresh();
+    }
   }
 
   /**

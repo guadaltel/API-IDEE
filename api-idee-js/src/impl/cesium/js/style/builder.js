@@ -180,15 +180,15 @@ export const getLabel = (options, featureVariable, layer) => {
     const baseline = Simple.getValue(options.label.baseline, featureVariable, layer);
     labelText = {
       font: Simple.getValue(options.label.font, featureVariable, layer) || '10px sans-serif',
-      scale: Simple.getValue(options.label.scale, featureVariable, layer),
+      scale: Simple.getValue(options.label.scale, featureVariable, layer) || 1,
       pixelOffset: new Cartesian2(
         Simple.getValue(
-          options.label.offset ? options.label.offset[0] : undefined,
+          options.label.offset ? options.label.offset[0] : 0,
           featureVariable,
           layer,
         ),
         Simple.getValue(
-          options.label.offset ? options.label.offset[1] : undefined,
+          options.label.offset ? options.label.offset[1] : 0,
           featureVariable,
           layer,
         ),
@@ -284,7 +284,7 @@ export const getIconSrc = (options, featureVariable, layer) => {
         1.0,
         Simple.getValue(options.icon.opacity || 1, featureVariable, layer),
       ),
-      scale: Simple.getValue(options.icon.scale, featureVariable, layer),
+      scale: Simple.getValue(options.icon.scale || 1, featureVariable, layer),
       rotation: Simple.getValue(
         options.icon.rotation ? -Number(options.icon.rotation) : 0,
         featureVariable,
@@ -303,9 +303,9 @@ export const getIconSrc = (options, featureVariable, layer) => {
         ) : undefined,
       pixelOffset: new Cartesian2(
         Simple.getValue(options.icon.anchor
-          ? options.icon.anchor[1] : undefined, featureVariable, layer),
+          ? options.icon.anchor[1] : 0, featureVariable, layer),
         Simple.getValue(options.icon.anchor
-          ? options.icon.anchor[0] : undefined, featureVariable, layer),
+          ? options.icon.anchor[0] : 0, featureVariable, layer),
       ),
       verticalOrigin: Object.values(Baseline).includes(baseline) && options.icon.anchor
         ? VerticalOrigin[baseline.toUpperCase()] : VerticalOrigin.CENTER,
