@@ -187,7 +187,7 @@ class WMC extends Layer {
     const size = this.map.getMapImpl().getSize();
 
     const baseLayer = (!isNullOrEmpty(layers) ? layers : this.map.getBaseLayers()).filter((bl) => {
-      return bl.isVisible();
+      return bl.isBase && bl.isVisible();
     })[0];
 
     // gets min/max resolutions from base layer
@@ -212,48 +212,45 @@ class WMC extends Layer {
       ? (IDEE.config.MAX_ZOOM || 28) - (IDEE.config.MIN_ZOOM || 0)
       : zoomLevels;
 
-    // eslint-disable-next-line no-underscore-dangle
-    if (this.map.getImpl().userResolutions_ === null) {
-      if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
-        resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
-        this.map.setResolutions(resolutions, true);
+    if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
+      resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
+      this.map.setResolutions(resolutions, true);
 
+      // eslint-disable-next-line no-underscore-dangle
+      this.map._resolutionsBaseLayer = true;
+
+      // checks if it was the first time to
+      // calculate resolutions in that case
+      // fires the completed event
+      // eslint-disable-next-line no-underscore-dangle
+      if (this.map._calculatedResolutions === false) {
         // eslint-disable-next-line no-underscore-dangle
-        this.map._resolutionsBaseLayer = true;
-
-        // checks if it was the first time to
-        // calculate resolutions in that case
-        // fires the completed event
-        // eslint-disable-next-line no-underscore-dangle
-        if (this.map._calculatedResolutions === false) {
-          // eslint-disable-next-line no-underscore-dangle
-          this.map._calculatedResolutions = true;
-          this.map.fire(EventType.COMPLETED);
-        }
-      } else {
-        this.map.calculateMaxExtent().then((extent) => {
-          // eslint-disable-next-line no-underscore-dangle
-          if (!this.map._resolutionsBaseLayer && (this.map.getImpl().userResolutions_ === null)) {
-            resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
-            this.map.setResolutions(resolutions, true);
-
-            // eslint-disable-next-line no-underscore-dangle
-            this.map._resolutionsEnvolvedExtent = true;
-
-            // checks if it was the first time to
-            // calculate resolutions in that case
-            // fires the completed event
-            // eslint-disable-next-line no-underscore-dangle
-            if (this.map._calculatedResolutions === false) {
-              // eslint-disable-next-line no-underscore-dangle
-              this.map._calculatedResolutions = true;
-              this.map.fire(EventType.COMPLETED);
-            }
-          }
-        }).catch((error) => {
-          throw error;
-        });
+        this.map._calculatedResolutions = true;
+        this.map.fire(EventType.COMPLETED);
       }
+    } else {
+      this.map.calculateMaxExtent().then((extent) => {
+        // eslint-disable-next-line no-underscore-dangle
+        if (!this.map._resolutionsBaseLayer && (this.map.getImpl().userResolutions_ === null)) {
+          resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
+          this.map.setResolutions(resolutions, true);
+
+          // eslint-disable-next-line no-underscore-dangle
+          this.map._resolutionsEnvolvedExtent = true;
+
+          // checks if it was the first time to
+          // calculate resolutions in that case
+          // fires the completed event
+          // eslint-disable-next-line no-underscore-dangle
+          if (this.map._calculatedResolutions === false) {
+            // eslint-disable-next-line no-underscore-dangle
+            this.map._calculatedResolutions = true;
+            this.map.fire(EventType.COMPLETED);
+          }
+        }
+      }).catch((error) => {
+        throw error;
+      });
     }
   }
 

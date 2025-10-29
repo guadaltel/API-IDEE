@@ -457,9 +457,13 @@ class WMS extends LayerBase {
     let extent = null;
     if (!isNullOrEmpty(this.facadeLayer_.userMaxExtent)) {
       extent = this.facadeLayer_.userMaxExtent;
+    } else if (!isNullOrEmpty(this.options.wmcMaxExtent)) {
+      extent = this.options.wmcMaxExtent;
     } else {
-      extent = this.facadeLayer_.options.wmcMaxExtent;
+      extent = this.options.wmcGlobalMaxExtent;
     }
+    this.maxExtent_ = extent;
+    if (!isNullOrEmpty(extent)) this.setMaxExtent(extent);
 
     if (capabilities) {
       const capabilitiesLayer = capabilities.capabilities.Capability.Layer.Layer;
