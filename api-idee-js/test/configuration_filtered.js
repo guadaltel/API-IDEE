@@ -285,7 +285,7 @@ function fun(IDEE_) {
 
   /**
    * Determina el nivel de zoom cuando se usa el control location.
-   * @private
+   * @public
    * @type {Number}
    */
   IDEE.config('ZOOM_LOCATION', 16);

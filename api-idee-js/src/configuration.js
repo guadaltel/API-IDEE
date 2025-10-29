@@ -350,7 +350,7 @@ params.forEach((param) => {
 
   /**
    * Determina el nivel de zoom cuando se usa el control location.
-   * @private
+   * @public
    * @type {Number}
    */
   IDEE.config('ZOOM_LOCATION', '${zoomLocation}');
