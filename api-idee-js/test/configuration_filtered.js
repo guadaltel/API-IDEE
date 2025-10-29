@@ -284,8 +284,7 @@ function fun(IDEE_) {
   });
 
   /**
-   * Determina el nivel de zoom cuando se usa el control location,
-   * 16 es el valor por defecto de API-IDEE, 12 es el de Mapea.
+   * Determina el nivel de zoom cuando se usa el control location.
    * @private
    * @type {Number}
    */
