@@ -231,6 +231,34 @@ export const getLabel = (options, featureVariable, layer) => {
 export const iconCache = {};
 
 /**
+ * Esta función devuelve la posición relativa al terreno.
+ * Solo tendrá efecto si el parámetro height de la capa tiene valor.
+ *
+ * @public
+ * @function
+ *
+ * @param {Object} options Opciones.
+ * @param {Object} featureVariable Objetos geográficos.
+ * @param {Object} layer Capas.
+ *
+ * @return {Object} Objeto que indica la posición relativa al terreno.
+ * @api stable
+ */
+export const getHeightReference = (options, featureVariable, layer) => {
+  const opt = { };
+  if (!isNullOrEmpty(options.heightReference)) {
+    const heightReference = Simple.getValue(
+      options.heightReference,
+      featureVariable,
+      layer,
+    );
+    opt.heightReference = Object.values(HeightReference).includes(heightReference)
+      ? CesiumHeightReference[heightReference] : CesiumHeightReference.NONE;
+  }
+  return opt;
+};
+
+/**
  * Esta función devuelve el icono.
  *
  * @public
@@ -292,6 +320,7 @@ export const getIconSrc = (options, featureVariable, layer) => {
           Simple.getValue(options.icon.opacity || 1, featureVariable, layer),
         ),
         minimumPixelSize: Simple.getValue(options.icon.minimumPixelSize, featureVariable, layer),
+        heightReference: getHeightReference(options, featureVariable, layer),
       });
     } else {
       styleIcon = new BillboardGraphics({
@@ -599,34 +628,6 @@ export const getPerPositionHeight = (options, featureVariable, layer) => {
   if (!isNullOrEmpty(options.perPositionHeight)) {
     const perPositionHeight = Simple.getValue(options.perPositionHeight, featureVariable, layer);
     opt.perPositionHeight = perPositionHeight;
-  }
-  return opt;
-};
-
-/**
- * Esta función devuelve la posición relativa al terreno.
- * Solo tendrá efecto si el parámetro height de la capa tiene valor.
- *
- * @public
- * @function
- *
- * @param {Object} options Opciones.
- * @param {Object} featureVariable Objetos geográficos.
- * @param {Object} layer Capas.
- *
- * @return {Object} Objeto que indica la posición relativa al terreno.
- * @api stable
- */
-export const getHeightReference = (options, featureVariable, layer) => {
-  const opt = { };
-  if (!isNullOrEmpty(options.heightReference)) {
-    const heightReference = Simple.getValue(
-      options.heightReference,
-      featureVariable,
-      layer,
-    );
-    opt.heightReference = Object.values(HeightReference).includes(heightReference)
-      ? CesiumHeightReference[heightReference] : CesiumHeightReference.NONE;
   }
   return opt;
 };

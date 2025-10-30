@@ -607,7 +607,7 @@ class Utils {
     }
     if (!isNullOrEmpty(coordinates)) {
       const cartesian = Cartesian3.fromDegrees(coordinates[0], coordinates[1]);
-      const screenPosition = SceneTransforms.wgs84ToWindowCoordinates(map.scene, cartesian);
+      const screenPosition = SceneTransforms.worldToWindowCoordinates(map.scene, cartesian);
       // const canvasCoordinates = map.scene.cartesianToCanvasCoordinates(cartesian);
       pixel = [screenPosition.x, screenPosition.y];
     }
