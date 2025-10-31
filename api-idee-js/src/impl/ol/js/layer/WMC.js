@@ -214,7 +214,7 @@ class WMC extends Layer {
 
     if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
       resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
-      this.map.setResolutions(resolutions, true);
+      this.map.setResolutions(resolutions, true, false);
 
       // eslint-disable-next-line no-underscore-dangle
       this.map._resolutionsBaseLayer = true;
@@ -233,7 +233,7 @@ class WMC extends Layer {
         // eslint-disable-next-line no-underscore-dangle
         if (!this.map._resolutionsBaseLayer && (this.map.getImpl().userResolutions_ === null)) {
           resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
-          this.map.setResolutions(resolutions, true);
+          this.map.setResolutions(resolutions, true, false);
 
           // eslint-disable-next-line no-underscore-dangle
           this.map._resolutionsEnvolvedExtent = true;

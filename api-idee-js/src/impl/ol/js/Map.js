@@ -2862,11 +2862,13 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<Number>} resolutions Resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se propagan a las capas WMS.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  setResolutions(resolutions, optional) {
+  setResolutions(resolutions, optional, propagateToWMS = true) {
     // checks if the param is null or empty
     // if (isNullOrEmpty(resolutions)) {
     //   Exception(getValue('exception').no_resolutions);
@@ -2930,11 +2932,13 @@ class Map extends MObject {
 
     olMap.setView(newView);
 
-    // sets the resolutions for each layer
-    const layers = this.getWMS();
-    layers.forEach((layer) => {
-      layer.getImpl().setResolutions(resolutions);
-    });
+    if (propagateToWMS) {
+      // sets the resolutions for each layer
+      const layers = this.getWMS();
+      layers.forEach((layer) => {
+        layer.getImpl().setResolutions(resolutions);
+      });
+    }
 
     return this;
   }

@@ -3698,10 +3698,12 @@ class Map extends Base {
    * @public
    * @function
    * @param {String|Array<String>|Array<Number>} resolutionsParam Las resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se deben propagar a las capas WMS.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  setResolutions(resolutionsParam) {
+  setResolutions(resolutionsParam, optional, propagateToWMS = true) {
     // checks if the param is null or empty
     // if (isNullOrEmpty(resolutionsParam)) {
     //   Exception(getValue('exception').no_resolutions);
@@ -3715,7 +3717,7 @@ class Map extends Base {
     // parses the parameter
     const resolutions = parameter.resolutions(resolutionsParam);
 
-    this.getImpl().setResolutions(resolutions);
+    this.getImpl().setResolutions(resolutions, optional, propagateToWMS);
 
     return this;
   }
