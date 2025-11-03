@@ -8,11 +8,8 @@ import {
 } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import {
-  Color,
-  ConstantProperty,
-  CustomDataSource, Entity, HorizontalOrigin, PointGraphics,
-  VerticalOrigin,
-  // VerticalOrigin,
+  Color, ConstantProperty, CustomDataSource, Entity, HorizontalOrigin,
+  PointGraphics, VerticalOrigin,
 } from 'cesium';
 import Style from './Style';
 
@@ -173,17 +170,20 @@ class Cluster extends Style {
     const styleF = style[0];
     if (!isNullOrEmpty(style) && !isNullOrEmpty(cluster)) {
       cluster.billboard.show = false;
-      console.log(styleF);
-      console.log(cluster);
       if (!isNullOrEmpty(styleF.icon)) {
         cluster.billboard.show = true;
         Object.assign(cluster.billboard, {
-          image: styleF.icon.image.getValue(), // REVISAR
-          color: styleF.icon.color,
-          scale: styleF.icon.scale.getValue(),
+          image: styleF.icon.image.getValue(),
+          color: styleF.icon.color.getValue(),
+          scale: styleF.icon.scale ? styleF.icon.scale.getValue() : 1,
           rotation: styleF.icon.rotation.getValue(),
-          // imageSubRegion: styleF.icon,
+          imageSubRegion: styleF.icon.imageSubRegion
+            ? styleF.icon.imageSubRegion.getValue() : undefined,
           pixelOffset: styleF.icon.pixelOffset.getValue(),
+          verticalOrigin: styleF.icon.verticalOrigin.getValue() || VerticalOrigin.CENTER,
+          horizontalOrigin: styleF.icon.horizontalOrigin.getValue() || HorizontalOrigin.CENTER,
+          sizeInMeters: false,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
       }
       cluster.point.show = true;
@@ -200,7 +200,7 @@ class Cluster extends Style {
           pixelOffset: styleF.label.pixelOffset.getValue(),
           fillColor: styleF.label.fillColor,
           horizontalOrigin: styleF.label.horizontalOrigin.getValue() || HorizontalOrigin.CENTER,
-          verticalOrigin: styleF.label.horizontalOrigin.getValue() || VerticalOrigin.CENTER,
+          verticalOrigin: styleF.label.verticalOrigin.getValue() || VerticalOrigin.CENTER,
           style: new ConstantProperty(styleF.label.style),
           outlineColor: styleF.label.outlineColor ? styleF.label.outlineColor : Color.WHITE,
           outlineWidth: styleF.label.outlineWidth ? styleF.label.outlineWidth : 1,
@@ -238,10 +238,10 @@ class Cluster extends Style {
     }
 
     if (this.options_.hoverInteraction !== false) {
-      // this.addCoverInteraction_(); REVISAR
+      this.addCoverInteraction_();
     }
     if (this.options_.selectInteraction !== false) {
-      // this.addSelectInteraction_(); REVISAR
+      // this.addSelectInteraction_();
     }
 
     this.clusterLayer_.clustering.clusterEvent.addEventListener(this.onClusterEvent_.bind(this));
@@ -384,7 +384,9 @@ class Cluster extends Style {
    * @api stable
    */
   hoverFeatureFn_(features, evt) {
-    //
+    if (!isNullOrEmpty(features)) {
+      //
+    }
   }
 
   /**
@@ -443,7 +445,7 @@ class Cluster extends Style {
     // eslint-disable-next-line no-underscore-dangle
     const clusterCesiumFeatures = feature._features;
     if (!clusterCesiumFeatures) {
-      // return new Centroid(); REVISAR
+      // return new Centroid();
     }
     const numFeatures = clusterCesiumFeatures.length;
     const range = this.options_.ranges

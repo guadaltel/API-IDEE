@@ -29,6 +29,9 @@ import {
 import PointFontSymbol from '../point/FontSymbol';
 import Simple from './Simple';
 
+const baselineInCesium = [Baseline.TOP, Baseline.BOTTOM, Baseline.BASELINE, Baseline.CENTER];
+const alignInCesium = [Align.LEFT, Align.CENTER, Align.RIGHT];
+
 /**
  * Esta función devuelve el relleno.
  * @public
@@ -170,7 +173,7 @@ export const getStrokePatern = (options, featureVariable, layer) => {
 export const getLabel = (options, featureVariable, layer) => {
   const DEFAULT_LABEL_COLOR = '#000';
   const DEFAULT_ALIGN = HorizontalOrigin.CENTER;
-  const DEFAULT_BASELINE = VerticalOrigin.TOP;
+  const DEFAULT_BASELINE = VerticalOrigin.CENTER;
 
   let label = {};
   if (options.label) {
@@ -198,9 +201,9 @@ export const getLabel = (options, featureVariable, layer) => {
         featureVariable,
         layer,
       )),
-      horizontalOrigin: Object.values(Align).includes(align)
+      horizontalOrigin: alignInCesium.includes(align)
         ? HorizontalOrigin[align.toUpperCase()] : DEFAULT_ALIGN,
-      verticalOrigin: Object.values(Baseline).includes(baseline)
+      verticalOrigin: baselineInCesium.includes(baseline)
         ? VerticalOrigin[baseline.toUpperCase()] : DEFAULT_BASELINE,
       text: textLabel === undefined ? undefined : String(textLabel),
       style: LabelStyle.FILL,
@@ -307,9 +310,9 @@ export const getIconSrc = (options, featureVariable, layer) => {
         Simple.getValue(options.icon.anchor
           ? options.icon.anchor[0] : 0, featureVariable, layer),
       ),
-      verticalOrigin: Object.values(Baseline).includes(baseline) && options.icon.anchor
+      verticalOrigin: baselineInCesium.includes(baseline) && options.icon.anchor
         ? VerticalOrigin[baseline.toUpperCase()] : VerticalOrigin.CENTER,
-      horizontalOrigin: Object.values(Align).includes(align) && options.icon.anchor
+      horizontalOrigin: alignInCesium.includes(align) && options.icon.anchor
         ? HorizontalOrigin[align.toUpperCase()] : HorizontalOrigin.CENTER,
       sizeInMeters: false,
     });
