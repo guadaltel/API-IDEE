@@ -56,7 +56,7 @@ class Rotate extends ControlBase {
      * Order: Orden que tendrá con respecto al
      * resto de plugins y controles por pantalla.
      */
-    this.order = options.order;
+    this.order = options.order >= -1 ? options.order : null;
   }
 
   /**
