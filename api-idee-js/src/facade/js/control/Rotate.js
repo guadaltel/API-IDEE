@@ -25,7 +25,12 @@ class Rotate extends ControlBase {
    * Constructor principal de la clase.
    *
    * @constructor
-   * @param {String} format Formato de respuesta.
+   * @param {String} options Opciones del control.
+   * - viewInitial: Vista inicial. Solo disponible para Cesium.
+   * - help: Indica si se muestra la ayuda al crear el control.
+   * Por defecto, verdadero. Solo disponible para Cesium.
+   * - order: Orden que tendrá con respecto al
+   * resto de plugins y controles por pantalla.
    * @api
    */
   constructor(options = {}) {
@@ -46,6 +51,12 @@ class Rotate extends ControlBase {
     super(impl, Rotate.NAME);
 
     this.help = opts.help;
+
+    /**
+     * Order: Orden que tendrá con respecto al
+     * resto de plugins y controles por pantalla.
+     */
+    this.order = options.order;
   }
 
   /**
@@ -79,12 +90,14 @@ class Rotate extends ControlBase {
           image1_description: getValue('rotate').image1_description,
           image2_description: getValue('rotate').image2_description,
           close_btn: getValue('rotate').close_btn,
+          order: this.order,
         },
       });
     } else {
       compTemplate = compileTemplate(template, {
         vars: {
           title: getValue('rotate').title,
+          order: this.order,
         },
       });
     }

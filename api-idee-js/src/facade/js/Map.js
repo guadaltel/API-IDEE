@@ -3022,6 +3022,8 @@ class Map extends Base {
                       paramsRotate.viewInitial = bbox;
                     }
                     if (p === 'false') paramsRotate.help = false;
+                    // eslint-disable-next-line no-restricted-globals
+                    if (!isNaN(p)) paramsRotate.order = Number(p);
                   }
                 });
                 control = new Rotate(paramsRotate);
@@ -3029,6 +3031,7 @@ class Map extends Base {
                   collapsible: false,
                   className: 'm-rotate',
                   position: Position.TL,
+                  order: (paramsRotate.order) ? paramsRotate.order : null,
                 });
                 break;
               case BackgroundLayers.NAME:
