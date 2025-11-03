@@ -506,8 +506,6 @@ class Map extends MObject {
       }
     });
 
-    this.facadeMap_.fire(EventType.REMOVED_LAYER, [layers]);
-
     return this;
   }
 
@@ -883,6 +881,10 @@ class Map extends MObject {
       wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
     }, this);
 
+    if (wmcMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmcMapLayers]);
+    }
+
     return this;
   }
 
@@ -982,6 +984,10 @@ class Map extends MObject {
       kmlLayer.getImpl().destroy();
       kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
     }, this);
+
+    if (kmlMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [kmlMapLayers]);
+    }
 
     return this;
   }
@@ -1102,6 +1108,10 @@ class Map extends MObject {
       this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
       wmsLayer.getImpl().destroy();
     });
+
+    if (wmsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmsMapLayers]);
+    }
 
     return this;
   }
@@ -1289,6 +1299,10 @@ class Map extends MObject {
       wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
     });
 
+    if (wfsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wfsMapLayers]);
+    }
+
     return this;
   }
 
@@ -1409,6 +1423,10 @@ class Map extends MObject {
       geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
     });
 
+    if (geotiffMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [geotiffMapLayers]);
+    }
+
     return this;
   }
 
@@ -1522,6 +1540,10 @@ class Map extends MObject {
       ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
     });
 
+    if (ogcapifMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [ogcapifMapLayers]);
+    }
+
     return this;
   }
 
@@ -1627,6 +1649,10 @@ class Map extends MObject {
       wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
     });
 
+    if (wmtsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [wmtsMapLayers]);
+    }
+
     return this;
   }
 
@@ -1725,6 +1751,10 @@ class Map extends MObject {
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
 
+    if (mbtilesMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mbtilesMapLayers]);
+    }
+
     return this;
   }
 
@@ -1819,6 +1849,11 @@ class Map extends MObject {
       mbtilesLayer.getImpl().destroy();
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
+
+    if (mbtilesMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mbtilesMapLayers]);
+    }
+
     return this;
   }
 
@@ -1993,6 +2028,10 @@ class Map extends MObject {
       mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
     });
 
+    if (mvtLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mvtLayers]);
+    }
+
     return this;
   }
 
@@ -2082,6 +2121,10 @@ class Map extends MObject {
       mapLibreLayer.getImpl().destroy();
       mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
     });
+
+    if (mapLibreLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [mapLibreLayers]);
+    }
 
     return this;
   }
@@ -2189,6 +2232,10 @@ class Map extends MObject {
       xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
     });
 
+    if (xyzMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [xyzMapLayers]);
+    }
+
     return this;
   }
 
@@ -2281,6 +2328,10 @@ class Map extends MObject {
       tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
     });
 
+    if (tmsMapLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [tmsMapLayers]);
+    }
+
     return this;
   }
 
@@ -2368,6 +2419,10 @@ class Map extends MObject {
       tileLayer.getImpl().destroy();
       tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
     });
+
+    if (tileLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [tileLayers]);
+    }
 
     return this;
   }
