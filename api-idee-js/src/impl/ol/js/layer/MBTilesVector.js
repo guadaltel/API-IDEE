@@ -125,11 +125,6 @@ class MBTilesVector extends Vector {
     this.source_ = userParameters.source;
 
     /**
-     * MBTilesVector style: Define el estilo de la capa.
-     */
-    this.style_ = userParameters.style;
-
-    /**
      * MBTilesVector tileSize: Tamaño de la tesela vectorial, por defecto 256.
      */
     this.tileSize_ = typeof userParameters.tileSize === 'number' ? userParameters.tileSize : DEFAULT_TILE_SIZE;
