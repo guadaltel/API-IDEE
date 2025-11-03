@@ -67,7 +67,7 @@
     "title": "Girar al norte",
     "textHelp": {
       "text1": "La herramienta de rotación permite volver a una orientación Norte al visualizador.",
-      "text2": "Para poder girar el mapa en el visualizador, se realiza con la combinación de teclas Shit + Alt + click izquierdo del ratón + mover ratón para girar."
+      "text2": "Para poder girar el mapa en el visualizador, se realiza con la combinación de teclas Shift + Alt + click izquierdo del ratón + mover ratón para girar."
     },
     "titleCesium": "Control de movimiento",
     "title_help": "Ayuda",
@@ -87,7 +87,10 @@
       "text4": "Haz doble clic en el círculo interior para volver rápidamente a la vista inicial.",
       "text5": "Si necesitas ayuda, pulsa el botón '?' ubicado a la derecha del control para abrir un panel con instrucciones detalladas."
     },
-    "close_not_show_help": "Cerrar y no mostrar de nuevo"
+    "close_not_show_help": "Cerrar y no mostrar de nuevo",
+    "image1_description": "Icono girar vista",
+    "image2_description": "Icono inclinar vista",
+    "close_btn": "Cerrar ayuda"
   },
   "mouse": {
     "title": "Coordenadas del puntero"

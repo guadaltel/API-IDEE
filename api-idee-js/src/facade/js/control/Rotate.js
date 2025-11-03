@@ -76,6 +76,9 @@ class Rotate extends ControlBase {
           text4: textHelp.text4,
           showHelp: this.help,
           close_not_show_help: getValue('rotate').close_not_show_help,
+          image1_description: getValue('rotate').image1_description,
+          image2_description: getValue('rotate').image2_description,
+          close_btn: getValue('rotate').close_btn,
         },
       });
     } else {

@@ -1,6 +1,6 @@
-<div class="m-control m-rotate-container" title="{{title}}">
+<div class="m-control m-rotate-container" title="{{title}}" tabindex="0">
   <div class="m-rotate-compass">
-    {{#if showHelp}}<button id="m-rotate-help" class="m-rotate-help-button" title="{{title_help}}">?</button>{{/if}}
+    {{#if showHelp}}<button id="m-rotate-help" class="m-rotate-help-button" title="{{title_help}}" tabindex="0" type="button">?</button>{{/if}}
     <svg class="m-rotate-background-exterior" width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <mask id="m-rotate-hole">
@@ -30,22 +30,22 @@
   {{#if showHelp}}
     <div class="m-rotate-help-container">
       <div class="m-rotate-help-header">
-        <h3>{{title_help_container}}</h3>
-        <button class="m-rotate-help-close g-cartografia-cancelar"></button>
+        <h3 tabindex="0">{{title_help_container}}</h3>
+        <button class="m-rotate-help-close g-cartografia-cancelar" tabindex="0" type="button" title="{{close_btn}}"></button>
       </div>
       <div class="m-rotate-help-section">
-        <div class="m-rotate-help-option">
+        <div class="m-rotate-help-option" tabindex="0">
           <div>
-            <img class="m-rotate-dot" src="../facade/assets/images/girar-vista.svg">
+            <img class="m-rotate-dot" src="../facade/assets/images/girar-vista.svg" alt="{{image1_description}}">
           </div>
           <div>
             <b>{{title1}}</b>
             <p>{{text1}}</p>
           </div>
         </div>
-        <div class="m-rotate-help-option">
+        <div class="m-rotate-help-option" tabindex="0">
           <div>
-            <img class="m-rotate-dot" src="../facade/assets/images/inclinar-vista.svg">
+            <img class="m-rotate-dot" src="../facade/assets/images/inclinar-vista.svg" alt="{{image2_description}}">
           </div>
           <div>
             <b>{{title2}}</b>
@@ -53,13 +53,13 @@
             <p>{{text3}}</p>
           </div>
         </div>
-        <div class="m-rotate-help-ctrl">
+        <div class="m-rotate-help-ctrl" tabindex="0">
           <div>
             <span class="m-rotate-key">CTRL</span>
           </div>
           <p>{{text4}}</p>
         </div>
-        <button id="m-rotate-help-not-show-btn">
+        <button id="m-rotate-help-not-show-btn" tabindex="0" type="button">
           <span class="m-rotate-help-not-show-span">{{close_not_show_help}}</span>
         </button>
       </div>
