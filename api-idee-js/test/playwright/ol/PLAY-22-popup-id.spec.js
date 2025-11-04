@@ -23,12 +23,13 @@ test.describe('IDEE.Popup', () => {
         extract: true,
       });
       window.ogc_001 = ogc_001;
-
+      window.map.addLayers(window.ogc_001);
+    });
+    await page.evaluate(() => {
       return new Promise((resolve) => {
-        window.map.on(IDEE.evt.ADDED_OGCAPIFEATURES, () => {
+        window.ogc_001.on(IDEE.evt.LOAD, () => {
           resolve();
         });
-        window.map.addLayers(window.ogc_001);
       });
     });
     await page.click('#map', { position: { x: 562, y: 293 } });
@@ -38,6 +39,8 @@ test.describe('IDEE.Popup', () => {
       const id = popup.getId();
       return id;
     });
+    await page.waitForSelector('.m-popup');
+
     const popup = await page.locator('.m-popup');
     await expect(popup).toHaveId(idPopup);
   });
