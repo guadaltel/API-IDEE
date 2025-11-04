@@ -1,8 +1,8 @@
 /**
  * @module IDEE/impl/handler/Feature
  */
-// import ClusteredFeature from 'IDEE/feature/Clustered';
-// import Cluster from 'IDEE/style/Cluster';
+import ClusteredFeature from 'IDEE/feature/Clustered';
+import Cluster from 'IDEE/style/Cluster';
 import { isNullOrEmpty } from 'IDEE/util/Utils';
 // import RenderFeature from 'ol/render/Feature';
 import {
@@ -12,9 +12,6 @@ import {
   ScreenSpaceEventType,
 } from 'cesium';
 import FeatureFacade from 'IDEE/feature/Feature';
-
-// import AnimatedCluster from '../layer/AnimatedCluster';
-// import RenderFeatureImpl from '../feature/RenderFeature';
 // import RenderFeatureImpl from '../feature/RenderFeature';
 import FeatureImpl from '../feature/Feature';
 import ImplUtils from '../util/Utils';
@@ -108,27 +105,26 @@ class Feature {
         if (userMaxExtent && !this.handleFeatureInExtent(userMaxExtent, evt.pixel)) {
           return;
         }
-        if (feature.id && feature.id.entityCollection.owner === cesiumLayer) {
-          // if ((layerFrom instanceof AnimatedCluster)
-          //  && !isNullOrEmpty(feature.get('features'))) {
-          //   const clusteredFeatures = feature.get('features')
-          // .map((f) => getFacadeFeature(f, layer));
-          //   if (clusteredFeatures.length === 1) {
-          //     features.push(clusteredFeatures[0]);
-          //   } else {
-          //     let styleCluster = layer.getStyle();
-          //     if (!(styleCluster instanceof Cluster)) {
-          //       styleCluster = styleCluster.getStyles()
-          // .find((style) => style instanceof Cluster);
-          //     }
-          //     features.push(new ClusteredFeature(clusteredFeatures, {
-          //       ranges: styleCluster.getRanges(),
-          //       hoverInteraction: styleCluster.getOptions().hoverInteraction,
-          //       maxFeaturesToSelect: styleCluster.getOptions().maxFeaturesToSelect,
-          //       distance: styleCluster.getOptions().distance,
-          //     }));
-          //   }
-          // } else
+        if (!isNullOrEmpty(cesiumLayer.clustering) && cesiumLayer.clustering.enabled
+          && !isNullOrEmpty(feature.id)) {
+          // eslint-disable-next-line no-underscore-dangle
+          const clusteredFeatures = feature.id.map((f) => getFacadeFeature(f, layer));
+          if (clusteredFeatures.length === 1) {
+            features.push(clusteredFeatures[0]);
+          } else {
+            let styleCluster = layer.getStyle();
+            if (!(styleCluster instanceof Cluster)) {
+              styleCluster = styleCluster.getStyles().find((style) => style instanceof Cluster);
+            }
+            features.push(new ClusteredFeature(clusteredFeatures, {
+              ranges: styleCluster.getRanges(),
+              hoverInteraction: styleCluster.getOptions().hoverInteraction,
+              maxFeaturesToSelect: styleCluster.getOptions().maxFeaturesToSelect,
+              distance: styleCluster.getOptions().distance,
+            }));
+          }
+        } else if (feature.id && !isNullOrEmpty(feature.id.entityCollection)
+          && feature.id.entityCollection.owner === cesiumLayer) {
           if (!feature.id.properties || !feature.id.properties.hasProperty('selectclusterlink')) {
             features.push(getFacadeFeature(feature.id, layer));
           }

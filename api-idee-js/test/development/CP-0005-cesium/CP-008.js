@@ -6,6 +6,8 @@ import { BAN } from 'IDEE/style/Form';
 
 const mapa = Mmap({
   container: 'map',
+  center: [-4.219808368498104, 33.440820890847064],
+  zoom: 6,
 });
 window.mapa = mapa;
 

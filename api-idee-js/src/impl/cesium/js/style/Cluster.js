@@ -1,17 +1,23 @@
 /**
  * @module IDEE/impl/style/Cluster
  */
+import LayerVector from 'IDEE/layer/Vector';
 import Generic from 'IDEE/style/Generic';
 import FacadeCluster from 'IDEE/style/Cluster';
 import {
   isNullOrEmpty, extendsObj, inverseColor, isFunction,
 } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
+import ClusteredFeature from 'IDEE/feature/Clustered';
 import {
+  Cartesian3,
   Color, ConstantProperty, CustomDataSource, Entity, HorizontalOrigin,
-  PointGraphics, VerticalOrigin,
+  PointGraphics, PolygonGraphics, PolygonHierarchy, VerticalOrigin,
 } from 'cesium';
 import Style from './Style';
+import ImplUtils from '../util/Utils';
+import Feature from '../feature/Feature';
+import coordinatesConvexHull from '../util/convexhull';
 
 /**
  * @classdesc
@@ -385,7 +391,39 @@ class Cluster extends Style {
    */
   hoverFeatureFn_(features, evt) {
     if (!isNullOrEmpty(features)) {
-      //
+      let hoveredFeatures = [];
+      features.forEach((hoveredFeature) => {
+        if (hoveredFeature instanceof ClusteredFeature) {
+          hoveredFeatures = hoveredFeatures.concat(hoveredFeature.getAttribute('features'));
+        } else {
+          hoveredFeatures.push(hoveredFeature);
+        }
+      });
+
+      const coordinates = hoveredFeatures
+        .map((f) => ImplUtils.getCoordinateEntity(f.getImpl().getFeature()));
+      let convexHull = coordinatesConvexHull(coordinates);
+      if (convexHull.length > 2) {
+        convexHull = convexHull.map((c) => Cartesian3.fromDegrees(c[0], c[1], c[2]));
+        const convexCesiumFeature = new Entity({
+          polygon: new PolygonGraphics({
+            hierarchy: new PolygonHierarchy(convexHull),
+          }),
+        });
+        const convexFeature = Feature.feature2Facade(convexCesiumFeature);
+        if (isNullOrEmpty(this.convexHullLayer_)) {
+          this.convexHullLayer_ = new LayerVector({
+            name: `cluster_cover_${this.layer_.name}`,
+            extract: false,
+          }, {
+            displayInLayerSwitcher: false,
+            style: new Generic({ polygon: this.optionsVendor_.convexHullStyle }),
+          });
+        } else {
+          this.convexHullLayer_.removeFeatures(this.convexHullLayer_.getFeatures());
+          this.convexHullLayer_.addFeatures(convexFeature);
+        }
+      }
     }
   }
 
