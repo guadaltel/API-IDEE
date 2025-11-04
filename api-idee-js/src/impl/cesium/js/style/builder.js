@@ -322,6 +322,7 @@ export const getIconSrc = (options, featureVariable, layer) => {
         minimumPixelSize: Simple.getValue(options.icon.minimumPixelSize, featureVariable, layer),
         heightReference: getHeightReference(options, featureVariable, layer),
       });
+      styleIcon.rotation = rotation;
     } else {
       styleIcon = new BillboardGraphics({
         image: Simple.getValue(options.icon.src, featureVariable, layer),

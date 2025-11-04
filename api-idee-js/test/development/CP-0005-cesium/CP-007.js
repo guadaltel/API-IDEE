@@ -38,6 +38,7 @@ const estilo = new Generic({
       src: 'https://sandcastle.cesium.com/SampleData/models/DracoCompressed/CesiumMilkTruck.gltf',
       // opacity: 0.5,
       scale: 10,
+      // rotation: 0.5,
     },
     heightReference: CLAMP_TO_GROUND,
   },

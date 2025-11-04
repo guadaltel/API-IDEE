@@ -2,7 +2,9 @@
  * @module IDEE/impl/style/Simple
  */
 import { isNullOrEmpty, isFunction, extendsObj } from 'IDEE/util/Utils';
-import { Entity, ModelGraphics } from 'cesium';
+import {
+  Entity, HeadingPitchRoll, ModelGraphics, Transforms,
+} from 'cesium';
 import * as EventType from 'IDEE/event/eventtype';
 import ImplUtils from '../util/Utils';
 import Style from './Style';
@@ -100,7 +102,12 @@ class Simple extends Style {
             if (!isNullOrEmpty(icon)) {
               if (icon instanceof ModelGraphics) {
                 cesiumFeature.model = icon;
+                cesiumFeature.orientation = Transforms.headingPitchRollQuaternion(
+                  cesiumFeature.position.getValue(),
+                  new HeadingPitchRoll(icon.rotation, 0, 0),
+                );
               } else {
+                cesiumFeature.model = undefined;
                 cesiumFeature.billboard = icon;
                 cesiumFeature.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
               }
