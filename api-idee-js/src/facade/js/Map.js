@@ -4035,7 +4035,7 @@ class Map extends Base {
   }
 
   /**
-   * Este método devuelve el ticket para controlar capas seguras.
+   * Este método devuelve el ticket, si se ha establecido, para controlar capas seguras.
    *
    * @public
    * @function
