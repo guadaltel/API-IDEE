@@ -252,6 +252,14 @@ function fun(IDEE_) {
   IDEE_.config('MAX_ZOOM', '');
 
   /**
+   * Zoom por defecto.
+   *
+   * @private
+   * @type {Number | String}
+   */
+  IDEE_.config('DEFAULT_ZOOM', '3');
+
+  /**
    * Hace el popup inteligente
    *
    * @private
