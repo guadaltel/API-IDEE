@@ -290,6 +290,13 @@ function fun(IDEE_) {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location.
+   * @public
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', 16);
 }
 
 fun(window.IDEE);
