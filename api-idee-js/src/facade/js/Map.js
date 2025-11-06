@@ -4035,6 +4035,21 @@ class Map extends Base {
   }
 
   /**
+   * Este método devuelve el ticket, si se ha establecido, para controlar capas seguras.
+   *
+   * @public
+   * @function
+   * @returns {String} Devuelve el ticket.
+   * @api
+   */
+  getTicket() {
+    if (!isNullOrEmpty(this.ticket_)) {
+      return this.ticket_;
+    }
+    return IDEE.config.TICKET;
+  }
+
+  /**
    * Este método devuelve el centro inicial del mapa.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @public
