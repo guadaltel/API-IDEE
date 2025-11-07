@@ -13,7 +13,8 @@
 - Se elimina replace del método loadInternal_ de JSONP.
 - Se desarrolla la implementación en Cesium del control rotate.
 - Se mejora el lanzamiento del evento REMOVED_FROM_MAP en WMS y LayerGroup.
-- Se añaden a utilidades los métodos: rgbaToHex
+- Se añaden a utilidades los métodos: rgbaToHex, rgbToHex
+- Se modifica imagen de dynamicLegend usada en estilos con funciones y se soluciona problemas con estilos genéricos y leyendas con funciones.
 
 
 01/01/25 - Versión 1.0.0
