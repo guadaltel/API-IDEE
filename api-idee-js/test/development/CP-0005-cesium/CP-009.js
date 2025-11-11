@@ -16,28 +16,28 @@ window.mapa = mapa;
 
 // Example #1: Patrones en polígonos
 // Nota: Geometrías en 2D con CLAMP_TO_GROUND no tienen stroke
-// const estilo = new Generic({
-//   polygon: {
-//     stroke: {
-//       color: '#ff5588',
-//       width: 4,
-//     },
-//     fill: {
-//       color: 'blue',
-//       opacity: 0.6,
-//       pattern: {
-//         name: 'square',
-//         scale: 5,
-//         spacing: 20,
-//         // rotation: 20,
-//         // offset: [21, 21],
-//         color: '#fff',
-//         // opacity: 0.5,
-//         repeat: [7, 7],
-//       },
-//     },
-//   },
-// });
+const estilo = new Generic({
+  polygon: {
+    stroke: {
+      color: '#ff5588',
+      width: 4,
+    },
+    fill: {
+      color: 'blue',
+      opacity: 0.9,
+      pattern: {
+        name: 'square',
+        scale: 5,
+        spacing: 20,
+        // rotation: 20,
+        // offset: [21, 21],
+        color: '#fff',
+        // opacity: 0.5,
+        repeat: [7, 7],
+      },
+    },
+  },
+});
 
 // Example #2: Patrones con imágenes en polígonos
 // const estilo = new Generic({
@@ -57,29 +57,29 @@ window.mapa = mapa;
 //   },
 // });
 
-// const distritosSan = new WFS({
-//   url: 'https://hcsigc.juntadeandalucia.es/geoserver/IECA/wfs?',
-//   name: 'sigc_distrito_sanitario_1724755018396',
-//   legend: 'Distritos Sanitarios',
-//   geometry: 'POLYGON',
-//   ids: '28',
-//   extract: true,
-// });
+const distritosSan = new WFS({
+  url: 'https://hcsigc.juntadeandalucia.es/geoserver/IECA/wfs?',
+  name: 'sigc_distrito_sanitario_1724755018396',
+  legend: 'Distritos Sanitarios',
+  geometry: 'POLYGON',
+  ids: '28',
+  extract: true,
+});
 
-// distritosSan.setStyle(estilo);
-
-// mapa.addLayers(distritosSan);
+distritosSan.setStyle(estilo);
+mapa.addLayers(distritosSan);
 
 // Example #3: Patrones en líneas
 // const estilo = new Generic({
 //   line: {
-//     stroke: {
-//       color: '#ff5588',
-//       width: 30,
-//     },
+//     // stroke: {
+//     //   color: '#ff5588',
+//     //   width: 10,
+//     // },
 //     fill: {
 //       width: 40,
 //       color: 'blue',
+//       opacity: 0.6,
 //       pattern: {
 //         name: 'circle',
 //         scale: 2,
@@ -95,41 +95,41 @@ window.mapa = mapa;
 // });
 
 // Example #4: Patrones con imágenes en líneas
-const estilo = new Generic({
-  line: {
-    stroke: {
-      color: '#ff5588',
-      width: 4,
-    },
-    fill: {
-      width: 40,
-      pattern: {
-        name: 'Image',
-        src: 'https://es.wikipedia.org/static/images/icons/wikipedia.png',
-        scale: 1,
-        // repeat: [2, 2],
-      },
-    },
-  },
-});
+// const estilo = new Generic({
+//   line: {
+//     stroke: {
+//       color: '#ff5588',
+//       width: 4,
+//     },
+//     fill: {
+//       width: 40,
+//       pattern: {
+//         name: 'Image',
+//         src: 'https://es.wikipedia.org/static/images/icons/wikipedia.png',
+//         scale: 1,
+//         // repeat: [2, 2],
+//       },
+//     },
+//   },
+// });
 
-const capaVectorial = new Vector({
-  name: 'Capa 2',
-});
+// const capaVectorial = new Vector({
+//   name: 'Capa 2',
+// });
 
-const f1 = new Feature('f1', {
-  'type': 'Feature',
-  'properties': {},
-  'geometry': {
-    'type': 'LineString',
-    'coordinates': [
-      [-3.7982077734375097, 38.10767109165957, 408.312],
-      [-7.725820078125008, 38.12495828299171, 0],
-    ],
-  },
-});
+// const f1 = new Feature('f1', {
+//   'type': 'Feature',
+//   'properties': {},
+//   'geometry': {
+//     'type': 'LineString',
+//     'coordinates': [
+//       [-3.7982077734375097, 38.10767109165957, 408.312],
+//       [-7.725820078125008, 38.12495828299171, 0],
+//     ],
+//   },
+// });
 
-capaVectorial.addFeatures([f1]);
+// capaVectorial.addFeatures([f1]);
 
-capaVectorial.setStyle(estilo);
-mapa.addLayers(capaVectorial);
+// capaVectorial.setStyle(estilo);
+// mapa.addLayers(capaVectorial);

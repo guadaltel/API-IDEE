@@ -430,7 +430,6 @@ export const getFillPatern = (options, featureVariable, layer, fill) => {
     color = Color.fromCssColorString(options.fill.pattern.color).withAlpha(opacity);
   }
   let style = {};
-
   const stylePattern = new CesiumStyleFillPattern({
     pattern: (Simple.getValue(options.fill.pattern.name, featureVariable, layer) || '')
       .toLowerCase(),
@@ -449,12 +448,12 @@ export const getFillPatern = (options, featureVariable, layer, fill) => {
   const repeatX = options.fill.pattern.repeat ? options.fill.pattern.repeat[0] : 1;
   const repeatY = options.fill.pattern.repeat ? options.fill.pattern.repeat[1] : 1;
   const canvas = stylePattern.getImage();
-  console.log(canvas);
 
   style = {
     material: new ImageMaterialProperty({
       image: canvas,
       repeat: new Cartesian2(repeatX, repeatY),
+      transparent: true,
     }),
   };
 
