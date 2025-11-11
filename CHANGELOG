@@ -15,6 +15,7 @@
 - Se mejora el lanzamiento del evento REMOVED_FROM_MAP en WMS y LayerGroup.
 - Se añaden a utilidades los métodos: rgbaToHex, rgbToHex
 - Se modifica imagen de dynamicLegend usada en estilos con funciones y se soluciona problemas con estilos genéricos y leyendas con funciones.
+- Se permite añadir nuevas proyecciones con el método addProjections sin tener que ponerlas en forma de array, además se controla el añadido de proyecciones duplicadas.
 
 
 01/01/25 - Versión 1.0.0
