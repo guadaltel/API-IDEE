@@ -20,7 +20,8 @@
 - Modificado método getMaxExtent de las capas WMS para confirmar que la capa existe antes de aplicarlo.
 - Añadida la función parseRotation a la clase parámetros.
 - En capas MBTilesVectors tileLoadFunction_ pasa a público por lo que ahora se renombra a tileLoadFunction.
-- MBTilesVector hereda de Vector la funcionalidad extract
+- MBTilesVector hereda de Vector la funcionalidad extract.
+- Se implementa el uso de ticket en WFS.
 
 
 01/01/25 - Versión 1.0.0
