@@ -210,6 +210,7 @@ class MBTiles extends Layer {
    * @function
    * @param {Function} callbackFn Función que se ejecuta cuando se obtiene la extensión.
    * @returns {Array} Devuelve la extensión de la capa.
+   * @api
    */
   getMaxExtent(callbackFn) {
     const extent = this.maxExtent_ || this.getExtentFromProvider();

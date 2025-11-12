@@ -151,6 +151,7 @@ class MBTiles extends LayerBase {
    * @function
    * @param {Function} callbackFn Función que se ejecuta cuando se obtiene la extensión.
    * @returns {Array} Devuelve la extensión de la capa.
+   * @api
    */
   getMaxExtent(callbackFn) {
     return this.getImpl().getMaxExtent(callbackFn);
