@@ -3786,7 +3786,7 @@ class Map extends Base {
    *
    * @public
    * @function
-   * @param {String|Mx.Projection} projectionParam EL "bbox".
+   * @param {String|Mx.Projection} projectionParam Proyección a aplicar al mapa.
    * @param {Boolean} asDefault Utiliza la proyección por defecto.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
