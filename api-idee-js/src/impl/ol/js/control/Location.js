@@ -147,8 +147,8 @@ class Location extends Control {
     }
 
     this.geolocation_.setTracking(true);
-    this.facadeMap_.drawFeatures([this.accuracyFeature_]);
-    // this.facadeMap_.drawFeatures([this.accuracyFeature_, this.positionFeature_]);
+    // this.facadeMap_.drawFeatures([this.accuracyFeature_]);
+    this.facadeMap_.drawFeatures([this.accuracyFeature_, this.positionFeature_]);
   }
 
   /**
