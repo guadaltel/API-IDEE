@@ -2906,13 +2906,19 @@ class Map extends Base {
   }
 
   /**
+   * Este método añade un estilo al control scaleline para que
+   * no choque con los controles scale y wmcselector cuando la pantalla
+   * no es lo suficientemente ancha y los tres controles han sido añadidos.
+   * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @private
    * @function
+   * @param {Object} panel panel del control.
+   * @api
    */
   addUpClass_(panel) {
     panel.on(EventType.ADDED_TO_MAP, (html) => {
       if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-        this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
+        this.getControls(['scaleline'])[0].getElement().classList.add('ol-scale-line-up');
       }
     });
   }
