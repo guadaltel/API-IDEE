@@ -122,8 +122,13 @@ class Location extends Control {
         },
       }, this.vendorOptions_, true));
       this.geolocation_.on('change:accuracyGeometry', (evt) => {
-        const accuracyGeom = evt.target.get(evt.key);
-        this.accuracyFeature_.getImpl().getFeature().setGeometry(accuracyGeom);
+        // const accuracyGeom = evt.target.get(evt.key);
+        const coord = this.geolocation_.getPosition();
+        const geom = isNullOrEmpty(coord)
+          ? null
+          : new OLGeomPoint(coord);
+        this.accuracyFeature_.getImpl().getFeature().setGeometry(geom);
+        // this.accuracyFeature_.getImpl().getFeature().setGeometry(accuracyGeom);
       });
       this.geolocation_.once('change:position', (evt) => {
         const newCoord = evt.target.get(evt.key);
