@@ -433,7 +433,7 @@ class LayerBase extends MObject {
    * Este método busca si hay capas base y activa la primera de la lista.
    *
    * @function
-   * @param {Object} layer capa eliminada
+   * @param {IDEE.Layer} layer capa eliminada
    * @param {IDEE.Map} facadeMap Fachada del mapa.
    * @api stable
    * @expose
