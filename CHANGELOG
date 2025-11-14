@@ -22,6 +22,7 @@
 - En capas MBTilesVectors tileLoadFunction_ pasa a público por lo que ahora se renombra a tileLoadFunction.
 - MBTilesVector hereda de Vector la funcionalidad extract.
 - Se implementa el uso de ticket en WFS.
+- Se añade el metodo generateRandomStyle a utilidades de estilo.
 
 
 01/01/25 - Versión 1.0.0
