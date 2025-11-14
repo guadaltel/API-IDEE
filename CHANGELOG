@@ -23,6 +23,7 @@
 - MBTilesVector hereda de Vector la funcionalidad extract.
 - Se implementa el uso de ticket en WFS.
 - Se añade el metodo generateRandomStyle a utilidades de estilo.
+- Se configura la URL de recursos estáticos para poder personalizar la URL del despliegue del mismo.
 
 
 01/01/25 - Versión 1.0.0
