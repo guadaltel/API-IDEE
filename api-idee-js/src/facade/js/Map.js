@@ -3929,6 +3929,32 @@ class Map extends Base {
   }
 
   /**
+   * Este método agrega plugins.
+   *
+   * @public
+   * @function
+   * @param {Array<Plugin>} plugins  Plugins para añadir al mapa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addPlugins(plugins) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(plugins)) {
+      Exception(getValue('exception').no_plugins);
+    }
+    let allPlugins = plugins;
+    if (!isArray(plugins)) {
+      allPlugins = [plugins];
+    }
+
+    allPlugins.forEach((plugin) => {
+      this.addPlugin(plugin);
+    });
+
+    return this;
+  }
+
+  /**
    * Este método elimina los complementos especificados del mapa.
    *
    * @function
