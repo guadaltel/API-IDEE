@@ -25,6 +25,8 @@
 - Se añade el metodo generateRandomStyle a utilidades de estilo.
 - Se configura la URL de recursos estáticos para poder personalizar la URL del despliegue del mismo.
 - Se modifica el desarrollo del método getCentroid de utilidades (implementación).
+- El control location sitúa al usuario y detectará cambios de posición.
+- Soluciona error por el cual el control location no mostraba el punto.
 
 
 01/01/25 - Versión 1.0.0
