@@ -28,6 +28,7 @@
 - El control location sitúa al usuario y detectará cambios de posición.
 - Soluciona error por el cual el control location no mostraba el punto.
 - Añadido el método addPlugins a la clase Map para permitir añadir un array de plugins.
+- Se elimina código innecesario y se soluciona problema con asignación de estilos en capas MBTilesVector.
 
 
 01/01/25 - Versión 1.0.0
