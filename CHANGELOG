@@ -30,6 +30,7 @@
 - Añadido el método addPlugins a la clase Map para permitir añadir un array de plugins.
 - Se elimina código innecesario y se soluciona problema con asignación de estilos en capas MBTilesVector.
 - Añadido método activateBaseLayer en Layer, para que cuando una capa base sea eliminada, se active otra si hay.
+- Se implementa la posibilidad de enviar un callback a getMaxExtent de mbtiles.
 
 
 01/01/25 - Versión 1.0.0
