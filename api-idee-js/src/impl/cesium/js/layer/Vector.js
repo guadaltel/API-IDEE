@@ -1,6 +1,7 @@
 /**
  * @module IDEE/impl/layer/Vector
  */
+import ClusteredFeature from 'IDEE/feature/Clustered';
 import {
   isNullOrEmpty,
   isFunction,
@@ -658,8 +659,8 @@ class Vector extends Layer {
    * @expose
    */
   selectFeatures(features, coord, evt) {
-    if (this.extract === true) {
-      const feature = features[0];
+    const feature = features[0];
+    if (!(feature instanceof ClusteredFeature) && (this.extract === true)) {
       if (!isNullOrEmpty(feature)) {
         const clickFn = feature.getAttribute('vendor.api_idee.click');
         if (isFunction(clickFn)) {

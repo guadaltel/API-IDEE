@@ -3,7 +3,7 @@
  */
 import ClusteredFeature from 'IDEE/feature/Clustered';
 import Cluster from 'IDEE/style/Cluster';
-import { isNullOrEmpty } from 'IDEE/util/Utils';
+import { isNullOrEmpty, isArray } from 'IDEE/util/Utils';
 // import RenderFeature from 'ol/render/Feature';
 import {
   Cesium3DTilePointFeature,
@@ -105,9 +105,11 @@ class Feature {
         if (userMaxExtent && !this.handleFeatureInExtent(userMaxExtent, evt.pixel)) {
           return;
         }
+
+        const auxstyle = layer.getStyle();
         if (!isNullOrEmpty(cesiumLayer.clustering) && cesiumLayer.clustering.enabled
-          && !isNullOrEmpty(feature.id)) {
-          // eslint-disable-next-line no-underscore-dangle
+          && (auxstyle.getOptions().selectInteraction || auxstyle.getOptions().hoverInteraction)
+          && !isNullOrEmpty(feature.id) && isArray(feature.id)) {
           const clusteredFeatures = feature.id.map((f) => getFacadeFeature(f, layer));
           if (clusteredFeatures.length === 1) {
             features.push(clusteredFeatures[0]);

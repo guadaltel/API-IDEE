@@ -5,19 +5,31 @@ import LayerVector from 'IDEE/layer/Vector';
 import Generic from 'IDEE/style/Generic';
 import FacadeCluster from 'IDEE/style/Cluster';
 import {
-  isNullOrEmpty, extendsObj, inverseColor, isFunction,
+  isNullOrEmpty, extendsObj, inverseColor,
+  // isFunction,
 } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import ClusteredFeature from 'IDEE/feature/Clustered';
 import {
   Cartesian3,
-  Color, ConstantProperty, CustomDataSource, Entity, HorizontalOrigin,
-  PointGraphics, PolygonGraphics, PolygonHierarchy, VerticalOrigin,
+  Color,
+  ConstantProperty,
+  CustomDataSource,
+  Entity,
+  HorizontalOrigin,
+  PointGraphics,
+  PolygonGraphics,
+  PolygonHierarchy,
+  ScreenSpaceEventHandler,
+  ScreenSpaceEventType,
+  VerticalOrigin,
 } from 'cesium';
+import { getValue } from 'IDEE/i18n/language';
 import Style from './Style';
-import ImplUtils from '../util/Utils';
+import Utils from '../util/Utils';
 import Feature from '../feature/Feature';
 import coordinatesConvexHull from '../util/convexhull';
+import SelectCluster from '../interaction/SelectedCluster';
 
 /**
  * @classdesc
@@ -33,7 +45,22 @@ class Cluster extends Style {
    * Constructor principal de la clase.
    *
    * @constructor
-   *
+   * @param {Object} options Parámetros de los estilos del "cluster".
+   * - ranges: Matriz de objetos con el valor mínimo, el máximo y un IDEE.style.Point.
+   * - hoverInteraction: Indica si se quiere mostrar el polígono que
+   * engloba los elementos al situarse sobre el "cluster".
+   * - selectInteraction: Indica si se quiere que al pinchar en un "cluster"
+   * se abra el abanico de puntos o no, por defecto verdadero.
+   * - displayAmount: Indica si se muestra el número de elementos
+   * que componen el "cluster".
+   * - maxFeaturesToSelect: Número máximo de elementos agrupados a partir de los cuales,
+   * al hacer click, se hará zoom en lugar de desplegar el "cluster".
+   * - distance: Distancia (en píxeles) de agrupación de elementos.
+   * - label: Estilo opcional de la etiqueta de número de elementos de
+   * todos los rangos, si se muestra.
+   * @param {Object} optionsVendor Opciones que se pasarán a la librería base.
+   * - distanceSelectFeatures: Distancia de selección de los objetos geográficos.
+   * - convexHullStyle: Estilo de casco convexo.
    * @api stable
    */
   constructor(options, optionsVendor) {
@@ -94,6 +121,13 @@ class Cluster extends Style {
      * @expose
      */
     this.hoverInteraction_ = null;
+
+    /**
+     * @private
+     * @type {function}
+     * @expose
+     */
+    this.boundOnClusterEvent_ = null;
   }
 
   /**
@@ -123,7 +157,7 @@ class Cluster extends Style {
    *
    * @function
    * @public
-   * @return {Array<ol.interaction.SelectCluster>} Grupo de estilo con interación.
+   * @return {Array<IDEE.impl.interaction.SelectCluster>} Grupo de estilo con interación.
    * @api stable
    */
   get selectClusterInteraction() {
@@ -173,8 +207,8 @@ class Cluster extends Style {
    */
   setPropertiesCluster_(clusterF, style) {
     const cluster = clusterF;
-    const styleF = style[0];
     if (!isNullOrEmpty(style) && !isNullOrEmpty(cluster)) {
+      const styleF = style[0];
       cluster.billboard.show = false;
       if (!isNullOrEmpty(styleF.icon)) {
         cluster.billboard.show = true;
@@ -214,6 +248,10 @@ class Cluster extends Style {
             ? styleF.label.disableDepthTestDistance.getValue() : undefined,
         });
       }
+    } else if (isNullOrEmpty(style)) {
+      cluster.billboard.show = false;
+      cluster.point.show = false;
+      cluster.label.show = false;
     }
   }
 
@@ -247,10 +285,11 @@ class Cluster extends Style {
       this.addCoverInteraction_();
     }
     if (this.options_.selectInteraction !== false) {
-      // this.addSelectInteraction_();
+      this.addSelectInteraction_();
     }
 
-    this.clusterLayer_.clustering.clusterEvent.addEventListener(this.onClusterEvent_.bind(this));
+    this.boundOnClusterEvent_ = this.onClusterEvent_.bind(this);
+    this.clusterLayer_.clustering.clusterEvent.addEventListener(this.boundOnClusterEvent_);
   }
 
   /**
@@ -322,6 +361,7 @@ class Cluster extends Style {
 
   /**
    * Este método actualiza la animación.
+   * No disponible para Cesium.
    *
    * @function
    * @public
@@ -333,7 +373,8 @@ class Cluster extends Style {
    */
 
   setAnimated(animated, layer, cluster) {
-    //
+    // eslint-disable-next-line no-console
+    console.warn(getValue('exception').animated_method);
   }
 
   /**
@@ -355,7 +396,25 @@ class Cluster extends Style {
    * @api stable
    */
   addSelectInteraction_() {
-    //
+    const map = this.layer_.getImpl().getMap();
+    this.selectClusterInteraction_ = new SelectCluster({
+      fLayer: this.layer_,
+      map,
+      maxFeaturesToSelect: this.options_.maxFeaturesToSelect,
+      pointRadius: this.optionsVendor_.distanceSelectFeatures,
+      layers: [this.clusterLayer_],
+    });
+    this.handleSelectEvent = new ScreenSpaceEventHandler(map.getMapImpl().scene.canvas);
+    this.handleSelectEvent.setInputAction((click) => {
+      this.selectClusterFeature_();
+      this.selectClusterInteraction_.selectCluster(click);
+    }, ScreenSpaceEventType.LEFT_CLICK);
+
+    this.onCameraMoveStart_ = () => {
+      this.selectClusterFeature_();
+      this.selectClusterInteraction_.refreshViewEvents();
+    };
+    map.getMapImpl().camera.moveStart.addEventListener(this.onCameraMoveStart_);
   }
 
   /**
@@ -377,7 +436,17 @@ class Cluster extends Style {
    * @api stable
    */
   removeSelectInteraction_() {
-    //
+    if (this.handleSelectEvent) {
+      this.handleSelectEvent.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+      this.handleSelectEvent.destroy();
+      this.handleSelectEvent = undefined;
+    }
+
+    if (!isNullOrEmpty(this.selectClusterInteraction_)) {
+      this.selectClusterInteraction_.clear();
+      this.layer_.getImpl().getMap().getMapImpl().camera.moveStart
+        .removeEventListener(this.onCameraMoveStart_);
+    }
   }
 
   /**
@@ -401,7 +470,7 @@ class Cluster extends Style {
       });
 
       const coordinates = hoveredFeatures
-        .map((f) => ImplUtils.getCoordinateEntity(f.getImpl().getFeature()));
+        .map((f) => Utils.getCoordinateEntity(f.getImpl().getFeature()));
       let convexHull = coordinatesConvexHull(coordinates);
       if (convexHull.length > 2) {
         convexHull = convexHull.map((c) => Cartesian3.fromDegrees(c[0], c[1], c[2]));
@@ -419,6 +488,11 @@ class Cluster extends Style {
             displayInLayerSwitcher: false,
             style: new Generic({ polygon: this.optionsVendor_.convexHullStyle }),
           });
+          this.convexHullLayer_.addFeatures(convexFeature);
+          this.layer_.getImpl().getMap().addLayers(this.convexHullLayer_);
+          this.convexHullLayer_.setStyle(new Generic({
+            polygon: this.optionsVendor_.convexHullStyle,
+          }));
         } else {
           this.convexHullLayer_.removeFeatures(this.convexHullLayer_.getFeatures());
           this.convexHullLayer_.addFeatures(convexFeature);
@@ -483,7 +557,7 @@ class Cluster extends Style {
     // eslint-disable-next-line no-underscore-dangle
     const clusterCesiumFeatures = feature._features;
     if (!clusterCesiumFeatures) {
-      // return new Centroid();
+      return new PointGraphics();
     }
     const numFeatures = clusterCesiumFeatures.length;
     const range = this.options_.ranges
@@ -510,7 +584,16 @@ class Cluster extends Style {
       }
       cesiumStyle = style.getImpl().olStyleFn(feature);
     } else if (numFeatures === 1) {
-      //
+      // No debe entrar ya que Cesium no considera como cluster un único feature
+      // let clusterCesiumFeatureStyle = clusterCesiumFeatures[0].getStyle();
+      // if (!clusterCesiumFeatureStyle) {
+      //   clusterCesiumFeatureStyle = this.oldLayer_.getStyle();
+      // }
+      // cesiumStyle = clusterCesiumFeatureStyle(clusterCesiumFeatures[0], resolution);
+      // if (!isArray(cesiumStyle)) {
+      //   cesiumStyle = [cesiumStyle];
+      // }
+      // cesiumStyle[0].setGeometry(clusterCesiumFeatures[0].getGeometry());
     }
     return cesiumStyle;
   }
@@ -555,7 +638,7 @@ class Cluster extends Style {
    * @api stable
    */
   selectClusterFeature_(evt) {
-    //
+    this.clearConvexHull();
   }
 
   /**
@@ -565,7 +648,19 @@ class Cluster extends Style {
    * @api stable
    */
   unapply() {
-    //
+    if (!isNullOrEmpty(this.clusterLayer_)) {
+      this.clusterLayer_.clustering.clusterEvent.removeEventListener(this.boundOnClusterEvent_);
+      this.layer_.getImpl().getLayer().clustering.enabled = false;
+      // this.layer_.getImpl().setLayer(this.oldLayer_);
+      this.removeCoverInteraction_();
+      this.removeSelectInteraction_();
+      this.clearConvexHull();
+      // this.deactivateChangeResolutionEvent();
+      this.layer_.redraw();
+      this.deactivateChangeEvent();
+    } else if (!isNullOrEmpty(this.layer_)) {
+      this.layer_.un(EventType.LOAD, this.clusterize_.bind(this), this);
+    }
   }
 
   /**
@@ -592,13 +687,18 @@ class Cluster extends Style {
   updateCanvas() {}
 
   /**
-   * Actica el cambio del evento.
+   * Activa el cambio del evento.
    * @public
    * @function
    * @api stable
    */
   activateChangeEvent() {
-    //
+    // Nota: En Cesium lo realiza automáticamente
+    // if (this.clusterLayer_ !== null) {
+    //   const clusterSource = this.clusterLayer_.getSource();
+    //   const callback = OLSourceCluster.prototype.refresh;
+    //   clusterSource.getSource().on('change', callback);
+    // }
   }
 
   /**
@@ -609,7 +709,18 @@ class Cluster extends Style {
    * @api stable
    */
   deactivateChangeEvent() {
-    //
+    // Nota: En Cesium no es necesario activar el evento
+    // if (this.clusterLayer_ !== null) {
+    //   const clusterSource = this.clusterLayer_.getSource();
+    //   const callback = OLSourceCluster.prototype.refresh;
+    //   unByKey({
+    //     bindTo: undefined,
+    //     callOnce: false,
+    //     listener: callback,
+    //     target: clusterSource.getSource(),
+    //     type: 'change',
+    //   });
+    // }
   }
 
   /**
@@ -619,7 +730,8 @@ class Cluster extends Style {
    * @api stable
    */
   deactivateChangeResolutionEvent() {
-    //
+    // eslint-disable-next-line no-console
+    console.warn(getValue('exception').deactivatechangeresolution_method);
   }
 
   /**
@@ -631,14 +743,14 @@ class Cluster extends Style {
    * @api stable
    */
   deactivateTemporarilyChangeEvent(callback, callbackArguments) {
-    this.deactivateChangeEvent();
-    if (isFunction(callback)) {
-      if (callbackArguments == null) {
-        callback();
-      } else {
-        callback(...callbackArguments);
-      }
-    }
+    // this.deactivateChangeEvent();
+    // if (isFunction(callback)) {
+    //   if (callbackArguments == null) {
+    //     callback();
+    //   } else {
+    //     callback(...callbackArguments);
+    //   }
+    // }
   }
 
   /**

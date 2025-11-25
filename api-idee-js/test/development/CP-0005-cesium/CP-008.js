@@ -2,12 +2,12 @@ import { map as Mmap } from 'IDEE/api-idee';
 import WFS from 'IDEE/layer/WFS';
 import Cluster from 'IDEE/style/Cluster';
 import Generic from 'IDEE/style/Generic';
-import { BAN } from 'IDEE/style/Form';
+import GeoJSON from 'IDEE/layer/GeoJSON';
 
 const mapa = Mmap({
   container: 'map',
-  center: [-4.219808368498104, 33.440820890847064],
-  zoom: 6,
+  center: [-4.955234548683441, 37.91842330548027],
+  zoom: 9,
 });
 window.mapa = mapa;
 
@@ -19,62 +19,36 @@ const campamentos = new WFS({
   version: '1.0.0',
 });
 
+// const campamentos = new WFS({
+//   name: 'reservas_biosfera',
+//   namespace: 'reservas_biosfera',
+//   legend: 'Reservas biosferas',
+//   geometry: 'POLYGON',
+//   url: 'https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_WFS_Patrimonio_Natural?',
+//   version: '1.1.0',
+// }, {
+//   getFeatureOutputFormat: 'geojson',
+//   describeFeatureTypeOutputFormat: 'geojson',
+// });
+
 mapa.addLayers(campamentos);
 
 // Example #1: Se aplica un cluster por defecto
 // campamentos.setStyle(new Cluster());
 
 // Example #2: Se aplica un clúster personalizado
-const clusterOpts = {
+const estilo = new Generic({
+  point: {
+    fill: {
+      color: 'red',
+    },
+  },
+});
+
+const clusterOptions = {
   ranges: [{
-    min: 151,
-    max: 181,
-    style: new Generic({
-      point: {
-        stroke: {
-          color: '#5789aa',
-        },
-        fill: {
-          color: '#3399ff',
-        },
-        // icon: {
-        //   // // src
-        //   // src: 'https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/mozilla.svg',
-        //   // rotation: 0.5,
-        //   // scale: 0.2,
-        //   // opacity: 0.4,
-        //   // anchor: [2, 2],
-        //   // anchororigin: 'bottom-right',
-        //   // anchorxunits: 'pixel',
-        //   // anchoryunits: 'pixel',
-        //   // offsetorigin: 'bottom-left',
-        //   // offset: [20, 0],
-        //   // size: [300, 300],
-        //   // fill: {
-        //   //   color: 'grey',
-        //   //   opacity: 0.5,
-        //   // },
-        //   // stroke: {
-        //   //   color: 'white',
-        //   //   width: 2,
-        //   // },
-        //   // // form
-        //   form: BAN,
-        //   class: 'g-cartografia-pin',
-        //   fontsize: 0.5,
-        //   radius: 20,
-        //   rotation: 0,
-        //   color: '#006CFF' || 'blue',
-        //   offset: [0, 0],
-        //   fill: '#8A0829' || 'red',
-        //   // opacity: 0.5,
-        // },
-        radius: 30,
-      },
-    }),
-  }, {
-    min: 0,
-    max: 150,
+    min: 2,
+    max: 4,
     style: new Generic({
       point: {
         stroke: {
@@ -86,12 +60,52 @@ const clusterOpts = {
         radius: 20,
       },
     }),
-  }],
+  }, {
+    min: 5,
+    max: 9,
+    style: new Generic({
+      point: {
+        stroke: {
+          color: '#5789aa',
+        },
+        fill: {
+          color: '#3399ff',
+        },
+        radius: 30,
+      },
+    }),
+  },
+  ],
+  // animated: true, // En Cesium siempre está activado
+  hoverInteraction: true,
+  // hoverInteraction: false,
+  // displayAmount: false,
+  displayAmount: true,
+  selectInteraction: true,
+  // selectInteraction: false,
   distance: 80,
+  maxFeaturesToSelect: 6,
   label: {
-    font: 'bold 19px Comic Sans MS',
+    font: 'bold 15px Comic Sans MS',
     color: '#FFFFFF',
   },
-  hoverInteraction: true,
 };
-campamentos.setStyle(new Cluster(clusterOpts));
+
+const optionsVendor = {
+  // distanceSelectFeatures: 5000,
+  convexHullStyle: {
+    fill: {
+      color: '#000000',
+      opacity: 0.5,
+    },
+    stroke: {
+      color: '#000000',
+      width: 1,
+    },
+  },
+};
+
+// const styleCluster = new Cluster(clusterOptions);
+const styleCluster = new Cluster(clusterOptions, optionsVendor);
+campamentos.setStyle(estilo);
+campamentos.setStyle(styleCluster);

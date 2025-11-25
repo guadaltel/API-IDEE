@@ -20,6 +20,7 @@ import {
   Ellipsoid,
   SceneTransforms,
   Cartesian2,
+  defined,
 } from 'cesium';
 import proj4 from 'proj4';
 
@@ -607,7 +608,7 @@ class Utils {
     }
     if (!isNullOrEmpty(coordinates)) {
       const cartesian = Cartesian3.fromDegrees(coordinates[0], coordinates[1]);
-      const screenPosition = SceneTransforms.wgs84ToWindowCoordinates(map.scene, cartesian);
+      const screenPosition = SceneTransforms.worldToWindowCoordinates(map.scene, cartesian);
       // const canvasCoordinates = map.scene.cartesianToCanvasCoordinates(cartesian);
       pixel = [screenPosition.x, screenPosition.y];
     }
@@ -850,6 +851,33 @@ class Utils {
       geometry.coordinates = cesiumFeature.position._value;
     }
     return geometry;
+  }
+
+  /**
+   * Este método convierte un punto de píxeles a metros.
+   *
+   * @function
+   * @param {Cesium.Viewer} viewer Mapa de Cesium.
+   * @param {Cesium.Cartesian3} center Posición 3D del centro del punto.
+   * @param {number} pixels Distancia deseada en píxeles.
+   * @returns {number} Distancia equivalente en metros en el mundo 3D.
+   */
+  static convertPixelsToMeters(map, center, pixels) {
+    const scene = map.scene;
+    const centerScreenPos = scene.cartesianToCanvasCoordinates(center);
+
+    if (!defined(centerScreenPos)) {
+      return 50000;
+    }
+
+    const displacedScreenPos = new Cartesian2(centerScreenPos.x + pixels, centerScreenPos.y);
+    const displacedWorldPos = scene.camera.pickEllipsoid(displacedScreenPos, scene.globe.ellipsoid);
+
+    if (!defined(displacedWorldPos)) {
+      return 50000;
+    }
+
+    return Cartesian3.distance(center, displacedWorldPos);
   }
 
   /**

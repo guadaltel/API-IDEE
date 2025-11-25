@@ -307,6 +307,8 @@
     "setmaxzoom_no_apply": "No es posible aplicar el máximo zoom a la capa WMC.",
     "setminscale_no_apply": "No es posible aplicar la mínima escala a la capa WMC.",
     "setmaxscale_no_apply": "No es posible aplicar la máxima escala a la capa WMC.",
-    "wkt_toCQL_method": "La implementación usada no puede crear el formateador WKT por lo que no incluirá filtros CQL."
+    "wkt_toCQL_method": "La implementación usada no puede crear el formateador WKT por lo que no incluirá filtros CQL.",
+    "animated_method": "La implementación usada no podrá desactivar ni modificar la animación",
+    "deactivatechangeresolution_method": "La implementación usada no posee el método deactivateChangeResolutionEvent"
   }
 }
