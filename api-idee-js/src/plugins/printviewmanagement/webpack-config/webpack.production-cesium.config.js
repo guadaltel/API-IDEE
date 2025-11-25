@@ -78,10 +78,10 @@ module.exports = {
     emitOnErrors: false,
     minimizer: [
       new OptimizeCssAssetsPlugin({
-        parallel: 2,
+        parallel: 1,
       }),
       new TerserPlugin({
-        parallel: 2,
+        parallel: 1,
         terserOptions: {
           sourceMap: true,
         },
