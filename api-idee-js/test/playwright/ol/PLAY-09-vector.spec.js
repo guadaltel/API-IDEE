@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Vector layers', () => {
-  let map;
   test.beforeEach(async ({ page }) => {
     await page.goto('/test/playwright/ol/basic-ol.html');
     await page.evaluate(() => {
-      map = IDEE.map({ container: 'map' });
+      const map = IDEE.map({ container: 'map' });
       window.map = map;
     });
   });
@@ -14,6 +13,7 @@ test.describe('Vector layers', () => {
     const textPopup = 'Popup personalizado';
     const customTemplate = `<div>${textPopup}</div>`;
 
+    await page.waitForFunction(() => window.map.isFinished());
     await page.evaluate((temp) => {
       const ogc_001 = new IDEE.layer.OGCAPIFeatures({
         url: 'https://api-features.ign.es/collections/',
@@ -25,20 +25,27 @@ test.describe('Vector layers', () => {
         template: temp,
       });
 
-      map.addLayers(ogc_001);
       window.ogc_001 = ogc_001;
     }, customTemplate);
 
-    await page.waitForTimeout(5000);
-    await page.mouse.click(599, 132);
-    const popup = await page.locator('.m-popup.m-collapsed .m-body');
-    //try {
-      const text = await popup.innerText({ timeout: 2000 });
-      expect(text).toContain(textPopup);
-      const template = await page.evaluate(() => ogc_001.template);
-      expect(template).toEqual(customTemplate);
-    /*} catch (e) {
+    await page.evaluate(() => {
+      return new Promise((resolve) => {
+        window.ogc_001.on(IDEE.evt.LOAD, () => {
+          resolve();
+        });
+        window.map.addLayers(window.ogc_001);
+      });
+    });
+
+    await page.click('#map', { position: { x: 599, y: 132 } });
+    const popup = await page.locator('.m-popup .m-body');
+    // try {
+    const text = await popup.innerText({ timeout: 2000 });
+    expect(text).toContain(textPopup);
+    const template = await page.evaluate(() => window.ogc_001.template);
+    expect(template).toEqual(customTemplate);
+    /* } catch (e) {
       console.warn('⚠️ Popup no apareció. El servicio podría no haber cargado los features.');
-    }*/
+    } */
   });
 });

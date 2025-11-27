@@ -11,16 +11,15 @@ test('Capa WMTS - tileLoadFunction', async ({ page }) => {
     }
   });
 
-  let mapjs;
   await page.evaluate(() => {
-    mapjs = IDEE.map({
+    const mapjs = IDEE.map({
       container: 'map',
     });
+    window.mapjs = mapjs;
   });
 
-  let wms;
   await page.evaluate(() => {
-    wms = new IDEE.layer.WMTS(
+    const wms = new IDEE.layer.WMTS(
       {
         url: 'https://wmts-mapa-lidar.idee.es/lidar',
         name: 'EL.GridCoverageDSM',
@@ -37,8 +36,16 @@ test('Capa WMTS - tileLoadFunction', async ({ page }) => {
         },
       },
     );
-    mapjs.addLayers([wms]);
+    window.wms = wms;
   });
-  await page.waitForTimeout(4000);
+  await page.evaluate(() => {
+    return new Promise((resolve) => {
+      window.wms.on(IDEE.evt.ADDED_TO_MAP, () => {
+        resolve();
+      });
+      window.mapjs.addLayers([window.wms]);
+    });
+  });
+  await page.waitForTimeout(2000);
   expect(hasTileLog).toBe(true);
 });

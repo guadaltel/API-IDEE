@@ -27,16 +27,20 @@ test.describe('IDEE.Popup', () => {
         legend: 'Capa OGCAPIFeatures',
         extract: true,
       });
-
+      window.ogc_001 = ogc_001;
+      window.map.addLayers(window.ogc_001);
+    }, text);
+    await page.evaluate(() => {
       return new Promise((resolve) => {
-        window.map.on(IDEE.evt.ADDED_OGCAPIFEATURES, () => {
+        window.ogc_001.on(IDEE.evt.LOAD, () => {
           resolve();
         });
-        window.map.addLayers(ogc_001);
       });
-    }, text);
-    await page.mouse.click(562, 293);
-    const footer = await page.locator('.m-popup.m-collapsed .m-footer');
+    });
+    await await page.click('#map', { position: { x: 562, y: 293 } });
+    await page.waitForSelector('.m-popup .m-footer');
+
+    const footer = await page.locator('.m-popup .m-footer');
     await expect(footer).toHaveText(text);
   });
 });

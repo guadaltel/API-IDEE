@@ -6,6 +6,7 @@ import { get as getProj, transform } from 'ol/proj';
 import OLFormatWMTSCapabilities from 'ol/format/WMTSCapabilities';
 import OLProjection from 'ol/proj/Projection';
 import OLInteraction from 'ol/interaction/Interaction';
+import { MouseWheelZoom, DragPan } from 'ol/interaction';
 import MObject from 'IDEE/Object';
 import FacadePanzoombar from 'IDEE/control/Panzoombar';
 import * as LayerType from 'IDEE/layer/Type';
@@ -26,6 +27,8 @@ import FacadeMBTiles from 'IDEE/layer/MBTiles';
 import FacadeMBTilesVector from 'IDEE/layer/MBTilesVector';
 import FacadeMVT from 'IDEE/layer/MVT';
 import FacadeGeoTIFF from 'IDEE/layer/GeoTIFF';
+import FacadeGeoPackageTile from 'IDEE/layer/GeoPackageTile';
+import FacadeWMC from 'IDEE/layer/WMC';
 import * as EventType from 'IDEE/event/eventtype';
 import FacadeMap from 'IDEE/Map';
 import LayerBase from 'IDEE/layer/Layer';
@@ -72,6 +75,7 @@ import LayerGroup from './layer/LayerGroup';
  * @property {Number} currentZoom Almacena el zoom del mapa.
  * @property {Object} objectView Almacena las propiedades indicadas por el usuario para la vista.
  * @property {Array<IDEE.layer.Section>} sections_ Secciones añadidas al mapa.
+ * @property {Number} currentRotation Almacena la rotación del mapa.
  *
  * @api
  * @extends {IDEE.Object}
@@ -189,11 +193,25 @@ class Map extends MObject {
     this._resolutionsBaseLayer = false;
 
     /**
+     * Etiquetas
+     * @private
+     * @type {Array}
+     */
+    this.label = [];
+
+    /**
      * Almacena el zoom del mapa.
      * @api
      * @type {Number}
      */
     this.currentZoom = null;
+
+    /**
+     * Almacena la rotación del mapa.
+     * @api
+     * @type {Number}
+     */
+    this.currentRotation = null;
 
     /**
      * Extent restringido de navegación para el mapa.
@@ -217,7 +235,7 @@ class Map extends MObject {
      * Calcula la resolción del mapa a partir del dpi
      * definido en el fichero de configuración.
      */
-    const pixelRatio = Number.parseFloat(dpi) / 72;
+    const pixelRatio = Number.parseFloat(dpi) / 72 || 1;
 
     /**
      * Implementación del mapa.
@@ -241,6 +259,7 @@ class Map extends MObject {
       this.map_.updateSize();
     });
     this.map_.on('singleclick', this.onMapClick_.bind(this));
+
     // pointermove
     this.map_.addInteraction(new OLInteraction({
       handleEvent: (e) => {
@@ -252,6 +271,28 @@ class Map extends MObject {
         return true;
       },
     }));
+
+    const interactions = this.map_.getInteractions().getArray();
+
+    /**
+     * MouseWheelZoom - Interacción
+     * @private
+     * @type {ol.Interaction}
+     * @returns {ol.Interaction.MouseWheelZoom} MouseWheelZoom.
+     */
+    this.mouseWheelZoom_ = interactions.find((interaction) => {
+      return interaction instanceof MouseWheelZoom;
+    });
+
+    /**
+     * DragPan - Interacción.
+     * @private
+     * @type {ol.Interaction}
+     * @returns {ol.Interaction.DragPan} Interacción DragPan.
+     */
+    this.dragPan_ = interactions.find((interaction) => {
+      return interaction instanceof DragPan;
+    });
   }
 
   /**
@@ -264,6 +305,7 @@ class Map extends MObject {
    * @api
    */
   getLayers(filters) {
+    const wmcLayers = this.getWMC(filters);
     const kmlLayers = this.getKML(filters);
     const wmsLayers = this.getWMS(filters);
     const geotiffLayers = this.getGeoTIFF(filters);
@@ -277,9 +319,12 @@ class Map extends MObject {
     const xyzLayers = this.getXYZs(filters);
     const tmsLayers = this.getTMS(filters);
     const layersGroup = this.getLayerGroups(filters);
+    const geopackagetileLayers = this.getGeoPackageTile(filters);
     const unknowLayers = this.getUnknowLayers_(filters);
 
-    const layers = kmlLayers.concat(wmsLayers)
+    const layers = wmcLayers
+      .concat(kmlLayers)
+      .concat(wmsLayers)
       .concat(geotiffLayers)
       .concat(mapLibreLayers)
       .concat(wfsLayers)
@@ -291,6 +336,7 @@ class Map extends MObject {
       .concat(xyzLayers)
       .concat(tmsLayers)
       .concat(layersGroup)
+      .concat(geopackagetileLayers)
       .concat(unknowLayers);
 
     return layers.sort((layer1, layer2) => FacadeMap.LAYER_SORT(layer1, layer2, this.facadeMap_));
@@ -333,7 +379,9 @@ class Map extends MObject {
     }
 
     layersRec.forEach((layer) => {
-      if (layer.type === LayerType.WMS) {
+      if (layer.type === LayerType.WMC) {
+        this.facadeMap_.addWMC(layer);
+      } else if (layer.type === LayerType.WMS) {
         this.facadeMap_.addWMS(layer);
       } else if (layer.type === LayerType.WMTS) {
         this.facadeMap_.addWMTS(layer);
@@ -357,6 +405,8 @@ class Map extends MObject {
         this.facadeMap_.addXYZ(layer);
       } else if (layer.type === LayerType.TMS) {
         this.facadeMap_.addTMS(layer);
+      } else if (layer.type === LayerType.GeoPackageTile) {
+        this.facadeMap_.addGeoPackageTile(layer);
       } else if (layer.type === LayerType.LayerGroup) {
         this.facadeMap_.addLayerGroups(layer);
       } else if (!LayerType.know(layer.type)) {
@@ -451,6 +501,7 @@ class Map extends MObject {
     });
 
     if (knowLayers.length > 0) {
+      this.removeWMC(knowLayers);
       this.removeKML(knowLayers);
       this.removeWMS(knowLayers);
       this.removeGeoTIFF(knowLayers);
@@ -464,6 +515,7 @@ class Map extends MObject {
       this.removeXYZ(knowLayers);
       this.removeTMS(knowLayers);
       this.removeLayerGroups(knowLayers);
+      this.removeGeoPackageTile(knowLayers);
     }
 
     if (unknowLayers.length > 0) {
@@ -733,10 +785,129 @@ class Map extends MObject {
   removeLayerGroups(layers) {
     const layerGroupMapLayers = this.getLayerGroups(layers);
     layerGroupMapLayers.forEach((layerGroup) => {
-      layerGroup.fire(EventType.REMOVED_FROM_MAP, [layerGroup]);
       this.layers_ = this.layers_.filter((layer) => !layerGroup.equals(layer));
       layerGroup.getImpl().destroy();
+      layerGroup.getImpl().activateBaseLayer(layerGroup, this.facadeMap_);
+      layerGroup.fire(EventType.REMOVED_FROM_MAP, [layerGroup]);
     });
+
+    return this;
+  }
+
+  /**
+   * Este método obtiene las capas WMC añadidas al mapa.
+   *
+   * @function
+   * @param {Array<IDEE.Layer>} filters Filtros a aplicar para la búsqueda.
+   * @returns {Array<IDEE.layer.WMC>} Capas WMC del mapa.
+   * @api stable
+   */
+  getWMC(filtersParam) {
+    let filters = filtersParam;
+    let foundLayers = [];
+
+    // get all wmcLayers
+    const wmcLayers = this.layers_.filter((layer) => {
+      return (layer.type === LayerType.WMC);
+    });
+
+    // parse to Array
+    if (isNullOrEmpty(filters)) {
+      filters = [];
+    }
+    if (!isArray(filters)) {
+      filters = [filters];
+    }
+
+    if (filters.length === 0) {
+      foundLayers = wmcLayers;
+    } else {
+      filters.forEach((filterLayer) => {
+        foundLayers = foundLayers.concat(wmcLayers.filter((wmcLayer) => {
+          let layerMatched = true;
+          // checks if the layer is not in selected layers
+          if (!foundLayers.includes(wmcLayer)) {
+            // if instanceof FacadeWMC check if it is the same
+            if (filterLayer instanceof FacadeWMC) {
+              layerMatched = (filterLayer === wmcLayer);
+            } else {
+              // type
+              if (!isNullOrEmpty(filterLayer.type)) {
+                layerMatched = (layerMatched && (filterLayer.type === wmcLayer.type));
+              }
+              // URL
+              if (!isNullOrEmpty(filterLayer.url)) {
+                layerMatched = (layerMatched && (filterLayer.url === wmcLayer.url));
+              }
+              // name
+              if (!isNullOrEmpty(filterLayer.name)) {
+                layerMatched = (layerMatched && (filterLayer.name === wmcLayer.name));
+              }
+            }
+          } else {
+            layerMatched = false;
+          }
+          return layerMatched;
+        }));
+      }, this);
+    }
+    return foundLayers;
+  }
+
+  /**
+   * Este método añade las capas WMC especificadas por el usuario al mapa.
+   *
+   * @function
+   * @param {Array<IDEE.layer.WMC>} layers Capas WMC a añadir.
+   * @returns {Map} Mapa.
+   * @public
+   * @api
+   */
+  addWMC(layers) {
+    layers.forEach((layer) => {
+      // checks if layer is WMC and was added to the map
+      if (layer.type === LayerType.WMC) {
+        if (!includes(this.layers_, layer)) {
+          // eslint-disable-next-line no-underscore-dangle, no-param-reassign
+          layer.zindex_ = Map.Z_INDEX[LayerType.WMC];
+          // eslint-disable-next-line no-underscore-dangle, no-param-reassign
+          layer.getImpl().zIndex_ = Map.Z_INDEX[LayerType.WMC];
+          layer.getImpl().addTo(this.facadeMap_);
+          this.layers_.push(layer);
+        }
+      }
+    }, this);
+
+    return this;
+  }
+
+  /**
+   * Este método elimina las capas WMC del mapa especificadas por el usuario.
+   *
+   * @function
+   * @param {Array<IDEE.layer.WMC>} layers Capas WMC a eliminar.
+   * @returns {Map} Mapa.
+   * @public
+   * @api
+   */
+  removeWMC(layers) {
+    const wmcMapLayers = this.getWMC(layers);
+    wmcMapLayers.forEach((wmcLayer) => {
+      if (wmcLayer.selected === true && wmcLayer.isLoaded() === false) {
+        wmcLayer.on(EventType.LOAD, () => {
+          this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
+          this.facadeMap_.removeWMS(wmcLayer.layers);
+          wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
+          this.facadeMap_.refreshWMCSelectorControl();
+        });
+      } else {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
+        this.facadeMap_.removeWMS(wmcLayer.layers);
+      }
+      wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
+      this.facadeMap_.refreshWMCSelectorControl();
+      wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
+    }, this);
 
     return this;
   }
@@ -795,6 +966,10 @@ class Map extends MObject {
               if (!isNullOrEmpty(filterLayer.extract)) {
                 layerMatched = (layerMatched && (filterLayer.extract === kmlLayer.extract));
               }
+              // template
+              if (!isNullOrEmpty(filterLayer.template)) {
+                layerMatched = (layerMatched && (filterLayer.template === kmlLayer.template));
+              }
             }
           } else {
             layerMatched = false;
@@ -835,6 +1010,7 @@ class Map extends MObject {
     kmlMapLayers.forEach((kmlLayer) => {
       this.layers_ = this.layers_.filter((layer) => !kmlLayer.equals(layer));
       kmlLayer.getImpl().destroy();
+      kmlLayer.getImpl().activateBaseLayer(kmlLayer, this.facadeMap_);
       kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
     }, this);
 
@@ -953,9 +1129,10 @@ class Map extends MObject {
   removeWMS(layers) {
     const wmsMapLayers = this.getWMS(layers);
     wmsMapLayers.forEach((wmsLayer) => {
-      wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
       this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
       wmsLayer.getImpl().destroy();
+      wmsLayer.getImpl().activateBaseLayer(wmsLayer, this.facadeMap_);
+      wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
     });
 
     return this;
@@ -1141,6 +1318,7 @@ class Map extends MObject {
     wfsMapLayers.forEach((wfsLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(wfsLayer));
       wfsLayer.getImpl().destroy();
+      wfsLayer.getImpl().activateBaseLayer(wfsLayer, this.facadeMap_);
       wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
     });
 
@@ -1261,6 +1439,7 @@ class Map extends MObject {
     geotiffMapLayers.forEach((geotiffLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(geotiffLayer));
       geotiffLayer.getImpl().destroy();
+      geotiffLayer.getImpl().activateBaseLayer(geotiffLayer, this.facadeMap_);
       geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
     });
 
@@ -1374,6 +1553,7 @@ class Map extends MObject {
     ogcapifMapLayers.forEach((ogcapifLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(ogcapifLayer));
       ogcapifLayer.getImpl().destroy();
+      ogcapifLayer.getImpl().activateBaseLayer(ogcapifLayer, this.facadeMap_);
       ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
     });
 
@@ -1479,6 +1659,7 @@ class Map extends MObject {
     wmtsMapLayers.forEach((wmtsLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(wmtsLayer));
       wmtsLayer.getImpl().destroy();
+      wmtsLayer.getImpl().activateBaseLayer(wmtsLayer, this.facadeMap_);
       wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
     });
 
@@ -1577,6 +1758,7 @@ class Map extends MObject {
     mbtilesMapLayers.forEach((mbtilesLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
       mbtilesLayer.getImpl().destroy();
+      mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
 
@@ -1672,6 +1854,7 @@ class Map extends MObject {
     mbtilesMapLayers.forEach((mbtilesLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
       mbtilesLayer.getImpl().destroy();
+      mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
       mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
     });
     return this;
@@ -1764,13 +1947,7 @@ class Map extends MObject {
       if (includes(this.layers_, layer)) {
         this.layers_ = this.layers_.filter((layer2) => !layer2.equals(layer));
         layer.getImpl().destroy();
-        if (layer.isBase === true) {
-          // it was base layer so sets the visibility of the first one
-          const baseLayers = this.facadeMap_.getBaseLayers();
-          if (baseLayers.length > 0) {
-            baseLayers[0].setVisible(true);
-          }
-        }
+        layer.getImpl().activateBaseLayer(layer, this.facadeMap_);
       }
     });
   }
@@ -1845,6 +2022,7 @@ class Map extends MObject {
     mvtLayers.forEach((mvtLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mvtLayer));
       mvtLayer.getImpl().destroy();
+      mvtLayer.getImpl().activateBaseLayer(mvtLayer, this.facadeMap_);
       mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
     });
 
@@ -1935,6 +2113,7 @@ class Map extends MObject {
     mapLibreLayers.forEach((mapLibreLayer) => {
       this.layers_ = this.layers_.filter((layer) => !layer.equals(mapLibreLayer));
       mapLibreLayer.getImpl().destroy();
+      mapLibreLayer.getImpl().activateBaseLayer(mapLibreLayer, this.facadeMap_);
       mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
     });
 
@@ -2041,6 +2220,7 @@ class Map extends MObject {
     xyzMapLayers.forEach((xyzLayer) => {
       xyzLayer.getImpl().destroy();
       this.layers_ = this.layers_.filter((layer) => !layer.equals(xyzLayer));
+      xyzLayer.getImpl().activateBaseLayer(xyzLayer, this.facadeMap_);
       xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
     });
 
@@ -2133,7 +2313,97 @@ class Map extends MObject {
     tmsMapLayers.forEach((tmsLayer) => {
       tmsLayer.getImpl().destroy();
       this.layers_ = this.layers_.filter((layer) => !layer.equals(tmsLayer));
+      tmsLayer.getImpl().activateBaseLayer(tmsLayer, this.facadeMap_);
       tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
+    });
+
+    return this;
+  }
+
+  /**
+   * Este método obtiene las capas GeoPackageTile añadidas al mapa.
+   *
+   * @function
+   * @param {Array<IDEE.Layer>} filters Filtros para aplicar en la búsqueda.
+   * @returns {Array<IDEE.layer.GeoPackageTile>} Capas GeoPackageTile del mapa.
+   * @public
+   * @api
+   */
+  getGeoPackageTile(filtersParam) {
+    let foundLayers = [];
+    let filters = filtersParam;
+    const layers = this.layers_.filter((layer) => layer.type === LayerType.GeoPackageTile);
+
+    // parse to Array
+    if (isNullOrEmpty(filters)) {
+      filters = [];
+    }
+    if (!isArray(filters)) {
+      filters = [filters];
+    }
+
+    if (filters.length === 0) {
+      foundLayers = layers;
+    } else {
+      filters.forEach((filterLayer) => {
+        const filteredLayers = layers.filter((layer) => {
+          let layerMatched = true;
+          // checks if the layer is not in selected layers
+          if (!foundLayers.includes(layer)) {
+            // if instanceof FacadeTMS check if it is the same
+            if (filterLayer instanceof FacadeGeoPackageTile) {
+              layerMatched = (filterLayer.equals(layer));
+            } else {
+              // type
+              if (!isNullOrEmpty(filterLayer.type)) {
+                layerMatched = (layerMatched && (filterLayer.type === layer.type));
+              }
+              // name
+              if (!isNullOrEmpty(filterLayer.name)) {
+                layerMatched = (layerMatched && (filterLayer.name === layer.name));
+              }
+            }
+          } else {
+            layerMatched = false;
+          }
+          return layerMatched;
+        });
+        foundLayers = foundLayers.concat(filteredLayers);
+      });
+    }
+    return foundLayers;
+  }
+
+  /**
+   * Este método añade las capas GeoPackageTile especificadas por el usuario al mapa.
+   *
+   * @function
+   * @param {Array<IDEE.layer.GeoPackageTile>} layers Capas GeoPackageTile a añadir.
+   * @returns {IDEE.impl.Map} Mapa.
+   * @public
+   * @api
+   */
+  addGeoPackageTile(layers) {
+    this.addToLayers_(layers);
+    return this;
+  }
+
+  /**
+   * Este método elimina las capas GeoPackageTile del mapa especificadas por el usuario.
+   *
+   * @function
+   * @param {Array<IDEE.layer.GeoPackageTile>} layers Capas GeoPackageTile a eliminar.
+   * @returns {IDEE.impl.Map} Mapa.
+   * @public
+   * @api
+   */
+  removeGeoPackageTile(layers) {
+    const tileLayers = this.getGeoPackageTile(layers);
+    tileLayers.forEach((tileLayer) => {
+      this.layers_ = this.layers_.filter((layer) => !layer.equals(tileLayer));
+      tileLayer.getImpl().destroy();
+      tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
+      tileLayer.getImpl().activateBaseLayer(tileLayer, this.facadeMap_);
     });
 
     return this;
@@ -2661,15 +2931,17 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<Number>} resolutions Resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se propagan a las capas WMS.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  setResolutions(resolutions, optional) {
+  setResolutions(resolutions, optional, propagateToWMS = true) {
     // checks if the param is null or empty
-    if (isNullOrEmpty(resolutions)) {
-      Exception(getValue('exception').no_resolutions);
-    }
+    // if (isNullOrEmpty(resolutions)) {
+    //   Exception(getValue('exception').no_resolutions);
+    // }
 
     if (isNullOrEmpty(optional)) {
       this.userResolutions_ = resolutions;
@@ -2681,10 +2953,14 @@ class Map extends MObject {
     // sets the resolutions
     const olMap = this.getMapImpl();
     const oldViewProperties = olMap.getView().getProperties();
+    delete oldViewProperties.resolutions;
+    delete oldViewProperties.maxResolution;
+    delete oldViewProperties.minResolution;
     const oldZoom = olMap.getView().getUserZoom();
     const minZoom = olMap.getView().getMinZoom();
     const maxZoom = olMap.getView().getMaxZoom();
     const constrainResolution = olMap.getView().getConstrainResolution();
+    const center = olMap.getView().getCenter();
     const size = olMap.getSize();
 
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
@@ -2692,38 +2968,48 @@ class Map extends MObject {
       : { ...this.objectView, projection });
 
     newView.setProperties(oldViewProperties);
-    newView.setResolutions(resolutions);
     newView.setUserZoom(oldZoom);
     newView.setMinZoom(minZoom);
     newView.setMaxZoom(maxZoom);
     newView.setConstrainResolution(constrainResolution);
+    newView.setCenter(center);
+    // newView.setConstrainResolution(false);
     // calculates the new resolution
     let newResolution;
-    if (!isNullOrEmpty(oldZoom)) {
-      newResolution = resolutions[oldZoom];
-    } else {
-      const bbox = this.facadeMap_.getBbox();
-      if (!isNullOrEmpty(bbox)) {
-        const oldResolution = newView.getResolutionForExtent([
-          bbox.x.min,
-          bbox.y.min,
-          bbox.x.max,
-          bbox.y.max,
-        ], size);
-        const restDiff = resolutions.map((r) => Math.abs(r - oldResolution));
-        const newResolutionIdx = restDiff.indexOf(Math.min(...restDiff));
-        newResolution = resolutions[newResolutionIdx];
+    if (!isNullOrEmpty(resolutions)) {
+      if (!isNullOrEmpty(oldZoom)) {
+        newResolution = resolutions[Math.round(oldZoom)];
+      } else {
+        const bbox = this.facadeMap_.getBbox();
+        if (!isNullOrEmpty(bbox)) {
+          const oldResolution = newView.getResolutionForExtent([
+            bbox.x.min,
+            bbox.y.min,
+            bbox.x.max,
+            bbox.y.max,
+          ], size);
+          const restDiff = resolutions.map((r) => Math.abs(r - oldResolution));
+          const newResolutionIdx = restDiff.indexOf(Math.min(...restDiff));
+          newResolution = resolutions[newResolutionIdx];
+        }
       }
     }
-    newView.setResolution(newResolution);
+    if (!isNullOrEmpty(resolutions)) {
+      newView.setResolutions(resolutions);
+    }
+    if (!isNullOrEmpty(newResolution)) {
+      newView.setResolution(newResolution);
+    }
 
     olMap.setView(newView);
 
-    // sets the resolutions for each layer
-    const layers = this.getWMS();
-    layers.forEach((layer) => {
-      layer.getImpl().setResolutions(resolutions);
-    });
+    if (propagateToWMS) {
+      // sets the resolutions for each layer
+      const layers = this.getWMS();
+      layers.forEach((layer) => {
+        layer.getImpl().setResolutions(resolutions);
+      });
+    }
 
     return this;
   }
@@ -2963,87 +3249,29 @@ class Map extends MObject {
    * @api
    */
   updateResolutionsFromBaseLayer() {
-    // FIXME:
-    // let resolutions = [];
-
-    // // zoom levels
-    // let zoomLevels = 20;
-
-    // // units
-    // const units = this.getProjection().units;
-
-    // // size
-    // const size = this.getMapImpl().getSize();
-
-    // const baseLayer = this.getBaseLayers().filter((bl) => {
-    //   return bl.isVisible();
-    // })[0];
-
-    // // gets min/max resolutions from base layer
-    // let maxResolution = null;
-    // let minResolution = null;
-    // if (!isNullOrEmpty(baseLayer)) {
-    //   minResolution = baseLayer.getImpl().getMinResolution();
-    //   maxResolution = baseLayer.getImpl().getMaxResolution();
-    //   zoomLevels = baseLayer.getImpl().getNumZoomLevels();
-    // }
-
-    // if (this.userResolutions_ === null) {
-    //   if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
-    //     resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
-    //     this.setResolutions(resolutions, true);
-
-    //     this._resolutionsBaseLayer = true;
-
-    //     // checks if it was the first time to
-    //     // calculate resolutions in that case
-    //     // fires the completed event
-    //     if (this._calculatedResolutions === false) {
-    //       this._calculatedResolutions = true;
-    //       this.fire(EventType.COMPLETED);
-    //     }
-    //   } else {
-    //     this.facadeMap_.calculateMaxExtent().then((extent) => {
-    //       if (!this._resolutionsBaseLayer && (this.userResolutions_ === null)) {
-    //         resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
-    //         this.setResolutions(resolutions, true);
-
-    //         this._resolutionsEnvolvedExtent = true;
-
-    //         // checks if it was the first time to
-    //         // calculate resolutions in that case
-    //         // fires the completed event
-    //         if (this._calculatedResolutions === false) {
-    //           this._calculatedResolutions = true;
-    //           this.fire(EventType.COMPLETED);
-    //         }
-    //       }
-    //     }).catch((error) => {
-    //       throw error;
-    //     });
-    //   }
-    // }
     this.fire(EventType.COMPLETED);
     this.refresh();
   }
 
   /**
-   * Este método añade un "popup" y elimina el anterior.
+   * Este método añade una etiqueta y elimina la anterior.
    *
    * @function
-   * @param {IDEE.impl.Popup} label "Popup" a añadir.
+   * @param {IDEE.impl.Popup} label Etiqueta a añadir.
+   * @param {boolean} removePrevious Opcional, indica si se eliminan o no las etiquetas anteriores.
+   * Si se añaden multiples etiquetas y el valor no es false, solo añade la última etiqueta.
    * @returns {ol.Map} Mapa.
    * @public
    * @api
    */
-  addLabel(label) {
-    this.label = label;
-    label.show(this.facadeMap_);
+  addLabel(label, removePrevious) {
+    this.label.push(label);
+    label.show(this.facadeMap_, removePrevious);
     return this;
   }
 
   /**
-   * Este método obtiene un "popup" con el texto indicado.
+   * Este método obtiene una etiqueta. Si hay más de una, es la primera de la lista.
    *
    * @function
    * @returns {ol.Map} Mapa.
@@ -3051,22 +3279,51 @@ class Map extends MObject {
    * @api
    */
   getLabel() {
-    return this.label;
+    return this.label[0];
   }
 
   /**
-   * Este método elimina un "popup" con el texto indicado.
+   * Este método obtiene todas las etiquetas.
    *
    * @function
    * @returns {ol.Map} Mapa.
    * @public
    * @api
    */
-  removeLabel() {
+  getLabels() {
+    return this.label;
+  }
+
+  /**
+   * Este método elimina una etiqueta con el texto indicado.
+   *
+   * @function
+   * @param {IDEE.impl.Popup} label Etiqueta a eliminar.
+   * @returns {ol.Map} Mapa.
+   * @public
+   * @api
+   */
+  removeLabel(label) {
+    let arrayLabels = label;
     if (!isNullOrEmpty(this.label)) {
-      const popup = this.label.getPopup();
-      this.removePopup(popup);
-      this.label = null;
+      if (isNullOrEmpty(label)) {
+        this.label.forEach((lbl) => this.removePopup(lbl.getPopup()));
+        this.label = [];
+      } else {
+        if (!isArray(label)) {
+          arrayLabels = [label];
+        }
+        for (let i = arrayLabels.length - 1; i >= 0; i -= 1) {
+          const elm = arrayLabels[i];
+          const labelAux = this.label.findIndex(
+            (lbl) => lbl.text === elm.text && lbl.coord === elm.coord,
+          );
+          if (labelAux !== -1) {
+            this.removePopup(this.label[labelAux].getPopup());
+            this.label.splice(labelAux, 1);
+          }
+        }
+      }
     }
   }
 
@@ -3110,6 +3367,49 @@ class Map extends MObject {
   }
 
   /**
+   * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
+   * El valor por defecto es true
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Boolean} active determina si se activa o desactiva el zoom con la rueda del ratón.
+   */
+  enableMouseWheel(active = true) {
+    if (!isNullOrEmpty(this.mouseWheelZoom_)) {
+      this.mouseWheelZoom_.setActive(active);
+    }
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active = true) {
+    if (!isNullOrEmpty(this.dragPan_)) {
+      this.dragPan_.setActive(active);
+    }
+  }
+
+  /**
+   * Este método establece el array de resoluciones calculadas.
+   *
+   * @function
+   * @public
+   * @param {Array<number>} _calculatedResolutions Array con las resoluciones
+   * calculadas.
+   * @api
+   */
+  setCalculatedResolutions(_calculatedResolutions) {
+    this._calculatedResolutions = _calculatedResolutions;
+  }
+
+  /**
    * Este método registra el evento de cambio de zoom.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
@@ -3121,17 +3421,39 @@ class Map extends MObject {
   }
 
   /**
-   * Este método se ejecuta cuando el usuario realiza zoom.
+   * Este método se ejecuta cuando el usuario realiza zoom o rotación.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
    * @public
    * @api
    */
   zoomEvent_() {
+    // Detectar cambios de zoom
     if (this.currentZoom !== this.getZoom()) {
       this.facadeMap_.fire(EventType.CHANGE_ZOOM, this.facadeMap_);
       this.currentZoom = this.getZoom();
     }
+
+    // Detectar cambios de rotación
+    const currentRotation = this.getRotation();
+    if (this.currentRotation !== currentRotation) {
+      this.onMapRotate_();
+      this.currentRotation = currentRotation;
+    }
+  }
+
+  /**
+   * Este método se ejecuta cuando el usuario rota el mapa con la
+   * combinación de teclas Shift + Alt.
+   * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+   * @function
+   * @public
+   * @api
+   */
+  onMapRotate_() {
+    const radians = this.map_.getView().getRotation();
+    const rotation = radians * (180 / Math.PI);
+    this.facadeMap_.fire(EventType.CHANGE_ROTATION, [rotation]);
   }
 
   /**
@@ -3179,6 +3501,38 @@ class Map extends MObject {
   }
 
   /**
+   * Función que devuelve la rotación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {number} Devuelve la rotación del mapa.
+   */
+  getRotation() {
+    let rotation;
+    const view = this.map_.getView();
+    if (!isNullOrEmpty(view)) {
+      rotation = view.getRotation();
+    }
+    return rotation;
+  }
+
+  /**
+   * Función que modifica la rotación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @param {number} rotation Valor que indica cuanto va a rotar el mapa.
+   */
+  setRotation(rotation) {
+    const view = this.map_.getView();
+    if (!isNullOrEmpty(view)) {
+      view.setRotation(rotation);
+    }
+  }
+
+  /**
    * Este método se ejecuta cuando el usuario mueve el ratón.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
@@ -3196,6 +3550,18 @@ class Map extends MObject {
       vendor: evt,
     }]);
   }
+
+  /**
+   * Función que obtiene el nombre de la implementación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {string} Devuelve el nombre de la implementación.
+   */
+  getImplementation() {
+    return 'ol';
+  }
 }
 
 /**
@@ -3207,6 +3573,7 @@ class Map extends MObject {
  */
 Map.Z_INDEX = {};
 Map.Z_INDEX_BASELAYER = 0;
+Map.Z_INDEX[LayerType.WMC] = 1;
 Map.Z_INDEX[LayerType.OSM] = 40;
 Map.Z_INDEX[LayerType.WMS] = 40;
 Map.Z_INDEX[LayerType.WMTS] = 40;
@@ -3225,5 +3592,6 @@ Map.Z_INDEX[LayerType.OGCAPIFeatures] = 40;
 Map.Z_INDEX[LayerType.GenericVector] = 40;
 Map.Z_INDEX[LayerType.GenericRaster] = 40;
 Map.Z_INDEX[LayerType.LayerGroup] = 40;
+Map.Z_INDEX[LayerType.GeoPackageTile] = 40;
 
 export default Map;

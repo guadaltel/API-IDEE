@@ -4,7 +4,7 @@ import MBTilesVector from 'IDEE/layer/MBTilesVector';
 
 const mapjs = map({
   container: 'map',
-  projection: 'EPSG:3857*m',
+  projection: 'EPSG:3857',
   // layers: ['OSM', 'MBTilesVector*Countries*http://localhost:8080/test/development/countries.mbtiles*countries*true*eyJwYXJhbWV0ZXJzIjpbeyJyYWRpdXMiOjUsImZpbGwiOnsiY29sb3IiOiJvcmFuZ2UiLCJvcGFjaXR5IjoiMC44In0sInN0cm9rZSI6eyJjb2xvciI6InJlZCIsIndpZHRoIjoxfX1dLCJkZXNlcmlhbGl6ZWRNZXRob2QiOiIoKHNlcmlhbGl6ZWRQYXJhbWV0ZXJzKSA9PiBNLnN0eWxlLlNpbXBsZS5kZXNlcmlhbGl6ZShzZXJpYWxpemVkUGFyYW1ldGVycywgJ00uc3R5bGUuUG9pbnQnKSkifQ=='],
   layers: ['OSM'],
   bbox: [260000.55171202554, 4717655.167246935, 401638.36512445717, 4762982.325020044],
@@ -12,7 +12,7 @@ const mapjs = map({
 
 window.mapjs = mapjs;
 
-fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/cabrera.mbtiles').then((response) => {
+fetch(`${IDEE.config.STATIC_RESOURCES_URL}/Datos/mbtiles/cabrera.mbtiles`).then((response) => {
   const mbtile = new MBTiles({
     name: 'mbtiles',
     legend: 'Cabrera',
@@ -44,7 +44,7 @@ fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/cabrera.mbtiles').the
 // // mapjs.addLayers('WFST*CapaWFS*http://geostematicos-sigc.juntadeandalucia.es/geoserver/sepim/ows*sepim:campamentos*POINT***eyJwYXJhbWV0ZXJzIjpbeyJpY29uIjp7ImZvcm0iOiJDSVJDTEUiLCJjbGFzcyI6ImctY2FydG9ncmFmaWEtYmFuZGVyYSIsImZvbnRzaXplIjowLjUsInJhZGl1cyI6MTUsImZpbGwiOiJ3aGl0ZSJ9LCJyYWRpdXMiOjV9XSwiZGVzZXJpYWxpemVkTWV0aG9kIjoiKChzZXJpYWxpemVkUGFyYW1ldGVycykgPT4gTS5zdHlsZS5TaW1wbGUuZGVzZXJpYWxpemUoc2VyaWFsaXplZFBhcmFtZXRlcnMsICdNLnN0eWxlLlBvaW50JykpIn0');
 // window.mapjs = mapjs;
 
-// fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/countries.mbtiles').then((response) => {
+// fetch(`${IDEE.config.STATIC_RESOURCES_URL}/Datos/mbtiles/countries.mbtiles`).then((response) => {
 //   const mbtile = new MBTilesVector({
 //     name: 'mbtiles_vector',
 //     legend: 'Countries',
@@ -56,7 +56,7 @@ fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/cabrera.mbtiles').the
 //   throw e
 // });
 
-// // fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/cabrera.mbtiles').then((response) => {
+// // fetch(`${IDEE.config.STATIC_RESOURCES_URL}/Datos/mbtiles/cabrera.mbtiles`).then((response) => {
 // //   const mbtile = new MBTiles({
 // //     name: 'mbtiles',
 // //     legend: 'Cabrera',

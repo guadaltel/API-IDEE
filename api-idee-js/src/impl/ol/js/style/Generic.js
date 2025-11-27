@@ -63,38 +63,13 @@ class Generic extends Simple {
    * @api stable
    */
   toImage() {
-    const imgSize = 30;
+    const imgSizeW = 30;
+    const imgSizeH = 15;
     let loadImagePoint = null;
     let loadImagePoly = null;
     let loadImageLine = null;
     const dinamic = drawDynamicStyle();
     const promises = [];
-
-    // Point image
-    if (!isUndefined(this.options_.point)) {
-      loadImagePoint = (d) => new Promise((resolve, reject) => {
-        const img = new Image();
-
-        // onload / onerror
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-
-        // img
-        img.width = imgSize;
-        img.height = imgSize;
-
-        if (isDynamic(this.options_.point) === true) {
-          img.src = d;
-        } else {
-          const getterPoint = GETTER_BY_GEOM.Point;
-          const stylesPoint = getterPoint(this.options_, this, this.layer_);
-          stylesPoint[0].getImage().setRadius(5);
-          const imageURLPoint = stylesPoint[0].getImage().getImage(1).toDataURL();
-          img.src = imageURLPoint;
-        }
-      });
-      promises.push(loadImagePoint(dinamic));
-    }
 
     // Polygon image
     if (!isUndefined(this.options_.polygon)) {
@@ -107,20 +82,22 @@ class Generic extends Simple {
 
         // img
 
-        if (isDynamic(this.options_.polygon) === true) {
+        const namesToSkip = ['label'];
+        if (isDynamic(this.options_.polygon, namesToSkip) === true) {
           img.src = d;
-          img.width = imgSize;
-          img.height = imgSize;
+          img.width = imgSizeW;
+          img.height = imgSizeH;
+          img.crossOrigin = 'anonymous';
         } else {
           const getterPolygon = GETTER_BY_GEOM.Polygon;
           const stylesPolygon = getterPolygon(this.options_, this, this.layer_);
           const canvasPO = document.createElement('canvas');
-          canvasPO.width = imgSize;
-          canvasPO.height = imgSize;
+          canvasPO.width = imgSizeW;
+          canvasPO.height = imgSizeH;
           const ctxPO = canvasPO.getContext('2d');
           const vectorContextPol = toContextRender(ctxPO);
           vectorContextPol.setStyle(stylesPolygon[0], 0, 0);
-          const canvasSize = [25, 15];
+          const canvasSize = [25, 12];
           const maxW = Math.floor(canvasSize[0]);
           const maxH = Math.floor(canvasSize[1]);
           const minW = (canvasSize[0] - maxW);
@@ -150,10 +127,14 @@ class Generic extends Simple {
         img.onerror = reject;
 
         // img
-        if (isDynamic(this.options_.line) === true) {
+
+        img.width = imgSizeW;
+        img.height = imgSizeH;
+
+        const namesToSkip = ['label'];
+        if (isDynamic(this.options_.line, namesToSkip) === true) {
           img.src = d;
-          img.width = 30;
-          img.height = 30;
+          img.crossOrigin = 'anonymous';
         } else {
           const getterLine = GETTER_BY_GEOM.LineString;
           const stylesLine = getterLine(this.options_, this, this.layer_);
@@ -180,17 +161,59 @@ class Generic extends Simple {
       promises.push(loadImageLine(dinamic));
     }
 
+    // Point image
+    if (!isUndefined(this.options_.point)) {
+      loadImagePoint = (d) => new Promise((resolve, reject) => {
+        const img = new Image();
+
+        // onload / onerror
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+
+        // img
+        img.width = imgSizeW;
+        img.height = imgSizeH;
+
+        const namesToSkip = ['label'];
+        if (isDynamic(this.options_.point, namesToSkip) === true) {
+          img.src = d;
+          img.crossOrigin = 'anonymous';
+        } else {
+          const getterPoint = GETTER_BY_GEOM.Point;
+          const stylesPoint = getterPoint(this.options_, this, this.layer_);
+          stylesPoint[0].getImage().setRadius(5);
+          const imageURLPoint = stylesPoint[0].getImage().getImage(1).toDataURL();
+          img.src = imageURLPoint;
+        }
+      });
+      promises.push(loadImagePoint(dinamic));
+    }
+
     // Canvas / Context
     const canvasGL = document.createElement('canvas');
-    canvasGL.width = 200;
-    canvasGL.height = 50;
+    canvasGL.height = 20;
     const ctxGL = canvasGL.getContext('2d');
 
-    const positions = [0, 60, 120];
+    const positions = [0, 35, 70];
     let cont = 0;
 
     // Loading images
     return Promise.all(promises).then((values) => {
+      const lngt = values.length;
+      if (lngt === 1) {
+        canvasGL.width = 35;
+      } else if (lngt === 2) {
+        canvasGL.width = 70;
+      } else {
+        canvasGL.width = 100;
+      }
+      let height = 0;
+      values.forEach((image) => {
+        if (image.height > height) {
+          height = image.height;
+        }
+      });
+      canvasGL.height = height;
       values.forEach((image) => {
         ctxGL.drawImage(image, positions[cont], 0);
         cont += 1;

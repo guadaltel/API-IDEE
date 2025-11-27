@@ -64,8 +64,6 @@ const CLASS_CHECK = 'm-layerswitcher-check';
 /* LEGEND LAYER */
 const I18N_LEGEND_ERROR = 'legend_error';
 
-const LEGEND_DEFAULT_IMG = 'https://componentes.idee.es/estaticos/imagenes/leyenda/legend-default.png';
-
 /* TARGET LAYER */
 const layersTypesTarget = ['WMTS', 'WFS', 'MBTilesVector', 'MBTiles', 'OSM', 'XYZ', 'TMS', 'GeoJSON', 'KML', 'OGCAPIFeatures', 'Vector', 'GenericRaster', 'GenericVector', 'MVT', 'GeoTIFF', 'MapLibre'];
 
@@ -153,6 +151,7 @@ const errorLegendLayer = (layer, useProxy, statusProxy) => {
 };
 
 export const legendInfo = (evt, layer, useProxy, statusProxy) => {
+  const LEGEND_DEFAULT_IMG = `${IDEE.config.STATIC_RESOURCES_URL}/imagenes/leyenda/legend-default.png`;
   if (evt.target.className.indexOf('m-layerswitcher-icons-image') > -1) {
     const legend = evt.target.parentElement.parentElement.parentElement.querySelector('.m-layerswitcher-legend');
     if (legend.style.display !== 'block') {
@@ -183,6 +182,9 @@ export const legendInfo = (evt, layer, useProxy, statusProxy) => {
             const text = document.createTextNode(getValue(I18N_LEGEND_ERROR));
             messageError.appendChild(text);
             img.parentNode.insertBefore(messageError, img);
+            if (!IDEE.utils.isNullOrEmpty(img)) {
+              img.src = '';
+            }
           } else if (newLegend !== '') {
             legend.querySelector('img').src = newLegend;
           } else {
@@ -355,11 +357,19 @@ const changeLayerConfig = (layer, otherStyles) => {
         }
       }
     } else {
-      layer.getImpl().getLayer().getSource().updateParams({ STYLES: styleSelected });
+      let styleProcessed = styleSelected;
+      if (layer instanceof IDEE.layer.WMS) {
+        const layerImpl = layer.getImpl();
+        const layerNames = IDEE.utils.isNullOrEmpty(layerImpl.layers)
+          ? layerImpl.name
+          : layerImpl.layers;
+        styleProcessed = layer.getImpl().processStyles(styleProcessed, layerNames);
+      }
+      layer.getImpl().getLayer().getSource().updateParams({ STYLES: styleProcessed });
       const cm = layer.capabilitiesMetadata;
       if (!IDEE.utils.isNullOrEmpty(cm) && !IDEE.utils.isNullOrEmpty(cm.style)) {
         const filtered = layer.capabilitiesMetadata.style.filter((style) => {
-          return style.Name === styleSelected;
+          return style.Name === styleProcessed;
         });
 
         if (filtered.length > 0 && filtered[0].LegendURL.length > 0) {

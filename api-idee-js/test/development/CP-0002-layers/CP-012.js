@@ -27,7 +27,7 @@ import { generic_001 } from '../layers/generic/generic';
 
 const mapa = Mmap({
   container: 'map',
-  projection: 'EPSG:3857*m',
+  projection: 'EPSG:3857',
   center: [-443273.10081370454, 4757481.749296248],
   zoom: 6,
   controls: ['panzoom'],
@@ -46,7 +46,8 @@ setTimeout(() => {
 window.capa = generic_001;
 mapa.addLayers(generic_001);
 
-// window.fetch('https://componentes.idee.es/estaticos/Datos/mbtiles/cabrera.mbtiles').then((response) => {
+// window.fetch(`${IDEE.config.STATIC_RESOURCES_URL}/Datos/mbtiles/cabrera.mbtiles`).then(
+// (response) => {
 //   const mbtile = new MBTiles({
 //     name: 'mbtiles',
 //     legend: 'Capa MBTiles L',

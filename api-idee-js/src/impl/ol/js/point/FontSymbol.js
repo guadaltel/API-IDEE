@@ -29,11 +29,8 @@ class FontSymbol extends OLFontSymbol {
    * @api stable
    */
   constructor(options = {}) {
+    const offset = options.offset || [0, 0];
     // super call
-    const optionsC = options;
-    if (!options.offset) {
-      optionsC.offset = [];
-    }
     super({
       glyph: options.glyph,
       color: options.color,
@@ -43,8 +40,8 @@ class FontSymbol extends OLFontSymbol {
       radius: options.radius,
       form: options.form,
       gradient: options.gradient,
-      offsetX: options.offset[0],
-      offsetY: options.offset[1],
+      offsetX: offset[0],
+      offsetY: offset[1],
       opacity: options.opacity,
       rotation: options.rotation,
       rotateWithView: options.rotateWithView,
