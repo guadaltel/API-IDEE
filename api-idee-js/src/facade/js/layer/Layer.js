@@ -26,6 +26,7 @@ import * as EventType from '../event/eventtype';
  * @property {string} legend Indica el nombre que queremos que aparezca en el árbol
  * de contenidos, si lo hay.
  * @property {Boolean} isBase Define si la capa es base.
+ * @property {IDEE.layer.Section} section_ Indica si la capa pertenece a una sección.
  *
  * @api
  * @extends {IDEE.Base}
@@ -52,6 +53,7 @@ class LayerBase extends Base {
   constructor(userParameters, impl) {
     // calls the super constructor
     super(impl);
+    this.constructorParameters = { userParameters, impl };
 
     // This layer is of parameters.
     const parameter = parserParameter.layer(userParameters);
@@ -139,6 +141,15 @@ class LayerBase extends Base {
      * @private
      */
     this.isReset_ = false;
+
+    /**
+     * Sección de la capa.
+     *
+     * @private
+     * @type {IDEE.layer.Section}
+     * @api
+     */
+    this.section_ = null;
   }
 
   /**
@@ -403,7 +414,15 @@ class LayerBase extends Base {
   setId(newID) {
     if (!isNullOrEmpty(this.map_)) {
       const findId = this.map_.getLayers().find((layer) => {
-        return layer.idLayer === newID;
+        let result = null;
+        if (layer.constructor.name === 'WMC') {
+          result = layer.layers.find((layerwmc) => {
+            return layerwmc.idLayer === newID;
+          });
+        } else {
+          result = layer.idLayer === newID;
+        }
+        return result;
       });
       if (isUndefined(findId)) {
         this.map_.getFeatureHandler().changeNamePrevs(this.idLayer, newID);
@@ -497,6 +516,31 @@ class LayerBase extends Base {
    */
   setMap(map) {
     this.map_ = map;
+  }
+
+  /**
+   * Este método devuelve la sección de esta capa, si la tiene.
+   *
+   * @public
+   * @function
+   * @returns {IDEE.layer.Section} Sección de la capa.
+   * @api
+   */
+  getSection() {
+    return this.section_;
+  }
+
+  /**
+   * Este método añade la capa dentro de una sección. Una capa solo puede
+   * estar dentro de una sección a la vez.
+   * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+   *
+   * @function
+   * @param {IDEE.layer.Section} section Sección a la que se añadirá la capa.
+   * @api
+   */
+  setSection_(section) {
+    this.section_ = section;
   }
 
   /**
@@ -792,7 +836,11 @@ class LayerBase extends Base {
  * @public
  * @api
  */
-LayerBase.LEGEND_DEFAULT = 'https://componentes.idee.es/estaticos/imagenes/leyenda/legend-default.png';
+Object.defineProperty(LayerBase, 'LEGEND_DEFAULT', {
+  get() {
+    return `${IDEE.config.STATIC_RESOURCES_URL}/imagenes/leyenda/legend-default.png`;
+  },
+});
 
 /**
  * Imagen de error PNG para la leyenda predeterminada.
@@ -801,6 +849,10 @@ LayerBase.LEGEND_DEFAULT = 'https://componentes.idee.es/estaticos/imagenes/leyen
  * @public
  * @api
  */
-LayerBase.LEGEND_ERROR = 'https://componentes.idee.es/estaticos/imagenes/leyenda/legend-error.png';
+Object.defineProperty(LayerBase, 'LEGEND_ERROR', {
+  get() {
+    return `${IDEE.config.STATIC_RESOURCES_URL}/imagenes/leyenda/legend-error.png`;
+  },
+});
 
 export default LayerBase;

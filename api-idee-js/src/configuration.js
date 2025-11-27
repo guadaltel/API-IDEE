@@ -114,6 +114,15 @@ params.forEach((param) => {
   IDEE.config('PROXY_POST_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.proxy_post.url}`);
 
   /**
+   * The static resources URL
+   * @const
+   * @type {string}
+   * @public
+   * @api stable
+   */
+  IDEE.config('STATIC_RESOURCES_URL', '${api-idee.static_resources.url}');
+
+  /**
    * The path to the api-idee theme
    * @const
    * @type {string}
@@ -275,6 +284,14 @@ params.forEach((param) => {
   IDEE.config('MAP_VIEWER_LAYERS', layers);
 
   /**
+   * MAP Viewer - DPI (Dots per inch)
+   * 
+   * @private
+   * @type {Number}
+   */
+  IDEE.config('DPI', 72);
+
+  /**
    * Mueve el mapa cuando se hace clic sobre un objeto
    * geográfico, (extract = true) o no (extract = false)
    *
@@ -298,6 +315,14 @@ params.forEach((param) => {
    * @type {Number | String}
    */
   IDEE.config('MIN_ZOOM', '${minZoom}');
+
+  /**
+   * Zoom por defecto.
+   *
+   * @public
+   * @type {Number | String}
+   */
+  IDEE.config('DEFAULT_ZOOM', '${defaultZoom}');
 
   /**
    * Hace el popup y dialog inteligente
@@ -330,5 +355,12 @@ params.forEach((param) => {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location.
+   * @public
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', '${zoomLocation}');
   window.M = IDEE;
 }(window.IDEE));

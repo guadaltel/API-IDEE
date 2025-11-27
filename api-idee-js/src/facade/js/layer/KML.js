@@ -4,7 +4,7 @@
 import KMLImpl from 'impl/layer/KML';
 import LayerVector from './Vector';
 import {
-  isUndefined, isNullOrEmpty, isString, normalize, isObject,
+  isUndefined, isNullOrEmpty, isObject,
 } from '../util/Utils';
 import Exception from '../exception/exception';
 import * as LayerType from './Type';
@@ -121,12 +121,7 @@ class KML extends LayerVector {
 
     // calls the super constructor
     super(parameters, options, undefined, impl);
-
-    /**
-     * KML extract: Activa la consulta al hacer clic sobre un objeto geográfico,
-     * por defecto verdadero.
-     */
-    this.extract = parameters.extract === undefined ? true : parameters.extract;
+    this.constructorParameters = { userParameters, options, vendorOptions };
 
     /**
      * KML options: Optiones que se mandan a la implementación.
@@ -167,42 +162,6 @@ class KML extends LayerVector {
   }
 
   /**
-   * Devuelve el valor de la propiedad "extract". La propiedad "extract" tiene la
-   * siguiente función: Activa la consulta al hacer clic en la característica,
-   * por defecto verdadero.
-   *
-   * @function
-   * @getter
-   * @returns {IDEE.LayerType.KML} Valor de la propiedad "extract".
-   * @api
-   */
-  get extract() {
-    return this.getImpl().extract;
-  }
-
-  /**
-   * Sobrescribe el valor de la propiedad "extract". La propiedad "extract" tiene la
-   * siguiente función: Activa la consulta al hacer clic en la característica,
-   * por defecto verdadero.
-   *
-   * @function
-   * @setter
-   * @param {Boolean} newExtract Nuevo valor para sobreescribir la propiedad "extract".
-   * @api
-   */
-  set extract(newExtract) {
-    if (!isNullOrEmpty(newExtract)) {
-      if (isString(newExtract)) {
-        this.getImpl().extract = (normalize(newExtract) === 'true');
-      } else {
-        this.getImpl().extract = newExtract;
-      }
-    } else {
-      this.getImpl().extract = true;
-    }
-  }
-
-  /**
    * Devuelve las opciones que se mandan a la implementación.
    * @function
    * @getter
@@ -223,6 +182,18 @@ class KML extends LayerVector {
    */
   set options(newOptions) {
     this.getImpl().options = newOptions;
+  }
+
+  /**
+   * Sobreescribe la URL de la capa.
+   *
+   * @function
+   * @param {String} newURL Nueva URL de la capa.
+   * @public
+   * @api
+   */
+  setURL(newURL) {
+    this.getImpl().setURL(newURL);
   }
 
   /**

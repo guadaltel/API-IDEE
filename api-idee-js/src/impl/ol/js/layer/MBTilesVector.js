@@ -2,13 +2,10 @@
 /**
  * @module IDEE/impl/layer/MBTilesVector
  */
-import { isNullOrEmpty, isFunction, extend } from 'IDEE/util/Utils';
-import { compileSync as compileTemplate } from 'IDEE/util/Template';
-import Popup from 'IDEE/Popup';
-import geojsonPopupTemplate from 'templates/geojson_popup';
+import { isNullOrEmpty, extend, isObject } from 'IDEE/util/Utils';
 import { get as getProj, transformExtent } from 'ol/proj';
 // import { inflate } from 'pako';
-import OLLayerTile from 'ol/layer/Tile';
+// import OLLayerTile from 'ol/layer/Tile';
 import OLLayerVectorTile from 'ol/layer/VectorTile';
 import OLSourceVectorTile from 'ol/source/VectorTile';
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -17,6 +14,7 @@ import TileProvider from 'IDEE/provider/Tile';
 import * as EventType from 'IDEE/event/eventtype';
 import MVT from 'ol/format/MVT';
 import { getValue } from 'IDEE/i18n/language';
+import TileState from 'ol/TileState';
 // import Feature from 'ol/Feature';
 import ImplMap from '../Map';
 import Vector from './Vector';
@@ -56,7 +54,7 @@ const generateResolutions = (extent, tileSize, maxZoomLevel) => {
  * @classdesc
  * Implementación de la capa MBTilesVector.
  *
- * @property {function} tileLoadFunction_ Función de carga de la tesela vectorial.
+ * @property {function} tileLoadFunction Función de carga de la tesela vectorial.
  * @property {string} url_ Url del fichero o servicio que genera el MBTilesVector.
  * @property {ArrayBuffer|Uint8Array|Response|File} source_ Fuente de la capa.
  * @property {File|String} style_ Define el estilo de la capa.
@@ -115,7 +113,7 @@ class MBTilesVector extends Vector {
      * MBTilesVector tileLoadFunction: Función de carga de la tesela
      * vectorial proporcionada por el usuario.
      */
-    this.tileLoadFunction_ = userParameters.tileLoadFunction || null;
+    this.tileLoadFunction = userParameters.tileLoadFunction || null;
 
     /**
      * MBTilesVector url: Url del fichero o servicio que genera el MBTilesVector.
@@ -126,11 +124,6 @@ class MBTilesVector extends Vector {
      * MBTilesVector source: Fuente de la capa.
      */
     this.source_ = userParameters.source;
-
-    /**
-     * MBTilesVector style: Define el estilo de la capa.
-     */
-    this.style_ = userParameters.style;
 
     /**
      * MBTilesVector tileSize: Tamaño de la tesela vectorial, por defecto 256.
@@ -161,6 +154,12 @@ class MBTilesVector extends Vector {
      * MBTilesVector visibility: Visibilidad de la capa.
      */
     this.visibility = userParameters.visibility === false ? userParameters.visibility : true;
+
+    /**
+     * MBTilesVector fireLoad_.
+     * Controla el disparo del evento LOAD
+     */
+    this.fireLoad_ = false;
   }
 
   /**
@@ -200,7 +199,7 @@ class MBTilesVector extends Vector {
     if (!isNullOrEmpty(this.options.minScale)) this.setMinScale(this.options.minScale);
     if (!isNullOrEmpty(this.options.maxScale)) this.setMaxScale(this.options.maxScale);
 
-    if (!this.tileLoadFunction_ && isNullOrEmpty(this.vendorOptions_.source)) {
+    if (!this.tileLoadFunction && isNullOrEmpty(this.vendorOptions_.source)) {
       this.fetchSource().then((tileProvider) => {
         tileProvider.getMaxZoomLevel().then((maxZoomLevel) => {
           if (!this.maxZoomLevel_) {
@@ -287,7 +286,7 @@ class MBTilesVector extends Vector {
    */
   createLayer(opts) {
     let tileLoadFn = this.loadVectorTileWithProvider;
-    if (this.tileLoadFunction_) {
+    if (this.tileLoadFunction) {
       tileLoadFn = this.loadVectorTile;
     }
     const mvtFormat = new MVT();
@@ -323,7 +322,7 @@ class MBTilesVector extends Vector {
     tile.setLoader((extent, resolution, projection) => {
       const tileCoord = tile.getTileCoord();
       // eslint-disable-next-line
-      target.tileLoadFunction_(tileCoord[0], tileCoord[1], -tileCoord[2] - 1).then((_vectorTile) => {
+      target.tileLoadFunction(tileCoord[0], tileCoord[1], -tileCoord[2] - 1).then((_vectorTile) => {
         if (_vectorTile) {
           try {
             const vectorTile = new Uint8Array(_vectorTile);
@@ -401,51 +400,6 @@ class MBTilesVector extends Vector {
         reject(new Error(getValue('exception').no_source));
       }
     });
-  }
-
-  /**
-   * Este método ejecuta un objeto geográfico seleccionado.
-   *
-   * @function
-   * @param {ol.features} features Objetos geográficos de Openlayers.
-   * @param {Array} coord Coordenadas.
-   * @param {Object} evt Eventos.
-   * @api stable
-   * @expose
-   */
-  selectFeatures(features, coord, evt) {
-    if (this.extract === true) {
-      const feature = features[0];
-      // unselects previous features
-      this.unselectFeatures();
-
-      if (!isNullOrEmpty(feature)) {
-        const clickFn = feature.getAttribute('vendor.api_idee.click');
-        if (isFunction(clickFn)) {
-          clickFn(evt, feature);
-        } else {
-          const popupTemplate = !isNullOrEmpty(this.template)
-            ? this.template : geojsonPopupTemplate;
-          const htmlAsText = compileTemplate(popupTemplate, {
-            vars: this.parseFeaturesForTemplate_(features),
-            parseToHtml: false,
-          });
-          const featureTabOpts = {
-            icon: 'g-cartografia-pin',
-            title: this.name,
-            content: htmlAsText,
-          };
-          let popup = this.map.getPopup();
-          if (isNullOrEmpty(popup)) {
-            popup = new Popup();
-            popup.addTab(featureTabOpts);
-            this.map.addPopup(popup, coord);
-          } else {
-            popup.addTab(featureTabOpts);
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -562,39 +516,29 @@ class MBTilesVector extends Vector {
   checkAllTilesLoaded_(evt) {
     const currTileCoord = evt.tile.getTileCoord();
     // eslint-disable-next-line no-underscore-dangle
-    const tileImages = this.olLayer.getSource().sourceTiles_;
+    let tileImages = this.olLayer.getSource().sourceTiles_;
+    if (isObject(tileImages)) {
+      tileImages = Object.values(tileImages);
+    }
     if (Array.isArray(tileImages)) {
-      const loaded = tileImages.some((tile) => {
+      const loaded = tileImages.every((tile) => {
         const tileCoord = tile.getTileCoord();
         const tileState = tile.getState();
         const sameTile = (currTileCoord[0] === tileCoord[0]
           && currTileCoord[1] === tileCoord[1]
           && currTileCoord[2] === tileCoord[2]);
-        const tileLoaded = sameTile || (tileState !== 1);
+        const tileLoaded = sameTile || (tileState !== TileState.LOADING);
         return tileLoaded;
       });
       if (loaded && !this.loaded_) {
         this.loaded_ = true;
+        this.facadeLayer_.fire(EventType.LOAD_ALL_TILES);
+      }
+      if (this.fireLoad_ === false) {
         this.facadeLayer_.fire(EventType.LOAD);
+        this.fireLoad_ = true;
       }
     }
-  }
-
-  /**
-   * Este método devuelve una copia de la capa de esta instancia.
-   *
-   * @function
-   * @returns {ol.layer.Tile} Copia de la capa.
-   * @public
-   * @api
-   */
-  cloneOLLayer() {
-    let olLayer = null;
-    if (this.olLayer != null) {
-      const properties = this.olLayer.getProperties();
-      olLayer = new OLLayerTile(properties);
-    }
-    return olLayer;
   }
 }
 export default MBTilesVector;

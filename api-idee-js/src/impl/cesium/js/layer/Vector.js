@@ -19,6 +19,7 @@ import {
   CustomDataSource,
   GeoJsonDataSource,
   ImageMaterialProperty,
+  ModelGraphics,
   PathGraphics,
   PointGraphics,
   PolylineGraphics,
@@ -116,6 +117,16 @@ class Vector extends Layer {
      * al suelo, por defecto falso.
      */
     this.clampToGround = options.clampToGround;
+
+    /**
+     * countFeatures_. Define el número de objetos geográficos de la capa.
+     */
+    this.countFeatures_ = 0;
+
+    /**
+     * countPromise_. Define el número de promesas completadas.
+     */
+    this.countPromise_ = 0;
   }
 
   /**
@@ -180,11 +191,11 @@ class Vector extends Layer {
           geometry.color = Color.fromAlpha(currentColor, opacityParsed);
           const currentOutlineColor = geometry.outlineColor.getValue();
           geometry.outlineColor = Color.fromAlpha(currentOutlineColor, opacityParsed);
-        } else if (geometry instanceof BillboardGraphics) {
+        } else if (geometry instanceof BillboardGraphics || geometry instanceof ModelGraphics) {
           geometry.color = new Color(1.0, 1.0, 1.0, opacity);
         } else if (!isNullOrEmpty(geometry)) {
           if (!(geometry instanceof PolylineGraphics) && !(geometry instanceof PathGraphics)
-            && !(geometry instanceof BillboardGraphics)) {
+            && !(geometry instanceof BillboardGraphics) && !(geometry instanceof ModelGraphics)) {
             const currentOutlineColor = geometry.outlineColor.getValue();
             geometry.outlineColor = Color.fromAlpha(currentOutlineColor, opacityParsed);
           }
@@ -300,6 +311,21 @@ class Vector extends Layer {
   updateSource_() {
     this.redraw();
     this.completeLoad_();
+  }
+
+  /**
+   * Este método devuelve si la capa es válida.
+   *
+   * @public
+   * @function
+   * @returns {Boolean} Verdadero si es válida, falso si no.
+   * @api stable
+   */
+  isValidSource() {
+    if (isNullOrEmpty(this.cesiumLayer)) {
+      return false;
+    }
+    return true;
   }
 
   completeLoad_() {
@@ -431,6 +457,8 @@ class Vector extends Layer {
    * @api stable
    */
   addFeatures_(features, update) {
+    this.countFeatures_ += features.length;
+
     const promises = [];
     features.forEach((newFeature) => {
       // eslint-disable-next-line no-underscore-dangle
@@ -440,8 +468,8 @@ class Vector extends Layer {
     Promise.all(promises).then(() => {
       const styleLayer = this.facadeVector_.getStyle();
       const othersEntities = [];
-
       features.forEach((newFeature) => {
+        this.countPromise_ += 1;
         const feature = this.features_.find((feature2) => feature2.equals(newFeature));
         if (isNullOrEmpty(feature)) {
           if (newFeature.getImpl().othersEntities) {
@@ -491,6 +519,12 @@ class Vector extends Layer {
         }
       });
 
+      if (this.countFeatures_ === this.countPromise_) {
+        this.facadeVector_.fire(EventType.LOAD);
+        this.countFeatures_ = 0;
+        this.countPromise_ = 0;
+      }
+
       if (update) {
         this.updateLayer_();
       }
@@ -499,8 +533,6 @@ class Vector extends Layer {
         this.map.getMapImpl().scene.globe.tileLoadProgressEvent
           .removeEventListener(this.tileLoadHandler);
       }
-
-      this.fire(EventType.LOAD, [this.features_]);
     });
   }
 

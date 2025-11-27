@@ -24,13 +24,19 @@ test('Capa WMS - ADDED_TO_MAP', async ({ page }) => {
       name: 'AU.AdministrativeBoundary',
       legend: 'Límite administrativo',
     });
+    window.wms_001 = wms_001;
 
-    wms_001.on(IDEE.evt.ADDED_TO_MAP, (facade) => {
+    window.wms_001.on(IDEE.evt.ADDED_TO_MAP, (facade) => {
       console.log('Capa WMS añadida');
     });
-
-    window.mapjs.addLayers([wms_001]);
   });
-  await page.waitForTimeout(5000);
+  await page.evaluate(() => {
+    return new Promise((resolve) => {
+      window.wms_001.on(IDEE.evt.ADDED_TO_MAP, () => {
+        resolve();
+      });
+      window.mapjs.addLayers([window.wms_001]);
+    });
+  });
   expect(hasMessage).toBe(true);
 });

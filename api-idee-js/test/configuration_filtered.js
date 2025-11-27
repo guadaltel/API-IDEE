@@ -74,6 +74,15 @@ function fun(IDEE_) {
   IDEE_.config('PROXY_POST_URL', `${location.protocol}//componentes-desarrollo.idee.es/api-idee/proxyPost`);
 
   /**
+   * The static resources URL
+   * @const
+   * @type {string}
+   * @public
+   * @api stable
+   */
+  IDEE.config('STATIC_RESOURCES_URL', 'https://componentes.idee.es/estaticos');
+
+  /**
    * The path to the API IDEE theme
    * @const
    * @type {string}
@@ -133,7 +142,7 @@ function fun(IDEE_) {
    * @public
    * @api stable
    */
-  IDEE_.config('DEFAULT_PROJ', 'EPSG:3857*m');
+  IDEE_.config('DEFAULT_PROJ', 'EPSG:3857');
 
   /**
    * Predefined WMC files. It is composed of URL,
@@ -243,6 +252,14 @@ function fun(IDEE_) {
   IDEE_.config('MAX_ZOOM', '');
 
   /**
+   * Zoom por defecto.
+   *
+   * @private
+   * @type {Number | String}
+   */
+  IDEE_.config('DEFAULT_ZOOM', '3');
+
+  /**
    * Hace el popup inteligente
    *
    * @private
@@ -273,6 +290,13 @@ function fun(IDEE_) {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location.
+   * @public
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', 16);
 }
 
 fun(window.IDEE);

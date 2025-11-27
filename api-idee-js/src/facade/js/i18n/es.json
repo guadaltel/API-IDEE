@@ -67,8 +67,30 @@
     "title": "Girar al norte",
     "textHelp": {
       "text1": "La herramienta de rotación permite volver a una orientación Norte al visualizador.",
-      "text2": "Para poder girar el mapa en el visualizador, se realiza con la combinación de teclas Shit + Alt + click izquierdo del ratón + mover ratón para girar."
-    }
+      "text2": "Para poder girar el mapa en el visualizador, se realiza con la combinación de teclas Shift + Alt + click izquierdo del ratón + mover ratón para girar."
+    },
+    "titleCesium": "Control de movimiento",
+    "title_help": "Ayuda",
+    "help": {
+      "title": "Control del giroscopio",
+      "title1": "Girar la vista",
+      "text1": "Arrastra el anillo circular exterior para rotar el mapa 360º",
+      "title2": "Inclinar la vista",
+      "text2": "Selecciona el círculo interior y arrastralo lentamente hacia cualquier lado para inclinar y/o girar el mapa.",
+      "text3": "También, si haces doble click vuelves a la vista inicial.",
+      "text4": "Además si bloqueas la tecla CTRL y arrastras sobre el mapa, puedes inclinar o girar el mapa."
+    },
+    "textHelpCesium": {
+      "text1": "Esta herramienta te permite mover y controlar la cámara en un entorno 3D, explorando el mapa desde diferentes ángulos.",
+      "text2": "Para rotar el mapa 360º, haz clic y arrastra el anillo circular exterior alrededor del control.",
+      "text3": "Para inclinar y/o girar el mapa, selecciona el círculo interior y arrástralo en cualquier dirección. También puedes mantener pulsada la tecla CTRL y arrastrar el mapa para lograr el mismo efecto.",
+      "text4": "Haz doble clic en el círculo interior para volver rápidamente a la vista inicial.",
+      "text5": "Si necesitas ayuda, pulsa el botón '?' ubicado a la derecha del control para abrir un panel con instrucciones detalladas."
+    },
+    "close_not_show_help": "Cerrar y no mostrar de nuevo",
+    "image1_description": "Icono girar vista",
+    "image2_description": "Icono inclinar vista",
+    "close_btn": "Cerrar ayuda"
   },
   "mouse": {
     "title": "Coordenadas del puntero"
@@ -102,8 +124,13 @@
       "text2": "En el desplegable se muestran todas las implementaciones disponibles (OpenLayers, Cesium, etc)."
     }
   },
+  "popup": {
+    "msg": "Llévame allí"
+  },
   "exception": {
     "addto_method": "La implementación usada no posee el método addTo",
+    "no_get_rotation_method": "La implementación usada no posee el método getRotation",
+    "no_set_rotation_method": "La implementación usada no posee el método setRotation",
     "getelement_method": "La implementación usada no posee el método getElement",
     "getfeatureinfo_method": "La implementación usada no puede crear controles GetFeatureInfo",
     "mouse_method": "La implementación usada no puede crear controles Mouse",
@@ -115,7 +142,7 @@
     "scaleline_method": "La implementación usada no puede crear controles ScaleLine",
     "wmcselector_method": "La implementación usada no puede crear controles WMCSelector",
     "geojson_method": "La implementación usada no puede crear objetos IDEE.impl.format.GeoJSON",
-    "wkt_method": "La implementación usada no puede creat objetos IDEE.impl.format.WKT",
+    "wkt_method": "La implementación usada no puede crear objetos IDEE.impl.format.WKT",
     "getfeaturesbylayer_method": "La implementación usada no posee el método getFeaturesByLayer",
     "geojsonlayer_method": "La implementación usada no puede crear capas GeoJSON",
     "no_param": "No se ha especificado ningun parámetro",
@@ -173,6 +200,7 @@
     "getzoom_method": "La implementación usada no posee el método getZoom.",
     "no_zoom": "No ha especificado ningún zoom.",
     "invalid_zoom": "El zoom especificado no es válido.",
+    "invalid_scale": "La escala especificada no es válida.",
     "setzoom_method": "La implementación usada no posee el método setZoom.",
     "getcenter_method": "La implementación usada no posee el método getCenter.",
     "setcenter_method": "La implementación usada no posee el método setCenter.",
@@ -282,6 +310,26 @@
     "id_exists": "El ID indicado ya existe.",
     "transparent_deprecated": "El parámetro 'transparent' ha quedado obsoleto, se recomienda usar en su lugar 'isBase'.",
     "getOL3Layer_deprecated": "El método getOL3Layer ha quedado obsoleto, se recomienda usar en su lugar getLayer.",
-    "setOL3Layer_deprecated": "El método setOL3Layer ha quedado obsoleto, se recomienda usar en su lugar setLayer."
+    "setOL3Layer_deprecated": "El método setOL3Layer ha quedado obsoleto, se recomienda usar en su lugar setLayer.",
+    "simple_deprecated": "Los estilos simples (IDEE.style.Point, IDEE.style.Polygon y IDEE.style.Line) han quedado obsoletos, se recomienda usar en su lugar los estilos genericos (IDEE.style.Generic)",
+    "geopackagetile_method": "La implementación usada no puede crear capas GeoPackageTile.",
+    "addgeopackagetile_method": "La implementación usada no posee el método addGeoPackageTile.",
+    "getgeopackagetile_method": "La implementación usada no posee el método getGeoPackageTile.",
+    "removegeopackagetile_method": "La implementación usada no posee el método removeGeoPackageTile.",
+    "wmc_method": "La implementación usada no puede crear capas WMC",
+    "sectionlayer_method": "La implementación usada no puede crear capas Section.",
+    "getsections_method": "La implementación usada no posee el método getSections.",
+    "addsections_method": "La implementación usada no posee el método addSections.",
+    "removesections_method": "La implementación usada no posee el método removeSections.",
+    "not_layergroup_in_section": "No es posible añadir un grupo de capas dentro de una sección.",
+    "setzindex_method": "No es posible aplicar un zIndex a una WMC.",
+    "setlayer_method": "No es posible establecer la capa de la implementación de una WMC.",
+    "setmaxextent_no_apply": "No es posible aplicar la extensión máxima a una WMC.",
+    "setminzoom_no_apply": "No es posible aplicar el mínimo zoom a la capa WMC.",
+    "setmaxzoom_no_apply": "No es posible aplicar el máximo zoom a la capa WMC.",
+    "setminscale_no_apply": "No es posible aplicar la mínima escala a la capa WMC.",
+    "setmaxscale_no_apply": "No es posible aplicar la máxima escala a la capa WMC.",
+    "wkt_toCQL_method": "La implementación usada no puede crear el formateador WKT por lo que no incluirá filtros CQL.",
+    "enableDrag_deprecated": "El método enableDrag de la clase Map ha quedado obsoleto, se recomienda usar en su lugar enablePan."
   }
 }

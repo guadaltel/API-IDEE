@@ -42,6 +42,7 @@ module.exports = {
       path: false,
       crypto: false,
       'buffer': require.resolve('buffer/'),
+      util: require.resolve('util/'),
     },
   },
   module: {
@@ -90,8 +91,11 @@ module.exports = {
   optimization: {
     emitOnErrors: false,
     minimizer: [
-      new OptimizeCssAssetsPlugin(),
+      new OptimizeCssAssetsPlugin({
+        parallel: 1,
+      }),
       new TerserPlugin({
+        parallel: 1,
         terserOptions: {
           sourceMap: true,
         },
@@ -135,5 +139,6 @@ module.exports = {
       ],
     }),
   ],
+  externals: ['better-sqlite3'],
   devtool: 'source-map',
 };

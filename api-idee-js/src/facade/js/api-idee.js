@@ -12,7 +12,8 @@ import TMS from 'IDEE/layer/TMS';
 import LayerGroup from 'IDEE/layer/LayerGroup';
 import WMTS from 'IDEE/layer/WMTS';
 import MapLibre from 'IDEE/layer/MapLibre';
-import Point from 'IDEE/style/Point';
+import Generic from 'IDEE/style/Generic';
+import pkg from '../../../package';
 import 'assets/css/idee';
 import { isUndefined, isNullOrEmpty } from './util/Utils';
 import Exception from './exception/exception';
@@ -160,7 +161,7 @@ const quickLayersTMS = (option) => {
             name: 'PNOA-MA',
             description: 'IGN',
             url: 'https://www.ign.es',
-            contentAttributions: 'https://componentes.idee.es/estaticos/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml',
+            contentAttributions: `${IDEE.config.STATIC_RESOURCES_URL}/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml`,
             contentType: 'kml',
           },
         }, {
@@ -186,11 +187,13 @@ const redesGeodesicasRegenteWFS = () => {
       geometry: 'POINT',
       extract: true,
     }, {
-      style: new Point({
-        radius: 2,
-        fill: {
-          color: 'black',
-          opacity: 0.5,
+      style: new Generic({
+        point: {
+          radius: 2,
+          fill: {
+            color: 'black',
+            opacity: 0.5,
+          },
         },
       }),
     });
@@ -216,7 +219,7 @@ const baseHIBRIDOLayerGroup = () => {
             name: 'PNOA-MA',
             description: 'IGN',
             url: 'https://www.ign.es',
-            contentAttributions: 'https://componentes.idee.es/estaticos/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml',
+            contentAttributions: `${IDEE.config.STATIC_RESOURCES_URL}/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml`,
             contentType: 'kml',
           },
         }, {
@@ -335,6 +338,14 @@ export const getQuickLayers = (layer) => {
   }
   return layers;
 };
+
+/**
+ * Debuelve la versión de api-idee
+ * @public
+ * @const {String}
+ * @api
+ */
+export const version = pkg.version;
 
 /**
  * Este comentario no se verá, es necesario incluir
