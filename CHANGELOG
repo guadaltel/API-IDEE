@@ -33,6 +33,7 @@
 - Se implementa la posibilidad de enviar un callback a getMaxExtent de mbtiles.
 - Se crean set/get multiWorld.
 - Se solucionan bugs que no persistia correctamente el zoomConstrain del mapa.
+- Mejora la visualización de leyendas.
 
 
 01/01/25 - Versión 1.0.0
