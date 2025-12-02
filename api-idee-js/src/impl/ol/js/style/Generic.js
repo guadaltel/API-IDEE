@@ -1,6 +1,7 @@
 /**
  * @module IDEE/impl/style/Generic
  */
+import { useproxy } from 'IDEE/api-idee';
 import {
   isUndefined, isArray, isFunction, isDynamic, drawDynamicStyle,
   concatUrlPaths, addParameters, getImageSize,
@@ -173,7 +174,7 @@ class Generic extends Simple {
             getImageSize(this.options_.point.icon.src).then((imgx) => {
               img.onload = () => resolve(img);
               img.onerror = reject;
-              if (!this.options_.point.icon.src.startsWith(window.location.origin)) {
+              if (!this.options_.point.icon.src.startsWith(window.location.origin) && useproxy) {
                 const proxyImageURL = concatUrlPaths([IDEE.config.PROXY_URL, '/image']);
                 img.crossOrigin = 'anonymous';
                 img.src = addParameters(proxyImageURL, {
