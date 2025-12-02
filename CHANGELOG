@@ -34,6 +34,7 @@
 - Se crean set/get multiWorld.
 - Se solucionan bugs que no persistia correctamente el zoomConstrain del mapa.
 - Mejora la visualización de leyendas.
+- Soluciona errores en el comportamiento de isVisible en MVT.
 
 
 01/01/25 - Versión 1.0.0
