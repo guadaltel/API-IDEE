@@ -35,6 +35,7 @@
 - Se solucionan bugs que no persistia correctamente el zoomConstrain del mapa.
 - Mejora la visualización de leyendas.
 - Soluciona errores en el comportamiento de isVisible en MVT.
+- Se soluciona un error al devolver el legendURL de una capa Vector con estilos cluster composite.
 
 
 01/01/25 - Versión 1.0.0
