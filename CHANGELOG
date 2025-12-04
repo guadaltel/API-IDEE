@@ -37,6 +37,7 @@
 - Soluciona errores en el comportamiento de isVisible en MVT.
 - Se soluciona un error al devolver el legendURL de una capa Vector con estilos cluster composite.
 - Se elimina el método getFeaturesExtentPromise de GeoJSON para que herede de Vector.
+- Añadida configuración para determinar el zoom aplicado al localizar al usuario mediante location.
 
 
 01/01/25 - Versión 1.0.0
