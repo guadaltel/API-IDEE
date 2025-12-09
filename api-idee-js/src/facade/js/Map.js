@@ -4598,6 +4598,23 @@ class Map extends Base {
   }
 
   /**
+   * Establece la devolución de llamada cuando se carga la instancia.
+   *
+   * @public
+   * @function
+   * @param {IDEE.evt} eventType Tipo de evento.
+   * @param {Function} listener "Callback".
+   * @param {Object} optThis Opciones de la instancia del mapa.
+   * @api
+   */
+  once(eventType, listener, optThis) {
+    super.once(eventType, listener, optThis);
+    if ((eventType === EventType.COMPLETED) && (this._finishedMap === true)) {
+      this.fire(EventType.COMPLETED);
+    }
+  }
+
+  /**
    * Método para añadir las atribuciones de las capas.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    *
