@@ -172,18 +172,14 @@ public class ActionsWS {
 	@GET
 	@Path("/plugins/external")
 	public String showAvailableExternalPlugins(@QueryParam("callback") String callbackFn) {
+		JSONArray pluginsJSON = new JSONArray();
+
 		PluginsManager.init(context);
-		
-		JSONObject result = new JSONObject();
-		JSONArray pluginsArray = new JSONArray();
-		
 		for (String pluginName : PluginsManager.getAvailableExternalPlugins()) {
-			pluginsArray.put(pluginName);
+			pluginsJSON.put(pluginName);
 		}
-		
-		result.put("plugins", pluginsArray);
-		
-		return JSBuilder.wrapCallback(result, callbackFn);
+
+		return JSBuilder.wrapCallback(pluginsJSON, callbackFn);
 	}
 
 	/**
