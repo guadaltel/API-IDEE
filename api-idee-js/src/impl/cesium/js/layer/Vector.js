@@ -444,6 +444,10 @@ class Vector extends Layer {
    * @api
    */
   handlerAddFeatures_(features, update) {
+    // Verificar que la capa sigue asociada al mapa (puede ser null si se destruyó)
+    if (isNullOrEmpty(this.map)) {
+      return;
+    }
     const cesiumMap = this.map.getMapImpl();
     if (cesiumMap.scene.globe.tilesLoaded) {
       this.addFeatures_(features, update);
@@ -818,6 +822,11 @@ class Vector extends Layer {
    */
   destroy() {
     const cesiumMap = this.map.getMapImpl();
+    // Eliminar el listener de tileLoadProgressEvent si existe
+    if (!isNullOrEmpty(this.tileLoadHandler)) {
+      cesiumMap.scene.globe.tileLoadProgressEvent.removeEventListener(this.tileLoadHandler);
+      this.tileLoadHandler = null;
+    }
     if (!isNullOrEmpty(this.cesiumLayer)) {
       cesiumMap.dataSources.remove(this.cesiumLayer, true);
       this.cesiumLayer = null;

@@ -408,11 +408,20 @@ class Cluster extends Style {
     this.handleSelectEvent.setInputAction((click) => {
       this.selectClusterFeature_();
       this.selectClusterInteraction_.selectCluster(click);
+      // Guardar posición de la cámara al desplegar el cluster
+      this.lastCameraPosition_ = Cartesian3.clone(map.getMapImpl().camera.position);
     }, ScreenSpaceEventType.LEFT_CLICK);
 
     this.onCameraMoveStart_ = () => {
-      this.selectClusterFeature_();
-      this.selectClusterInteraction_.refreshViewEvents();
+      // Solo limpiar si la cámara se ha movido significativamente
+      const currentPosition = map.getMapImpl().camera.position;
+      const threshold = 1.0; // Umbral en metros para considerar movimiento significativo
+      if (isNullOrEmpty(this.lastCameraPosition_)
+        || Cartesian3.distance(currentPosition, this.lastCameraPosition_) > threshold) {
+        this.selectClusterFeature_();
+        this.selectClusterInteraction_.refreshViewEvents();
+        this.lastCameraPosition_ = null;
+      }
     };
     map.getMapImpl().camera.moveStart.addEventListener(this.onCameraMoveStart_);
   }
@@ -471,6 +480,9 @@ class Cluster extends Style {
 
       const coordinates = hoveredFeatures
         .map((f) => Utils.getCoordinateEntity(f.getImpl().getFeature()));
+      // hoveredFeatures.forEach((f) => {
+      //   this.layer_.getImpl().getMap().getMapImpl().entities.add(f.getImpl().getFeature());
+      // });
       let convexHull = coordinatesConvexHull(coordinates);
       if (convexHull.length > 2) {
         convexHull = convexHull.map((c) => Cartesian3.fromDegrees(c[0], c[1], c[2]));
@@ -514,6 +526,7 @@ class Cluster extends Style {
     if (!isNullOrEmpty(this.convexHullLayer_)) {
       this.convexHullLayer_.removeFeatures(this.convexHullLayer_.getFeatures());
     }
+    // this.layer_.getImpl().getMap().getMapImpl().entities.removeAll();
   }
 
   /**
