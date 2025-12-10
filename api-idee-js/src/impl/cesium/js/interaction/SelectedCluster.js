@@ -3,6 +3,7 @@
  */
 
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   CustomDataSource,
@@ -125,14 +126,16 @@ class SelectCluster {
 
     this.overlayLayer_.entities.removeAll();
 
-    const center = pickedObject.primitive.position;
-    const radiusInPixels = this.pointRadius * (0.5 + (cluster.length / 4));
-    const radiusInMeters = Utils.convertPixelsToMeters(
-      this.map.getMapImpl(),
-      center,
-      radiusInPixels,
+    const centerCartesian = pickedObject.primitive.position;
+    const bs = new BoundingSphere(centerCartesian, 1.0);
+    const metersPerPixel = this.map.getMapImpl().camera.getPixelSize(
+      bs,
+      this.map.getMapImpl().scene.canvas.width,
+      this.map.getMapImpl().scene.canvas.height,
     );
-    this.drawFeaturesAndLinsInCircle_(cluster, radiusInMeters, center);
+    const radiusInMeters = metersPerPixel * this.pointRadius * (0.5 + (cluster.length / 4));
+
+    this.drawFeaturesAndLinsInCircle_(cluster, radiusInMeters, centerCartesian);
   }
 
   /**
