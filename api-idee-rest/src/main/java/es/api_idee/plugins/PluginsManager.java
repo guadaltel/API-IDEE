@@ -47,7 +47,14 @@ public abstract class PluginsManager {
 	private static java.util.Set<String> AVAILABLE_EXTERNAL_PLUGINS;
 
 	public static Collection<PluginAPI> getAllPlugins() {
-		return availablePlugins.values();
+		// Filtrar solo los plugins internos (no externos)
+		List<PluginAPI> internalPlugins = new LinkedList<PluginAPI>();
+		for (PluginAPI plugin : availablePlugins.values()) {
+			if (!plugin.isExternal()) {
+				internalPlugins.add(plugin);
+			}
+		}
+		return internalPlugins;
 	}
 
 	public static List<String> getPlugins(MultivaluedMap<String, String> queryParams) {
