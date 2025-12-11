@@ -84,6 +84,7 @@ class Map extends Base {
    * - zoom: Zoom del mapa.
    * - zoomConstrains: Restricciones de zoom.
    * - rotation: Rotación del mapa.
+   * - ticket: Ticket de autenticación.
    * @param { Mx.parameters.MapOptions } options Opciones personalizadas para la implementación
    * proporcionado por el usuario.
    * - verticalExaggeration: Exageración vertical de la escena. Si se establece a 1 no se aplica
@@ -166,6 +167,11 @@ class Map extends Base {
      * Map: Areas del contenedor.
      */
     this._areasContainer = null;
+
+    /**
+     * Map: Ticket de autenticación.
+     */
+    this.ticket_ = null;
 
     /**
      * Map: "Popup".
