@@ -1948,6 +1948,14 @@ class Map extends MObject {
         this.layers_ = this.layers_.filter((layer2) => !layer2.equals(layer));
         layer.getImpl().destroy();
         layer.getImpl().activateBaseLayer(layer, this.facadeMap_);
+        layer.fire(EventType.REMOVED_FROM_MAP, [layer]);
+        if (layer.isBase === true) {
+          // it was base layer so sets the visibility of the first one
+          const baseLayers = this.facadeMap_.getBaseLayers();
+          if (baseLayers.length > 0) {
+            baseLayers[0].setVisible(true);
+          }
+        }
       }
     });
   }
