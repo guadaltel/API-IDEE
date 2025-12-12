@@ -84,6 +84,7 @@ class Map extends Base {
    * - zoom: Zoom del mapa.
    * - zoomConstrains: Restricciones de zoom.
    * - rotation: Rotación del mapa.
+   * - ticket: Ticket de autenticación.
    * @param { Mx.parameters.MapOptions } options Opciones personalizadas para la implementación
    * proporcionado por el usuario.
    * - verticalExaggeration: Exageración vertical de la escena. Si se establece a 1 no se aplica
@@ -166,6 +167,11 @@ class Map extends Base {
      * Map: Areas del contenedor.
      */
     this._areasContainer = null;
+
+    /**
+     * Map: Ticket de autenticación.
+     */
+    this.ticket_ = null;
 
     /**
      * Map: "Popup".
@@ -1529,10 +1535,11 @@ class Map extends Base {
   }
 
   /**
-   * Este método agrega las capas de GeoJSON al mapa.
+   * Este método agrega las capas de tipo desconocido al mapa.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
-   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Colección u objeto de capa.
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParamVar Colección u objeto de capa.
+   * @api
    */
   addUnknowLayers_(layersParamVar) {
     let layersParam = layersParamVar;
@@ -4473,6 +4480,23 @@ class Map extends Base {
    */
   on(eventType, listener, optThis) {
     super.on(eventType, listener, optThis);
+    if ((eventType === EventType.COMPLETED) && (this._finishedMap === true)) {
+      this.fire(EventType.COMPLETED);
+    }
+  }
+
+  /**
+   * Establece la devolución de llamada cuando se carga la instancia.
+   *
+   * @public
+   * @function
+   * @param {IDEE.evt} eventType Tipo de evento.
+   * @param {Function} listener "Callback".
+   * @param {Object} optThis Opciones de la instancia del mapa.
+   * @api
+   */
+  once(eventType, listener, optThis) {
+    super.once(eventType, listener, optThis);
     if ((eventType === EventType.COMPLETED) && (this._finishedMap === true)) {
       this.fire(EventType.COMPLETED);
     }
