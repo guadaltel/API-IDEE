@@ -1199,7 +1199,6 @@ class Map extends Base {
       // gets the layers
       const wmcLayers = this.getWMC(layersParam);
       if (wmcLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wmcLayers]);
         // removes the layers
         this.getImpl().removeWMC(wmcLayers);
       }
@@ -1307,7 +1306,6 @@ class Map extends Base {
       // gets the layers
       const kmlLayers = this.getKML(layersParam);
       if (kmlLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [kmlLayers]);
         kmlLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1416,7 +1414,6 @@ class Map extends Base {
       // gets the layers
       const wmsLayers = this.getWMS(layersParam);
       if (wmsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wmsLayers]);
         // removes the layers
         this.getImpl().removeWMS(wmsLayers);
       }
@@ -1582,7 +1579,6 @@ class Map extends Base {
       // gets the layers
       const wfsLayers = this.getWFS(layersParam);
       if (wfsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wfsLayers]);
         wfsLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1695,7 +1691,6 @@ class Map extends Base {
       // gets the layers
       const geotiffLayers = this.getGeoTIFF(layersParam);
       if (geotiffLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [geotiffLayers]);
         geotiffLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1809,7 +1804,6 @@ class Map extends Base {
       // gets the layers
       const mapLibreLayers = this.getMapLibre(layersParam);
       if (mapLibreLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mapLibreLayers]);
         mapLibreLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1924,7 +1918,6 @@ class Map extends Base {
       // gets the layers
       const ogcapifLayers = this.getOGCAPIFeatures(layersParam);
       if (ogcapifLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [ogcapifLayers]);
         ogcapifLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -2035,7 +2028,6 @@ class Map extends Base {
       // gets the layers
       const wmtsLayers = this.getWMTS(layersParam);
       if (wmtsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wmtsLayers]);
         // removes the layers
         this.getImpl().removeWMTS(wmtsLayers);
       }
@@ -2094,7 +2086,6 @@ class Map extends Base {
       }
       const mvtLayers = this.getMVT(layersParam);
       if (mvtLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mvtLayers]);
         mvtLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -2226,7 +2217,6 @@ class Map extends Base {
     if (!isNullOrEmpty(layersParam)) {
       const mbtilesLayers = this.getMBTiles(layersParam);
       if (mbtilesLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mbtilesLayers]);
         this.getImpl().removeMBTiles(mbtilesLayers);
       }
     }
@@ -2313,7 +2303,6 @@ class Map extends Base {
       }
       const mbtilesLayers = this.getMBTilesVector(layersParam);
       if (mbtilesLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mbtilesLayers]);
         this.getImpl().removeMBTilesVector(mbtilesLayers);
       }
     }
@@ -2406,7 +2395,6 @@ class Map extends Base {
 
       const xyzLayers = this.getXYZs(layersParam);
       if (xyzLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [xyzLayers]);
         this.getImpl().removeXYZ(xyzLayers);
       }
     }
@@ -2499,7 +2487,6 @@ class Map extends Base {
 
       const tmsLayers = this.getTMS(layersParam);
       if (tmsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [tmsLayers]);
         this.getImpl().removeTMS(tmsLayers);
       }
     }
@@ -2602,7 +2589,6 @@ class Map extends Base {
 
       const tiles3DLayers = this.getTiles3D(layersParam);
       if (tiles3DLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [tiles3DLayers]);
         this.getImpl().removeTiles3D(tiles3DLayers);
       }
     }
@@ -2702,7 +2688,6 @@ class Map extends Base {
 
       const terrainLayers = this.getTerrain(layersParam);
       if (terrainLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [terrainLayers]);
         this.getImpl().removeTerrain(terrainLayers);
       }
     }
@@ -2841,7 +2826,6 @@ class Map extends Base {
         this.geopackages = this.geopackages
           .filter((geopackage) => !geopackage.equals(layer));
       });
-      this.fire(EventType.REMOVED_LAYER, [geopackageLayers]);
     }
     return this;
   }

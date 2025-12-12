@@ -529,8 +529,6 @@ class Map extends MObject {
       }
     });
 
-    this.facadeMap_.fire(EventType.REMOVED_LAYER, [layers]);
-
     return this;
   }
 
@@ -892,22 +890,30 @@ class Map extends MObject {
    */
   removeWMC(layers) {
     const wmcMapLayers = this.getWMC(layers);
+    const removedLayers = [];
     wmcMapLayers.forEach((wmcLayer) => {
-      if (wmcLayer.selected === true && wmcLayer.isLoaded() === false) {
-        wmcLayer.on(EventType.LOAD, () => {
+      if (includes(this.layers_, wmcLayer)) {
+        if (wmcLayer.selected === true && wmcLayer.isLoaded() === false) {
+          wmcLayer.on(EventType.LOAD, () => {
+            this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
+            this.facadeMap_.removeWMS(wmcLayer.layers);
+            wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
+            this.facadeMap_.refreshWMCSelectorControl();
+          });
+        } else {
           this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
           this.facadeMap_.removeWMS(wmcLayer.layers);
-          wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
-          this.facadeMap_.refreshWMCSelectorControl();
-        });
-      } else {
-        this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
-        this.facadeMap_.removeWMS(wmcLayer.layers);
+        }
+        wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
+        this.facadeMap_.refreshWMCSelectorControl();
+        wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
+        removedLayers.push(wmcLayer);
       }
-      wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
-      this.facadeMap_.refreshWMCSelectorControl();
-      wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
     }, this);
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1007,12 +1013,20 @@ class Map extends MObject {
    */
   removeKML(layers) {
     const kmlMapLayers = this.getKML(layers);
+    const removedLayers = [];
     kmlMapLayers.forEach((kmlLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !kmlLayer.equals(layer));
-      kmlLayer.getImpl().destroy();
-      kmlLayer.getImpl().activateBaseLayer(kmlLayer, this.facadeMap_);
-      kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
+      if (includes(this.layers_, kmlLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !kmlLayer.equals(layer));
+        kmlLayer.getImpl().destroy();
+        kmlLayer.getImpl().activateBaseLayer(kmlLayer, this.facadeMap_);
+        kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
+        removedLayers.push(kmlLayer);
+      }
     }, this);
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1128,12 +1142,21 @@ class Map extends MObject {
    */
   removeWMS(layers) {
     const wmsMapLayers = this.getWMS(layers);
+    const removedLayers = [];
     wmsMapLayers.forEach((wmsLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
-      wmsLayer.getImpl().destroy();
-      wmsLayer.getImpl().activateBaseLayer(wmsLayer, this.facadeMap_);
-      wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
+      if (includes(this.layers_, wmsLayer)) {
+        wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
+        this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
+        wmsLayer.getImpl().destroy();
+        wmsLayer.getImpl().activateBaseLayer(wmsLayer, this.facadeMap_);
+        wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
+        removedLayers.push(wmsLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1315,12 +1338,20 @@ class Map extends MObject {
    */
   removeWFS(layers) {
     const wfsMapLayers = this.getWFS(layers);
+    const removedLayers = [];
     wfsMapLayers.forEach((wfsLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(wfsLayer));
-      wfsLayer.getImpl().destroy();
-      wfsLayer.getImpl().activateBaseLayer(wfsLayer, this.facadeMap_);
-      wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
+      if (includes(this.layers_, wfsLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(wfsLayer));
+        wfsLayer.getImpl().destroy();
+        wfsLayer.getImpl().activateBaseLayer(wfsLayer, this.facadeMap_);
+        wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
+        removedLayers.push(wfsLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1436,12 +1467,20 @@ class Map extends MObject {
  */
   removeGeoTIFF(layers) {
     const geotiffMapLayers = this.getGeoTIFF(layers);
+    const removedLayers = [];
     geotiffMapLayers.forEach((geotiffLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(geotiffLayer));
-      geotiffLayer.getImpl().destroy();
-      geotiffLayer.getImpl().activateBaseLayer(geotiffLayer, this.facadeMap_);
-      geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
+      if (includes(this.layers_, geotiffLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(geotiffLayer));
+        geotiffLayer.getImpl().destroy();
+        geotiffLayer.getImpl().activateBaseLayer(geotiffLayer, this.facadeMap_);
+        geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
+        removedLayers.push(geotiffLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1550,12 +1589,20 @@ class Map extends MObject {
    */
   removeOGCAPIFeatures(layers) {
     const ogcapifMapLayers = this.getOGCAPIFeatures(layers);
+    const removedLayers = [];
     ogcapifMapLayers.forEach((ogcapifLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(ogcapifLayer));
-      ogcapifLayer.getImpl().destroy();
-      ogcapifLayer.getImpl().activateBaseLayer(ogcapifLayer, this.facadeMap_);
-      ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
+      if (includes(this.layers_, ogcapifLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(ogcapifLayer));
+        ogcapifLayer.getImpl().destroy();
+        ogcapifLayer.getImpl().activateBaseLayer(ogcapifLayer, this.facadeMap_);
+        ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
+        removedLayers.push(ogcapifLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1656,12 +1703,20 @@ class Map extends MObject {
    */
   removeWMTS(layers) {
     const wmtsMapLayers = this.getWMTS(layers);
+    const removedLayers = [];
     wmtsMapLayers.forEach((wmtsLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(wmtsLayer));
-      wmtsLayer.getImpl().destroy();
-      wmtsLayer.getImpl().activateBaseLayer(wmtsLayer, this.facadeMap_);
-      wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
+      if (includes(this.layers_, wmtsLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(wmtsLayer));
+        wmtsLayer.getImpl().destroy();
+        wmtsLayer.getImpl().activateBaseLayer(wmtsLayer, this.facadeMap_);
+        wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
+        removedLayers.push(wmtsLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1755,12 +1810,20 @@ class Map extends MObject {
    */
   removeMBTiles(layers) {
     const mbtilesMapLayers = this.getMBTiles(layers);
+    const removedLayers = [];
     mbtilesMapLayers.forEach((mbtilesLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
-      mbtilesLayer.getImpl().destroy();
-      mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
-      mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
+      if (includes(this.layers_, mbtilesLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
+        mbtilesLayer.getImpl().destroy();
+        mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
+        mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
+        removedLayers.push(mbtilesLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -1851,12 +1914,21 @@ class Map extends MObject {
    */
   removeMBTilesVector(layers) {
     const mbtilesMapLayers = this.getMBTilesVector(layers);
+    const removedLayers = [];
     mbtilesMapLayers.forEach((mbtilesLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
-      mbtilesLayer.getImpl().destroy();
-      mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
-      mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
+      if (includes(this.layers_, mbtilesLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
+        mbtilesLayer.getImpl().destroy();
+        mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
+        mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
+        removedLayers.push(mbtilesLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
+
     return this;
   }
 
@@ -1943,12 +2015,14 @@ class Map extends MObject {
    */
   removeUnknowLayers_(layers) {
     // removes unknow layers
+    const removedLayers = [];
     layers.forEach((layer) => {
       if (includes(this.layers_, layer)) {
         this.layers_ = this.layers_.filter((layer2) => !layer2.equals(layer));
         layer.getImpl().destroy();
         layer.getImpl().activateBaseLayer(layer, this.facadeMap_);
         layer.fire(EventType.REMOVED_FROM_MAP, [layer]);
+        removedLayers.push(layer);
         if (layer.isBase === true) {
           // it was base layer so sets the visibility of the first one
           const baseLayers = this.facadeMap_.getBaseLayers();
@@ -1958,6 +2032,9 @@ class Map extends MObject {
         }
       }
     });
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
   }
 
   /**
@@ -2026,13 +2103,21 @@ class Map extends MObject {
    * @api
    */
   removeMVT(layers) {
-    const mvtLayers = this.getMVT(layers);
-    mvtLayers.forEach((mvtLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(mvtLayer));
-      mvtLayer.getImpl().destroy();
-      mvtLayer.getImpl().activateBaseLayer(mvtLayer, this.facadeMap_);
-      mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
+    const mvtMapLayers = this.getMVT(layers);
+    const removedLayers = [];
+    mvtMapLayers.forEach((mvtLayer) => {
+      if (includes(this.layers_, mvtLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(mvtLayer));
+        mvtLayer.getImpl().destroy();
+        mvtLayer.getImpl().activateBaseLayer(mvtLayer, this.facadeMap_);
+        mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
+        removedLayers.push(mvtLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -2117,13 +2202,21 @@ class Map extends MObject {
      * @api
      */
   removeMapLibre(layers) {
-    const mapLibreLayers = this.getMapLibre(layers);
-    mapLibreLayers.forEach((mapLibreLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(mapLibreLayer));
-      mapLibreLayer.getImpl().destroy();
-      mapLibreLayer.getImpl().activateBaseLayer(mapLibreLayer, this.facadeMap_);
-      mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
+    const mapLibreMapLayers = this.getMapLibre(layers);
+    const removedLayers = [];
+    mapLibreMapLayers.forEach((mapLibreLayer) => {
+      if (includes(this.layers_, mapLibreLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(mapLibreLayer));
+        mapLibreLayer.getImpl().destroy();
+        mapLibreLayer.getImpl().activateBaseLayer(mapLibreLayer, this.facadeMap_);
+        mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
+        removedLayers.push(mapLibreLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -2225,12 +2318,20 @@ class Map extends MObject {
    */
   removeXYZ(layers) {
     const xyzMapLayers = this.getXYZs(layers);
+    const removedLayers = [];
     xyzMapLayers.forEach((xyzLayer) => {
-      xyzLayer.getImpl().destroy();
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(xyzLayer));
-      xyzLayer.getImpl().activateBaseLayer(xyzLayer, this.facadeMap_);
-      xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
+      if (includes(this.layers_, xyzLayer)) {
+        xyzLayer.getImpl().destroy();
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(xyzLayer));
+        xyzLayer.getImpl().activateBaseLayer(xyzLayer, this.facadeMap_);
+        xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
+        removedLayers.push(xyzLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -2318,12 +2419,20 @@ class Map extends MObject {
    */
   removeTMS(layers) {
     const tmsMapLayers = this.getTMS(layers);
+    const removedLayers = [];
     tmsMapLayers.forEach((tmsLayer) => {
-      tmsLayer.getImpl().destroy();
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(tmsLayer));
-      tmsLayer.getImpl().activateBaseLayer(tmsLayer, this.facadeMap_);
-      tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
+      if (includes(this.layers_, tmsLayer)) {
+        tmsLayer.getImpl().destroy();
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(tmsLayer));
+        tmsLayer.getImpl().activateBaseLayer(tmsLayer, this.facadeMap_);
+        tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
+        removedLayers.push(tmsLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
@@ -2406,13 +2515,21 @@ class Map extends MObject {
    * @api
    */
   removeGeoPackageTile(layers) {
-    const tileLayers = this.getGeoPackageTile(layers);
-    tileLayers.forEach((tileLayer) => {
-      this.layers_ = this.layers_.filter((layer) => !layer.equals(tileLayer));
-      tileLayer.getImpl().destroy();
-      tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
-      tileLayer.getImpl().activateBaseLayer(tileLayer, this.facadeMap_);
+    const tileMapLayers = this.getGeoPackageTile(layers);
+    const removedLayers = [];
+    tileMapLayers.forEach((tileLayer) => {
+      if (includes(this.layers_, tileLayer)) {
+        this.layers_ = this.layers_.filter((layer) => !layer.equals(tileLayer));
+        tileLayer.getImpl().destroy();
+        tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
+        tileLayer.getImpl().activateBaseLayer(tileLayer, this.facadeMap_);
+        removedLayers.push(tileLayer);
+      }
     });
+
+    if (removedLayers.length > 0) {
+      this.facadeMap_.fire(EventType.REMOVED_LAYER, [removedLayers]);
+    }
 
     return this;
   }
