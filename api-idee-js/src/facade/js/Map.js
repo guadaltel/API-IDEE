@@ -1538,10 +1538,11 @@ class Map extends Base {
   }
 
   /**
-   * Este método agrega las capas de GeoJSON al mapa.
+   * Este método agrega las capas de tipo desconocido al mapa.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
-   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Colección u objeto de capa.
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParamVar Colección u objeto de capa.
+   * @api
    */
   addUnknowLayers_(layersParamVar) {
     let layersParam = layersParamVar;
