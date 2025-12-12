@@ -6,6 +6,7 @@ import { get as getProj, transform } from 'ol/proj';
 import OLFormatWMTSCapabilities from 'ol/format/WMTSCapabilities';
 import OLProjection from 'ol/proj/Projection';
 import OLInteraction from 'ol/interaction/Interaction';
+import { MouseWheelZoom, DragPan } from 'ol/interaction';
 import MObject from 'IDEE/Object';
 import FacadePanzoombar from 'IDEE/control/Panzoombar';
 import * as LayerType from 'IDEE/layer/Type';
@@ -270,6 +271,28 @@ class Map extends MObject {
         return true;
       },
     }));
+
+    const interactions = this.map_.getInteractions().getArray();
+
+    /**
+     * MouseWheelZoom - Interacción
+     * @private
+     * @type {ol.Interaction}
+     * @returns {ol.Interaction.MouseWheelZoom} MouseWheelZoom.
+     */
+    this.mouseWheelZoom_ = interactions.find((interaction) => {
+      return interaction instanceof MouseWheelZoom;
+    });
+
+    /**
+     * DragPan - Interacción.
+     * @private
+     * @type {ol.Interaction}
+     * @returns {ol.Interaction.DragPan} Interacción DragPan.
+     */
+    this.dragPan_ = interactions.find((interaction) => {
+      return interaction instanceof DragPan;
+    });
   }
 
   /**
@@ -760,9 +783,10 @@ class Map extends MObject {
   removeLayerGroups(layers) {
     const layerGroupMapLayers = this.getLayerGroups(layers);
     layerGroupMapLayers.forEach((layerGroup) => {
-      layerGroup.fire(EventType.REMOVED_FROM_MAP, [layerGroup]);
       this.layers_ = this.layers_.filter((layer) => !layerGroup.equals(layer));
       layerGroup.getImpl().destroy();
+      layerGroup.getImpl().activateBaseLayer(layerGroup, this.facadeMap_);
+      layerGroup.fire(EventType.REMOVED_FROM_MAP, [layerGroup]);
     });
 
     return this;
@@ -873,12 +897,14 @@ class Map extends MObject {
           wmcLayer.on(EventType.LOAD, () => {
             this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
             this.facadeMap_.removeWMS(wmcLayer.layers);
+            wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
             this.facadeMap_.refreshWMCSelectorControl();
           });
         } else {
           this.layers_ = this.layers_.filter((layer) => !layer.equals(wmcLayer));
           this.facadeMap_.removeWMS(wmcLayer.layers);
         }
+        wmcLayer.getImpl().activateBaseLayer(wmcLayer, this.facadeMap_);
         this.facadeMap_.refreshWMCSelectorControl();
         wmcLayer.fire(EventType.REMOVED_FROM_MAP, [wmcLayer]);
         removedLayers.push(wmcLayer);
@@ -946,6 +972,10 @@ class Map extends MObject {
               if (!isNullOrEmpty(filterLayer.extract)) {
                 layerMatched = (layerMatched && (filterLayer.extract === kmlLayer.extract));
               }
+              // template
+              if (!isNullOrEmpty(filterLayer.template)) {
+                layerMatched = (layerMatched && (filterLayer.template === kmlLayer.template));
+              }
             }
           } else {
             layerMatched = false;
@@ -988,6 +1018,7 @@ class Map extends MObject {
       if (includes(this.layers_, kmlLayer)) {
         this.layers_ = this.layers_.filter((layer) => !kmlLayer.equals(layer));
         kmlLayer.getImpl().destroy();
+        kmlLayer.getImpl().activateBaseLayer(kmlLayer, this.facadeMap_);
         kmlLayer.fire(EventType.REMOVED_FROM_MAP, [kmlLayer]);
         removedLayers.push(kmlLayer);
       }
@@ -1117,6 +1148,8 @@ class Map extends MObject {
         wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
         this.layers_ = this.layers_.filter((layer) => !wmsLayer.equals(layer));
         wmsLayer.getImpl().destroy();
+        wmsLayer.getImpl().activateBaseLayer(wmsLayer, this.facadeMap_);
+        wmsLayer.fire(EventType.REMOVED_FROM_MAP, [wmsLayer]);
         removedLayers.push(wmsLayer);
       }
     });
@@ -1310,6 +1343,7 @@ class Map extends MObject {
       if (includes(this.layers_, wfsLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(wfsLayer));
         wfsLayer.getImpl().destroy();
+        wfsLayer.getImpl().activateBaseLayer(wfsLayer, this.facadeMap_);
         wfsLayer.fire(EventType.REMOVED_FROM_MAP, [wfsLayer]);
         removedLayers.push(wfsLayer);
       }
@@ -1438,6 +1472,7 @@ class Map extends MObject {
       if (includes(this.layers_, geotiffLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(geotiffLayer));
         geotiffLayer.getImpl().destroy();
+        geotiffLayer.getImpl().activateBaseLayer(geotiffLayer, this.facadeMap_);
         geotiffLayer.fire(EventType.REMOVED_FROM_MAP, [geotiffLayer]);
         removedLayers.push(geotiffLayer);
       }
@@ -1559,6 +1594,7 @@ class Map extends MObject {
       if (includes(this.layers_, ogcapifLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(ogcapifLayer));
         ogcapifLayer.getImpl().destroy();
+        ogcapifLayer.getImpl().activateBaseLayer(ogcapifLayer, this.facadeMap_);
         ogcapifLayer.fire(EventType.REMOVED_FROM_MAP, [ogcapifLayer]);
         removedLayers.push(ogcapifLayer);
       }
@@ -1672,6 +1708,7 @@ class Map extends MObject {
       if (includes(this.layers_, wmtsLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(wmtsLayer));
         wmtsLayer.getImpl().destroy();
+        wmtsLayer.getImpl().activateBaseLayer(wmtsLayer, this.facadeMap_);
         wmtsLayer.fire(EventType.REMOVED_FROM_MAP, [wmtsLayer]);
         removedLayers.push(wmtsLayer);
       }
@@ -1778,6 +1815,7 @@ class Map extends MObject {
       if (includes(this.layers_, mbtilesLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
         mbtilesLayer.getImpl().destroy();
+        mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
         mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
         removedLayers.push(mbtilesLayer);
       }
@@ -1881,6 +1919,7 @@ class Map extends MObject {
       if (includes(this.layers_, mbtilesLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(mbtilesLayer));
         mbtilesLayer.getImpl().destroy();
+        mbtilesLayer.getImpl().activateBaseLayer(mbtilesLayer, this.facadeMap_);
         mbtilesLayer.fire(EventType.REMOVED_FROM_MAP, [mbtilesLayer]);
         removedLayers.push(mbtilesLayer);
       }
@@ -1981,6 +2020,7 @@ class Map extends MObject {
       if (includes(this.layers_, layer)) {
         this.layers_ = this.layers_.filter((layer2) => !layer2.equals(layer));
         layer.getImpl().destroy();
+        layer.getImpl().activateBaseLayer(layer, this.facadeMap_);
         removedLayers.push(layer);
         if (layer.isBase === true) {
           // it was base layer so sets the visibility of the first one
@@ -2068,6 +2108,7 @@ class Map extends MObject {
       if (includes(this.layers_, mvtLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(mvtLayer));
         mvtLayer.getImpl().destroy();
+        mvtLayer.getImpl().activateBaseLayer(mvtLayer, this.facadeMap_);
         mvtLayer.fire(EventType.REMOVED_FROM_MAP, [mvtLayer]);
         removedLayers.push(mvtLayer);
       }
@@ -2166,6 +2207,7 @@ class Map extends MObject {
       if (includes(this.layers_, mapLibreLayer)) {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(mapLibreLayer));
         mapLibreLayer.getImpl().destroy();
+        mapLibreLayer.getImpl().activateBaseLayer(mapLibreLayer, this.facadeMap_);
         mapLibreLayer.fire(EventType.REMOVED_FROM_MAP, [mapLibreLayer]);
         removedLayers.push(mapLibreLayer);
       }
@@ -2280,6 +2322,7 @@ class Map extends MObject {
       if (includes(this.layers_, xyzLayer)) {
         xyzLayer.getImpl().destroy();
         this.layers_ = this.layers_.filter((layer) => !layer.equals(xyzLayer));
+        xyzLayer.getImpl().activateBaseLayer(xyzLayer, this.facadeMap_);
         xyzLayer.fire(EventType.REMOVED_FROM_MAP, [xyzLayer]);
         removedLayers.push(xyzLayer);
       }
@@ -2380,6 +2423,7 @@ class Map extends MObject {
       if (includes(this.layers_, tmsLayer)) {
         tmsLayer.getImpl().destroy();
         this.layers_ = this.layers_.filter((layer) => !layer.equals(tmsLayer));
+        tmsLayer.getImpl().activateBaseLayer(tmsLayer, this.facadeMap_);
         tmsLayer.fire(EventType.REMOVED_FROM_MAP, [tmsLayer]);
         removedLayers.push(tmsLayer);
       }
@@ -2477,6 +2521,7 @@ class Map extends MObject {
         this.layers_ = this.layers_.filter((layer) => !layer.equals(tileLayer));
         tileLayer.getImpl().destroy();
         tileLayer.fire(EventType.REMOVED_FROM_MAP, [tileLayer]);
+        tileLayer.getImpl().activateBaseLayer(tileLayer, this.facadeMap_);
         removedLayers.push(tileLayer);
       }
     });
@@ -2957,6 +3002,38 @@ class Map extends MObject {
   }
 
   /**
+   * Este método establece el estado de multiWorld
+   * instancia del mapa.
+   *
+   * @function
+   * @param {Boolean} multiWorld Nuevo valor.
+   * @returns {Map} Mapa.
+   * @public
+   * @api
+   */
+  setMultiWorld(multiWorld) {
+    if (isNullOrEmpty(multiWorld)) {
+      Exception(getValue('exception').no_multiWorld);
+    }
+    this.getMapImpl().getView().setMultiWorld(multiWorld);
+    return this;
+  }
+
+  /**
+   * Este método obtiene el estado actual de
+   * multiWorld de la instancia del mapa.
+   *
+   * @function
+   * @returns {Boolean} Valor actual.
+   * @public
+   * @api
+   */
+  getMultiWorld() {
+    const olMultiWorld = this.getMapImpl().getView().getMultiWorld();
+    return olMultiWorld;
+  }
+
+  /**
    * Este método obtiene las resoluciones actuales
    * para la instancia del mapa.
    *
@@ -2978,15 +3055,17 @@ class Map extends MObject {
    *
    * @function
    * @param {Array<Number>} resolutions Resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se propagan a las capas WMS.
    * @returns {Map} Mapa.
    * @public
    * @api
    */
-  setResolutions(resolutions, optional) {
+  setResolutions(resolutions, optional, propagateToWMS = true) {
     // checks if the param is null or empty
-    if (isNullOrEmpty(resolutions)) {
-      Exception(getValue('exception').no_resolutions);
-    }
+    // if (isNullOrEmpty(resolutions)) {
+    //   Exception(getValue('exception').no_resolutions);
+    // }
 
     if (isNullOrEmpty(optional)) {
       this.userResolutions_ = resolutions;
@@ -2998,9 +3077,14 @@ class Map extends MObject {
     // sets the resolutions
     const olMap = this.getMapImpl();
     const oldViewProperties = olMap.getView().getProperties();
+    delete oldViewProperties.resolutions;
+    delete oldViewProperties.maxResolution;
+    delete oldViewProperties.minResolution;
     const oldZoom = olMap.getView().getUserZoom();
     const minZoom = olMap.getView().getMinZoom();
     const maxZoom = olMap.getView().getMaxZoom();
+    const constrainResolution = olMap.getView().getConstrainResolution();
+    const center = olMap.getView().getCenter();
     const size = olMap.getSize();
 
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
@@ -3008,38 +3092,48 @@ class Map extends MObject {
       : { ...this.objectView, projection });
 
     newView.setProperties(oldViewProperties);
-    newView.setResolutions(resolutions);
     newView.setUserZoom(oldZoom);
     newView.setMinZoom(minZoom);
     newView.setMaxZoom(maxZoom);
+    newView.setConstrainResolution(constrainResolution);
+    newView.setCenter(center);
     // newView.setConstrainResolution(false);
     // calculates the new resolution
     let newResolution;
-    if (!isNullOrEmpty(oldZoom)) {
-      newResolution = resolutions[oldZoom];
-    } else {
-      const bbox = this.facadeMap_.getBbox();
-      if (!isNullOrEmpty(bbox)) {
-        const oldResolution = newView.getResolutionForExtent([
-          bbox.x.min,
-          bbox.y.min,
-          bbox.x.max,
-          bbox.y.max,
-        ], size);
-        const restDiff = resolutions.map((r) => Math.abs(r - oldResolution));
-        const newResolutionIdx = restDiff.indexOf(Math.min(...restDiff));
-        newResolution = resolutions[newResolutionIdx];
+    if (!isNullOrEmpty(resolutions)) {
+      if (!isNullOrEmpty(oldZoom)) {
+        newResolution = resolutions[Math.round(oldZoom)];
+      } else {
+        const bbox = this.facadeMap_.getBbox();
+        if (!isNullOrEmpty(bbox)) {
+          const oldResolution = newView.getResolutionForExtent([
+            bbox.x.min,
+            bbox.y.min,
+            bbox.x.max,
+            bbox.y.max,
+          ], size);
+          const restDiff = resolutions.map((r) => Math.abs(r - oldResolution));
+          const newResolutionIdx = restDiff.indexOf(Math.min(...restDiff));
+          newResolution = resolutions[newResolutionIdx];
+        }
       }
     }
-    newView.setResolution(newResolution);
+    if (!isNullOrEmpty(resolutions)) {
+      newView.setResolutions(resolutions);
+    }
+    if (!isNullOrEmpty(newResolution)) {
+      newView.setResolution(newResolution);
+    }
 
     olMap.setView(newView);
 
-    // sets the resolutions for each layer
-    const layers = this.getWMS();
-    layers.forEach((layer) => {
-      layer.getImpl().setResolutions(resolutions);
-    });
+    if (propagateToWMS) {
+      // sets the resolutions for each layer
+      const layers = this.getWMS();
+      layers.forEach((layer) => {
+        layer.getImpl().setResolutions(resolutions);
+      });
+    }
 
     return this;
   }
@@ -3129,6 +3223,7 @@ class Map extends MObject {
     const userZoom = olMap.getView().getUserZoom();
     const minZoom = olMap.getView().getMinZoom();
     const maxZoom = olMap.getView().getMaxZoom();
+    const constrainResolution = olMap.getView().getConstrainResolution();
 
     // sets the new view
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
@@ -3145,7 +3240,7 @@ class Map extends MObject {
     newView.setUserZoom(userZoom);
     newView.setMinZoom(minZoom);
     newView.setMaxZoom(maxZoom);
-    // newView.setConstrainResolution(false);
+    newView.setConstrainResolution(constrainResolution);
     olMap.setView(newView);
 
     // updates min, max resolutions of all WMS layers
@@ -3278,66 +3373,6 @@ class Map extends MObject {
    * @api
    */
   updateResolutionsFromBaseLayer() {
-    // FIXME:
-    // let resolutions = [];
-
-    // // zoom levels
-    // let zoomLevels = 20;
-
-    // // units
-    // const units = this.getProjection().units;
-
-    // // size
-    // const size = this.getMapImpl().getSize();
-
-    // const baseLayer = this.getBaseLayers().filter((bl) => {
-    //   return bl.isVisible();
-    // })[0];
-
-    // // gets min/max resolutions from base layer
-    // let maxResolution = null;
-    // let minResolution = null;
-    // if (!isNullOrEmpty(baseLayer)) {
-    //   minResolution = baseLayer.getImpl().getMinResolution();
-    //   maxResolution = baseLayer.getImpl().getMaxResolution();
-    //   zoomLevels = baseLayer.getImpl().getNumZoomLevels();
-    // }
-
-    // if (this.userResolutions_ === null) {
-    //   if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
-    //     resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
-    //     this.setResolutions(resolutions, true);
-
-    //     this._resolutionsBaseLayer = true;
-
-    //     // checks if it was the first time to
-    //     // calculate resolutions in that case
-    //     // fires the completed event
-    //     if (this._calculatedResolutions === false) {
-    //       this._calculatedResolutions = true;
-    //       this.fire(EventType.COMPLETED);
-    //     }
-    //   } else {
-    //     this.facadeMap_.calculateMaxExtent().then((extent) => {
-    //       if (!this._resolutionsBaseLayer && (this.userResolutions_ === null)) {
-    //         resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
-    //         this.setResolutions(resolutions, true);
-
-    //         this._resolutionsEnvolvedExtent = true;
-
-    //         // checks if it was the first time to
-    //         // calculate resolutions in that case
-    //         // fires the completed event
-    //         if (this._calculatedResolutions === false) {
-    //           this._calculatedResolutions = true;
-    //           this.fire(EventType.COMPLETED);
-    //         }
-    //       }
-    //     }).catch((error) => {
-    //       throw error;
-    //     });
-    //   }
-    // }
     this.fire(EventType.COMPLETED);
     this.refresh();
   }
@@ -3453,6 +3488,36 @@ class Map extends MObject {
    */
   setFacadeMap(facadeMap) {
     this.facadeMap_ = facadeMap;
+  }
+
+  /**
+   * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
+   * El valor por defecto es true
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Boolean} active determina si se activa o desactiva el zoom con la rueda del ratón.
+   */
+  enableMouseWheel(active = true) {
+    if (!isNullOrEmpty(this.mouseWheelZoom_)) {
+      this.mouseWheelZoom_.setActive(active);
+    }
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active = true) {
+    if (!isNullOrEmpty(this.dragPan_)) {
+      this.dragPan_.setActive(active);
+    }
   }
 
   /**
@@ -3608,6 +3673,18 @@ class Map extends MObject {
       coord,
       vendor: evt,
     }]);
+  }
+
+  /**
+   * Función que obtiene el nombre de la implementación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {string} Devuelve el nombre de la implementación.
+   */
+  getImplementation() {
+    return 'ol';
   }
 }
 

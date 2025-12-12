@@ -454,7 +454,16 @@ class WMS extends LayerBase {
    */
   addSingleLayer_(capabilities) {
     const selff = this;
-    let extent = this.facadeLayer_.userMaxExtent;
+    let extent = null;
+    if (!isNullOrEmpty(this.facadeLayer_.userMaxExtent)) {
+      extent = this.facadeLayer_.userMaxExtent;
+    } else if (!isNullOrEmpty(this.options.wmcMaxExtent)) {
+      extent = this.options.wmcMaxExtent;
+    } else {
+      extent = this.options.wmcGlobalMaxExtent;
+    }
+    this.maxExtent_ = extent;
+    if (!isNullOrEmpty(extent)) this.setMaxExtent(extent);
 
     if (capabilities) {
       const capabilitiesLayer = capabilities.capabilities.Capability.Layer.Layer;
@@ -761,16 +770,19 @@ class WMS extends LayerBase {
     // maxExtentPromise.then((maxExtent) => {
     const minResolution = this.options.minResolution;
     const maxResolution = this.options.maxResolution;
-    this.getLayer().setExtent(maxExtent);
-    if (this.tiled === true) {
-      let resolutions = this.map.getResolutions();
-      if (isNullOrEmpty(resolutions) && !isNullOrEmpty(this.resolutions_)) {
-        resolutions = this.resolutions_;
-      }
-      // gets the tileGrid
-      if (!isNullOrEmpty(resolutions)) {
-        const source = this.createOLSource_(resolutions, minResolution, maxResolution, maxExtent);
-        this.olLayer.setSource(source);
+    const layer = this.getLayer();
+    if (!isNullOrEmpty(layer)) {
+      layer.setExtent(maxExtent);
+      if (this.tiled === true) {
+        let resolutions = this.map.getResolutions();
+        if (isNullOrEmpty(resolutions) && !isNullOrEmpty(this.resolutions_)) {
+          resolutions = this.resolutions_;
+        }
+        // gets the tileGrid
+        if (!isNullOrEmpty(resolutions)) {
+          const source = this.createOLSource_(resolutions, minResolution, maxResolution, maxExtent);
+          this.olLayer.setSource(source);
+        }
       }
     }
     // });

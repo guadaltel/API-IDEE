@@ -5,8 +5,8 @@ import MapImpl from 'impl/Map';
 import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
-  isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString,
+  escapeJSCode, getEnvolvedExtent, getImageMap,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
@@ -20,14 +20,6 @@ import FeaturesHandler from './handler/Feature';
 import Feature from './feature/Feature';
 import * as Dialog from './dialog';
 import Control from './control/Control';
-import GetFeatureInfo from './control/GetFeatureInfo';
-import Location from './control/Location';
-import Scale from './control/Scale';
-import Rotate from './control/Rotate';
-import ScaleLine from './control/ScaleLine';
-import Panzoom from './control/Panzoom';
-import Panzoombar from './control/Panzoombar';
-import BackgroundLayers from './control/BackgroundLayers';
 import WMCSelector from './control/WMCSelector';
 import Layer from './layer/Layer';
 import * as LayerType from './layer/Type';
@@ -56,7 +48,7 @@ import Tiles3D from './layer/Tiles3D';
 import Terrain from './layer/Terrain';
 import WMC from './layer/WMC';
 import Attributions from './control/Attributions';
-import ImplementationSwitcher from './control/ImplementationSwitcher';
+import { buildControl, getPanelForControl } from './builder/builder';
 
 /**
  * @classdesc
@@ -91,6 +83,7 @@ class Map extends Base {
    * - viewExtent: Extensión de la vista.
    * - zoom: Zoom del mapa.
    * - zoomConstrains: Restricciones de zoom.
+   * - rotation: Rotación del mapa.
    * @param { Mx.parameters.MapOptions } options Opciones personalizadas para la implementación
    * proporcionado por el usuario.
    * - verticalExaggeration: Exageración vertical de la escena. Si se establece a 1 no se aplica
@@ -360,7 +353,7 @@ class Map extends Base {
       }
       this.setZoom(zoom, inmeters);
     } else if (isNullOrEmpty(params.bbox)) {
-      this.setZoom(3);
+      this.setZoom(IDEE.config.DEFAULT_ZOOM);
     }
 
     // zoomConstrains
@@ -386,6 +379,13 @@ class Map extends Base {
     } else if (IDEE.config.MAX_ZOOM !== '') {
       const maxZoom = Number(IDEE.config.MAX_ZOOM);
       this.setMaxZoom(maxZoom);
+    }
+
+    // rotation
+    if (!isNullOrEmpty(params.rotation)) {
+      this.once(EventType.COMPLETED, () => {
+        this.setRotation(params.rotation);
+      });
     }
 
     // label
@@ -2899,7 +2899,7 @@ class Map extends Base {
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  addControls(controlsParamVar) {
+  addControls(controlsParamVar, skipCheckDuplicate = false) {
     let controlsParam = controlsParamVar;
     if (!isNullOrEmpty(controlsParam)) {
       // checks if the implementation can manage layers
@@ -2916,168 +2916,56 @@ class Map extends Base {
       const controls = [];
       // for (let i = 0, ilen = controlsParam.length; i < ilen; i++) {
       controlsParam.forEach((controlParamVar) => {
-        let controlParam = controlParamVar;
+        const controlParam = controlParamVar;
         let control;
-        let panel;
         if (isString(controlParam)) {
-          controlParam = normalize(controlParam).split('*');
-          try {
-            switch (controlParam[0]) {
-              case Scale.NAME:
-                const paramsScale = {};
-                controlParam.forEach((p) => {
-                  if (p === 'true') paramsScale.exactScale = Boolean(p);
-                  // eslint-disable-next-line no-restricted-globals
-                  if (!isNaN(p)) paramsScale.order = Number(p);
-                });
-                control = new Scale(paramsScale);
-                panel = this.getPanels('map-info')[0];
-                if (isNullOrEmpty(panel)) {
-                  panel = new Panel('map-info', {
-                    collapsible: false,
-                    className: 'm-map-info',
-                    position: Position.BR,
-                    order: (paramsScale.order) ? paramsScale.order : null,
-                  });
-                  panel.on(EventType.ADDED_TO_MAP, (html) => {
-                    if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                      this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                    }
-                  });
-                }
-                panel.addClassName('m-with-scale');
-                break;
-              case ScaleLine.NAME:
-                control = new ScaleLine();
-                panel = new Panel(ScaleLine.NAME, {
-                  collapsible: false,
-                  className: 'm-scaleline',
-                  position: Position.BL,
-                  tooltip: 'Línea de escala',
-                });
-                panel.on(EventType.ADDED_TO_MAP, (html) => {
-                  if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                    this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                  }
-                });
-                break;
-              case Panzoombar.NAME:
-                control = new Panzoombar();
-                panel = new Panel(Panzoombar.NAME, {
-                  collapsible: false,
-                  className: 'm-panzoombar',
-                  position: Position.TL,
-                  tooltip: 'Nivel de zoom',
-                });
-                break;
-              case Panzoom.NAME:
-                control = new Panzoom();
-                panel = new Panel(Panzoom.NAME, {
-                  collapsible: false,
-                  className: 'm-panzoom',
-                  position: Position.TL,
-                });
-                break;
-              case Location.NAME:
-                control = new Location();
-                panel = new Panel(Location.NAME, {
-                  collapsible: false,
-                  className: 'm-location',
-                  position: Position.BR,
-                });
-                break;
-              case GetFeatureInfo.NAME:
-                control = new GetFeatureInfo(true);
-                break;
-              case Attributions.NAME:
-                if (controlParam.length === 2) {
-                  this.createAttribution({ collectionsAttributions: [controlParam[1]] });
-                } else {
-                  this.createAttribution();
-                }
+          control = buildControl(controlParam, this);
 
-                return;
-              case Rotate.NAME:
-                control = new Rotate();
-                panel = new Panel(Rotate.name, {
-                  collapsible: false,
-                  className: 'm-rotate',
-                  position: Position.TR,
-                });
-                break;
-              case BackgroundLayers.NAME:
-                control = new BackgroundLayers(this);
-                panel = new Panel(BackgroundLayers.NAME, {
-                  collapsible: false,
-                  position: Position.TR,
-                  className: 'm-plugin-baselayer',
-                });
-                break;
-              case ImplementationSwitcher.NAME:
-                control = new ImplementationSwitcher();
-                panel = new Panel(ImplementationSwitcher.NAME, {
-                  collapsible: true,
-                  position: Position.TR,
-                  className: 'm-implementationswitcher',
-                  collapsedButtonClass: 'g-cartografia-implementacion',
-                  tooltip: getValue('implementationswitcher').title,
-                });
-                break;
-              case WMCSelector.NAME:
-                control = new WMCSelector();
-                panel = this.getPanels('map-info')[0];
-                if (isNullOrEmpty(panel)) {
-                  panel = new Panel('map-info', {
-                    collapsible: false,
-                    position: Position.BR,
-                    className: 'm-map-info',
-                  });
-                  panel.on(EventType.ADDED_TO_MAP, () => {
-                    if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                      this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                    }
-                  });
-                }
-                panel.addClassName('m-with-wmcselector');
-                break;
-              default:
-                if (/backgroundlayers\*([0-9])+\*(true|false)/.test(controlParam)) {
-                  const idLayer = controlParam.match(/backgroundlayers\*([0-9])+\*(true|false)/)[1];
-                  const visible = controlParam.match(/backgroundlayers\*([0-9])+\*(true|false)/)[2] === 'true';
-                  control = new BackgroundLayers(this, Number.parseInt(idLayer, 10), visible);
-
-                  panel = new Panel(BackgroundLayers.NAME, {
-                    collapsible: false,
-                    position: Position.TR,
-                    className: 'm-plugin-baselayer',
-                  });
-                } else {
-                  const getControlsAvailable = concatUrlPaths([IDEE.config.API_IDEE_URL, '/api/actions/controls']);
-                  Dialog.error(`El control ${controlParam} no está definido. Consulte los controles disponibles <a href='${getControlsAvailable}' target="_blank">aquí</a>`);
-                }
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn(e);
-            control = null;
+          // Skip if control is null (like Attributions which is handled separately)
+          if (isNullOrEmpty(control)) {
+            return;
           }
-        } else if (controlParam instanceof Control) {
+        } else if (isObject(controlParam) && controlParam instanceof Control) {
           control = controlParam;
-        } else {
-          Exception('El control "'.concat(controlParam).concat('" no es un control válido.'));
         }
 
-        if (!isNullOrEmpty(panel) && !panel.hasControl(control)) {
-          panel.addControls(control);
-          this.addPanels(panel);
-        } else if (!isNullOrEmpty(control)) {
-          control.addTo(this);
+        const params = control.builderParams || {};
+        const panel = getPanelForControl(control, this, params);
+
+        if (skipCheckDuplicate || !this.hasControl(control)) {
+          if (!isNullOrEmpty(panel) && !this.hasControl(control)) {
+            panel.addControls(control);
+            this.addPanels(panel);
+          } else if (!isNullOrEmpty(control)) {
+            control.addTo(this);
+          }
           controls.push(control);
         }
       });
+
       this.getImpl().addControls(controls);
     }
     return this;
+  }
+
+  /**
+   * Este método comprueba si el mapa tiene un control añadido o no.
+   *
+   * @function
+   * @param {String} control nombre del control a buscar.
+   * @returns {Boolean} Devuelve si el mapa tiene o no el control.
+   * @api
+   */
+  hasControl(control) {
+    let controlName = control;
+    if (control instanceof Control) {
+      controlName = control.name;
+    }
+    const controls = this.getControls();
+    const controlFiltered = controls.find((ctrl) => ctrl.name === controlName);
+    const hasControl = !isNullOrEmpty(controlFiltered);
+
+    return hasControl;
   }
 
   /**
@@ -3528,6 +3416,56 @@ class Map extends Base {
   }
 
   /**
+   * Este método establece el estado de multiWorld
+   * instancia del mapa.
+   *
+   * @public
+   * @function
+   * @param {Boolean} multiWorld Nuevo valor.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  setMultiWorld(multiWorld) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(multiWorld)) {
+      Exception(getValue('exception').no_multiWorld);
+    }
+
+    if (isUndefined(MapImpl.prototype.setMultiWorld)) {
+      Exception(getValue('exception').setMultiWorld_method);
+    }
+
+    try {
+      const multiWorldParam = parameter.multiWorld(multiWorld);
+      this.getImpl().setMultiWorld(multiWorldParam);
+    } catch (err) {
+      Dialog.error(err.toString());
+      throw err;
+    }
+
+    return this;
+  }
+
+  /**
+   * Este método obtiene el estado actual de
+   * multiWorld de la instancia del mapa.
+   *
+   * @public
+   * @function
+   * @returns {Boolean} Valor actual.
+   * @api
+   */
+  getMultiWorld() {
+    if (isUndefined(MapImpl.prototype.getMultiWorld)) {
+      Exception(getValue('exception').getMultiWorld_method);
+    }
+
+    const multiWorld = this.getImpl().getMultiWorld();
+
+    return multiWorld;
+  }
+
+  /**
    * Este método establece el centro para esta
    * instancia del mapa.
    *
@@ -3682,14 +3620,16 @@ class Map extends Base {
    * @public
    * @function
    * @param {String|Array<String>|Array<Number>} resolutionsParam Las resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se deben propagar a las capas WMS.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  setResolutions(resolutionsParam) {
+  setResolutions(resolutionsParam, optional, propagateToWMS = true) {
     // checks if the param is null or empty
-    if (isNullOrEmpty(resolutionsParam)) {
-      Exception(getValue('exception').no_resolutions);
-    }
+    // if (isNullOrEmpty(resolutionsParam)) {
+    //   Exception(getValue('exception').no_resolutions);
+    // }
 
     // checks if the implementation can set the setResolutions
     if (isUndefined(MapImpl.prototype.setResolutions)) {
@@ -3699,7 +3639,7 @@ class Map extends Base {
     // parses the parameter
     const resolutions = parameter.resolutions(resolutionsParam);
 
-    this.getImpl().setResolutions(resolutions);
+    this.getImpl().setResolutions(resolutions, optional, propagateToWMS);
 
     return this;
   }
@@ -3770,7 +3710,7 @@ class Map extends Base {
    *
    * @public
    * @function
-   * @param {String|Mx.Projection} projection EL "bbox".
+   * @param {String|Mx.Projection} projectionParam Proyección a aplicar al mapa.
    * @param {Boolean} asDefault Utiliza la proyección por defecto.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
@@ -3791,9 +3731,12 @@ class Map extends Base {
     try {
       const oldProj = this.getProjection();
       projection = parameter.projection(projection);
-      this.getImpl().setProjection(projection);
-      this._defaultProj = (this._defaultProj && (asDefault === true));
-      this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
+
+      if (oldProj.code !== projection.code) {
+        this.getImpl().setProjection(projection);
+        this._defaultProj = (this._defaultProj && (asDefault === true));
+        this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
+      }
     } catch (err) {
       Dialog.error(err.toString());
       if (String(err).indexOf('El formato del parámetro projection no es correcto') >= 0) {
@@ -3865,6 +3808,32 @@ class Map extends Base {
       // eslint-disable-next-line no-console
       console.warn(e);
     }
+
+    return this;
+  }
+
+  /**
+   * Este método agrega plugins.
+   *
+   * @public
+   * @function
+   * @param {Array<Plugin>} plugins  Plugins para añadir al mapa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addPlugins(plugins) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(plugins)) {
+      Exception(getValue('exception').no_plugins);
+    }
+    let allPlugins = plugins;
+    if (!isArray(plugins)) {
+      allPlugins = [plugins];
+    }
+
+    allPlugins.forEach((plugin) => {
+      this.addPlugin(plugin);
+    });
 
     return this;
   }
@@ -3975,6 +3944,21 @@ class Map extends Base {
     // }
 
     return this;
+  }
+
+  /**
+   * Este método devuelve el ticket, si se ha establecido, para controlar capas seguras.
+   *
+   * @public
+   * @function
+   * @returns {String} Devuelve el ticket.
+   * @api
+   */
+  getTicket() {
+    if (!isNullOrEmpty(this.ticket_)) {
+      return this.ticket_;
+    }
+    return IDEE.config.TICKET;
   }
 
   /**
@@ -4693,6 +4677,103 @@ class Map extends Base {
       Exception(getValue('exception').no_set_rotation_method);
     }
     this.getImpl().setRotation(rotation * (Math.PI / 180));
+  }
+
+  /**
+   * Función que obtiene el nombre de la implementación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {string} Devuelve el nombre de la implementación.
+   */
+  getImplementation() {
+    return this.getImpl().getImplementation();
+  }
+
+  /**
+   * Este método devuelve una captura de pantalla del mapa.
+   *
+   * @function
+   * @public
+   * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+   * @param {String} type Formato de la imagen resultante.
+   * @param {HTMLCanvasElement} canva Elemento canvas.
+   * @param {Boolean} isPromise Si tiene que devolver una promesa (MapLibre).
+   * @api
+   * @returns {String} Imagen en base64
+   */
+  getImageMap(type = 'image/jpeg', canva = undefined, isPromise = false) {
+    return getImageMap(this, type, canva, isPromise);
+  }
+
+  /**
+   * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
+   * El valor por defecto es true
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Boolean} active determina si se activa o desactiva el zoom.
+   */
+  enableMouseWheel(active) {
+    this.getImpl().enableMouseWheel(active);
+  }
+
+  /**
+   * Método que devuelve las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {Array<IDEE.Layers>} capas superpuestas.
+   * @api
+   */
+  getOverlayLayers() {
+    const layers = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isBase === false);
+    return layers;
+  }
+
+  /**
+   * Método que elimina todas las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {IDEE.Map} mapa
+   * @api
+   */
+  removeOverlayLayers() {
+    const layers = this.getOverlayLayers();
+    this.removeLayers(layers);
+    return this;
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enablePan(active);
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   * @deprecated
+   */
+  enableDrag(active) {
+    // eslint-disable-next-line no-console
+    console.warn(getValue('exception').enableDrag_deprecated);
+    this.enablePan(active);
   }
 }
 
