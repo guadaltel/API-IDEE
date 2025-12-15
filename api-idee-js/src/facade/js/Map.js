@@ -4648,7 +4648,7 @@ class Map extends Base {
   }
 
   /**
-   * Establece los niveles de zoom del mapa.
+   * Establece los niveles de zoom del mapa aplicando las resoluciones correspondientes.
    *
    * @function
    * @public
