@@ -3677,6 +3677,18 @@ class Map extends MObject {
   }
 
   /**
+   * Este método establece la resolución más cercana a la indicada.
+   *
+   * @function
+   * @param {number} resolution Resolución.
+   * @public
+   * @api
+   */
+  setToClosestScale(resolution) {
+    this.getMapImpl().getView().setResolution(resolution);
+  }
+
+  /**
    * Función que obtiene el nombre de la implementación del mapa.
    *
    * @function
