@@ -46,6 +46,7 @@
 - Se dispara el evento REMOVED_LAYER en la implementación del Mapa pero accediendo a la fachada del mapa.
 - En "Mapa - addUnknownLayers" se modifica "Este método agrega las capas de GeoJSON al mapa." por "Este método agrega las capas de tipo desconocido al mapa."
 - Se crean set/get multiWorld y se solucionan bugs que no persistía correctamente el zoomConstrain del mapa.
+- Se implementa el parámetro overflow para los estilos de label.
 
 
 01/01/25 - Versión 1.0.0
