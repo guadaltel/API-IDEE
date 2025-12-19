@@ -276,6 +276,7 @@ mapa.addLayers(campamentos);
 // Example #2: Se aplica un clúster personalizado
 const estilo = new Generic({
   point: {
+    radius: 10,
     fill: {
       color: 'red',
     },

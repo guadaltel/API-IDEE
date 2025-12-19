@@ -112,7 +112,10 @@ class Feature {
           && !isNullOrEmpty(feature.id) && isArray(feature.id)) {
           const clusteredFeatures = feature.id.map((f) => getFacadeFeature(f, layer));
           if (clusteredFeatures.length === 1) {
-            features.push(clusteredFeatures[0]);
+            const cf0 = clusteredFeatures[0];
+            if (!features.some((f) => (f && typeof f.equals === 'function' ? f.equals(cf0) : false))) {
+              features.push(cf0);
+            }
           } else {
             let styleCluster = layer.getStyle();
             if (!(styleCluster instanceof Cluster)) {
@@ -125,10 +128,33 @@ class Feature {
               distance: styleCluster.getOptions().distance,
             }));
           }
-        } else if (feature.id && !isNullOrEmpty(feature.id.entityCollection)
-          && feature.id.entityCollection.owner === cesiumLayer) {
-          if (!feature.id.properties || !feature.id.properties.hasProperty('selectclusterlink')) {
-            features.push(getFacadeFeature(feature.id, layer));
+        } else if (feature.id && !isNullOrEmpty(feature.id.entityCollection)) {
+          const owner = feature.id.entityCollection.owner;
+          // Si la entidad pertenece a la capa Cluster
+          if (owner === cesiumLayer) {
+            if (!feature.id.properties || !feature.id.properties.hasProperty('selectclusterlink')) {
+              const mf = getFacadeFeature(feature.id, layer);
+              if (!isNullOrEmpty(mf)) {
+                if (!features.some((f) => (f && typeof f.equals === 'function' ? f.equals(mf) : false))) {
+                  features.push(mf);
+                }
+              }
+            }
+          } else {
+            // Si la entidad pertenece a la capa Cluster overlay obtiene el feature original via _id
+            // eslint-disable-next-line no-underscore-dangle
+            const originalId = feature.id._id || (feature.id.properties && feature.id.properties.hasProperty && feature.id.properties.hasProperty('originalId') && feature.id.properties.getValue('originalId'));
+            if (originalId) {
+              try {
+                const orig = layer.getFeatureById(originalId);
+                if (!isNullOrEmpty(orig) && !features.some((f) => (f && typeof f.equals === 'function' ? f.equals(orig) : false))) {
+                  features.push(orig);
+                }
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn();
+              }
+            }
           }
         } else if ((feature instanceof Cesium3DTileFeature
           || feature instanceof Cesium3DTilePointFeature)
