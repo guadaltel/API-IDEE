@@ -13,8 +13,8 @@ const pjson = require(PJSON_PATH);
 module.exports = {
   mode: 'production',
   entry: {
-    'help.cesium.min': path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
-    [`help-${pjson.version}.cesium.min`]: path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
+    'filteredsearch.cesium.min': path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
+    [`filteredsearch-${pjson.version}.cesium.min`]: path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
   },
   output: {
     path: path.resolve(__dirname, '..', 'dist'),

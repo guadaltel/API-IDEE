@@ -74,6 +74,26 @@
             minZoom: 4,
             center: [-467062.8225, 4783459.6216],
         });
+
+        const geodesia = new IDEE.layer.WFS({
+            url: 'https://www.ign.es/wfs/redes-geodesicas?',
+            legend: 'Red Geodésica Nacional por Técnicas Espaciales (REGENTE)',
+            name: 'RED_REGENTE',
+            geometry: 'POINT',
+            extract: true
+        });
+
+        const provincias = new IDEE.layer.WFS({
+            url: "https://hcsigc.juntadeandalucia.es/geoserver/wfs?",
+            namespace: "IECA",
+            name: "sigc_provincias_1724753768757",
+            legend: "Provincias",
+            geometry: 'MPOLYGON',
+        });
+
+        map.addWFS(geodesia);
+        map.addWFS(provincias);
+
         let mp;
         const selectPosicion = document.getElementById("selectPosicion");
         selectPosicion.addEventListener('change', cambiarTest);

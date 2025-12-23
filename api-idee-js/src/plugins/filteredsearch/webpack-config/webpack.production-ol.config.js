@@ -13,8 +13,8 @@ const pjson = require(PJSON_PATH);
 module.exports = {
   mode: 'production',
   entry: {
-    'help.ol.min': path.resolve(__dirname, '..', 'src', 'index-ol.js'),
-    [`help-${pjson.version}.ol.min`]: path.resolve(__dirname, '..', 'src', 'index-ol.js'),
+    'filteredsearch.ol.min': path.resolve(__dirname, '..', 'src', 'index-ol.js'),
+    [`filteredsearch-${pjson.version}.ol.min`]: path.resolve(__dirname, '..', 'src', 'index-ol.js'),
   },
   output: {
     path: path.resolve(__dirname, '..', 'dist'),
