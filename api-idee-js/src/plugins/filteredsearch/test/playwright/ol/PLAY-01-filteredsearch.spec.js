@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Test FilteredSearch', async ({ page }) => {
-  await page.goto('/test/playwright/ol/filteredsearch-ol.html');
+  await page.goto('/src/plugins/filteredsearch/test/playwright/ol/filteredsearch-ol.html');
   await page.evaluate(() => {
     window.mapjs = IDEE.map({
       container: 'mapjs',
