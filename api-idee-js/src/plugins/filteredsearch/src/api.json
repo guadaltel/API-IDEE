@@ -1,6 +1,6 @@
 {
   "url": {
-    "name": "FilteredSearch",
+    "name": "filteredsearch",
     "separator": "*"
   },
   "constructor": "M.plugin.FilteredSearch",
