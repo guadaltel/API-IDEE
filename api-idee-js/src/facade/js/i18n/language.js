@@ -76,6 +76,8 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].locatorscn = pluginsLanguage.locatorscn.esLocatorscn;
     configuration.translations[lang].vectorsmanagement = pluginsLanguage.vectorsmanagement
       .esVectorsmanagement;
+    configuration.translations[lang].filteredsearch = pluginsLanguage.filteredsearch
+      .esFilteredsearch;
   } else if (lang === 'en') {
     configuration.translations[lang].backimglayer = pluginsLanguage.backimglayer.enBackimglayer;
     configuration.translations[lang].comparators = pluginsLanguage.comparators.enComparators;
@@ -103,6 +105,8 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].locatorscn = pluginsLanguage.locatorscn.enLocatorscn;
     configuration.translations[lang].vectorsmanagement = pluginsLanguage.vectorsmanagement
       .enVectorsmanagement;
+    configuration.translations[lang].filteredsearch = pluginsLanguage.filteredsearch
+      .enFilteredsearch;
   }
   return configuration.translations[lang];
 };

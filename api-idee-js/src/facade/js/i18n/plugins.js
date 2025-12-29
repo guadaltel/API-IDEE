@@ -96,6 +96,10 @@ import enLocatorscn from '../../../plugins/locatorscn/src/facade/js/i18n/en';
 import esVectorsmanagement from '../../../plugins/vectorsmanagement/src/facade/js/i18n/es';
 import enVectorsmanagement from '../../../plugins/vectorsmanagement/src/facade/js/i18n/en';
 
+// Filteredsearch
+import esFilteredsearch from '../../../plugins/filteredsearch/src/facade/js/i18n/es';
+import enFilteredsearch from '../../../plugins/filteredsearch/src/facade/js/i18n/en';
+
 /**
  * Este objeto devuelve un objeto JSON dinámico que contiene
  * los plugins disponibles que soportan traducciones.
@@ -198,6 +202,10 @@ const pluginsLanguage = {
   vectorsmanagement: {
     esVectorsmanagement,
     enVectorsmanagement,
+  },
+  filteredsearch: {
+    esFilteredsearch,
+    enFilteredsearch,
   },
 };
 
