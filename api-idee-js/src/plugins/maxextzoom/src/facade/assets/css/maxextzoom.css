@@ -1,0 +1,4 @@
+/** Estilos sobreescritos */
+.m-control.activated>button {
+    color: rgb(255, 0, 0) !important;
+}
