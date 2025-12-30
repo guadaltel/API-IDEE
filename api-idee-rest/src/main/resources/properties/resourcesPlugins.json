@@ -46,6 +46,21 @@
       ]
     },
     {
+      "name": "filteredsearch",
+      "versions": [
+        {
+          "api-idee": "1.0.0",
+          "js": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/filteredsearch/filteredsearch.ol.min.js",
+          "css": "${api-idee.url}plugins/filteredsearch/filteredsearch.ol.min.css"
+        }
+      ]
+    },
+    {
       "name": "help",
       "versions": [
         {
@@ -147,6 +162,21 @@
           "api-idee": "latest",
           "js": "${api-idee.url}plugins/locatorscn/locatorscn.ol.min.js",
           "css": "${api-idee.url}plugins/locatorscn/locatorscn.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "mapheader",
+      "versions": [
+        {
+          "api-idee": "1.0.0",
+          "js": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/mapheader/mapheader.ol.min.js",
+          "css": "${api-idee.url}plugins/mapheader/mapheader.ol.min.css"
         }
       ]
     },

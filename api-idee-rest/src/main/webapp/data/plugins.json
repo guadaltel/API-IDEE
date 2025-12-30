@@ -231,6 +231,17 @@
     "obsolete": true
   },
   {
+    "name": "mapheader",
+    "plugin": "[mapheader]",
+    "version": "v1.0",
+    "url_es": "mapheader.jsp?language=es",
+    "url_en": "mapheader.jsp?language=en",
+    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/mapheader",
+    "image": "img/api-logo.png",
+    "description": "Plugin que permite mostrar un encabezado en el mapa.",
+    "obsolete": false
+  },
+  {
     "name": "measurebar",
     "plugin": "[measurebar]",
     "version": "v1.0",
