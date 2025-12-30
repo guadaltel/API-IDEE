@@ -52,10 +52,12 @@ export default class ZoomInteraction extends ol.Overlay {
     this._listener = null;
 
     ol.Overlay.prototype.setMap.call(this, map);
-    map.getViewport().addEventListener('mousemove', this.onMouseMove_.bind(this));
-    this._listener = map.getView().on('propertychange', this.setView_.bind(this));
 
-    this.setView_();
+    if (map) {
+      map.getViewport().addEventListener('mousemove', this.onMouseMove_.bind(this));
+      this._listener = map.getView().on('propertychange', this.setView_.bind(this));
+      this.setView_();
+    }
   }
 
   /** Get the magnifier map

@@ -135,11 +135,29 @@ export default class Magnify extends IDEE.Plugin {
    * @api stable
    */
   destroy() {
-    if (this.control_) {
-      this.control_.removeEffects();
-      this.map_.removeControls([this.control_]);
-      [this.control_, this.panel_, this.map_] = [null, null, null];
+    // Eliminar el efecto de magnificación (overlay de OL)
+    if (this.control_ && this.control_.getImpl()) {
+      this.control_.getImpl().removeEffects();
     }
+    // Eliminar también el elemento visual de la lupa del DOM
+    const magnifyElement = document.querySelector('.ol-magnify');
+    if (magnifyElement) {
+      magnifyElement.remove();
+    }
+    if (this.map_ && this.controls_) {
+      this.map_.getImpl().removeControls(this.controls_);
+    }
+    // Eliminar el panel del DOM por su clase CSS
+    const panelElement = document.querySelector('.m-plugin-magnify');
+    if (panelElement) {
+      panelElement.remove();
+    }
+    if (this.panel_ && this.map_) {
+      // Eliminar el panel del array de paneles del mapa
+      // eslint-disable-next-line no-underscore-dangle
+      this.map_._panels = this.map_._panels.filter((p) => !p.equals(this.panel_));
+    }
+    [this.control_, this.controls_, this.panel_, this.map_] = [null, null, null, null];
   }
 
   /**

@@ -45,6 +45,8 @@ export default class MagnifyControl extends IDEE.impl.Control {
   removeEffects() {
     if (this.zoomInteraction_ != null) {
       this.zoomInteraction_.setActive(false);
+      this.olMap.removeOverlay(this.zoomInteraction_);
+      this.zoomInteraction_ = null;
     }
   }
 }
