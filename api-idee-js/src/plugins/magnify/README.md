@@ -103,7 +103,7 @@ Ejemplo de constructor:
 ```
 
 ```
-https://componentes.idee.es/api-idee?magnify=base64=eyJwb3NpdGlvbiI6IlRMIiwiem9vbU1heCI6MTksInpvb20iOjUsImxheWVycyI6Ik9JLk9ydGhvaW1hZ2VDb3ZlcmFnZSJ9
+https://componentes.idee.es/api-idee?layers=OSM,WMTS*https://www.ign.es/wmts/pnoa-ma?*OI.OrthoimageCoverage*EPSG:25830*imagen*true*image/jpeg&projection=EPSG:25830&magnify=base64=eyJwb3NpdGlvbiI6IlRMIiwiem9vbU1heCI6MTksInpvb20iOjUsImxheWVycyI6Ik9JLk9ydGhvaW1hZ2VDb3ZlcmFnZSJ9
 ```
 
 
