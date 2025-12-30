@@ -231,6 +231,17 @@
     "obsolete": true
   },
   {
+    "name": "magnify",
+    "plugin": "[magnify]",
+    "version": "v1.0",
+    "url_es": "magnify.jsp?language=es",
+    "url_en": "magnify.jsp?language=en",
+    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/magnify",
+    "image": "img/api-logo.png",
+    "description": "Plugin que permite realizar un efecto de zoom o de lupa sobre una o varias capas.",
+    "obsolete": false
+  },
+  {
     "name": "mapheader",
     "plugin": "[mapheader]",
     "version": "v1.0",
