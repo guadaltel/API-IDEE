@@ -1,6 +1,6 @@
 {
   "url": {
-    "name": "MaxExtZoom",
+    "name": "maxextzoom",
     "separator": "*"
   },
   "constructor": "IDEE.plugin.MaxExtZoom",
@@ -20,21 +20,33 @@
   }],
   "files": {
     "ol": {
-      "scripts": ["maxextzoom.ol.min.js"],
-      "styles": ["maxextzoom.ol.min.css"]
+      "scripts": [
+        "maxextzoom.ol.min.js"
+      ],
+      "styles": [
+        "maxextzoom.ol.min.css"
+      ]
+    },
+    "cesium": {
+      "scripts": [
+        "maxextzoom.cesium.min.js"
+      ],
+      "styles": [
+        "maxextzoom.cesium.min.css"
+      ]
     }
   },
   "metadata": {
     "name": "MaxExtZoom",
     "description": "Zoom a la extensión del mapa",
     "text": "Permite realizar un zoom a la extensión del mapa ",
-    "version": "1.0.1",
-    "date": "Abril, 2021",
+    "version": "1.0.0",
+    "date": "Diciembre, 2025",
     "author": "",
-    "org": "Consejería de Hacienda, Industria y Energía. Junta de Andalucía.",
-    "tags": "mapea,plugin",
+    "org": "",
+    "tags": "idee,plugin",
     "icon": "./facade/assets/icons/icons.svg",
     "centralized": true,
-    "compatibility": ["5","6"]
+    "compatibility": ["1"]
   }
 }
