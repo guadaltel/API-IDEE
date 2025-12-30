@@ -6,6 +6,8 @@ const map = IDEE.map({
 
 map.addControls(['scaleline', 'panzoombar', ]);
 
+window.map = map;
+
 // Configuración de ejemplo para API-IDEE
 const config = {
   open: false,

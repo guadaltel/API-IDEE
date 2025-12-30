@@ -1,11 +1,11 @@
 /**
- * @module M/plugin/Mapheader
+ * @module M/plugin/Mapfooter
  */
-import 'assets/css/mapheader';
-import MapheaderControl from './mapheadercontrol';
+import 'assets/css/mapfooter';
+import MapfooterControl from './mapfootercontrol';
 import api from '../../api';
 
-export default class Mapheader extends IDEE.Plugin {
+export default class Mapfooter extends IDEE.Plugin {
   /**
    * @classdesc
    * Main facade plugin object. This class creates a plugin
@@ -51,20 +51,25 @@ export default class Mapheader extends IDEE.Plugin {
    * @api stable
    */
   addTo(map) {
-    this.controls_.push(new MapheaderControl(this.config));
+    this.control_ = new MapfooterControl(this.config);
+    this.controls_.push(this.control_);
     this.map_ = map;
     // panel para agregar control - no obligatorio
-    this.panel_ = new IDEE.ui.Panel('panelMapheader', {
+    this.panel_ = new IDEE.ui.Panel('panelMapfooter', {
       collapsible: true,
-      className: 'm-mapheader',
-      position: IDEE.ui.position.TR,
-      collapsedButtonClass: 'g-cartografia-flecha-abajo',
+      className: 'm-mapfooter',
+      position: IDEE.ui.position.BL,
+      collapsedButtonClass: 'mapfooter-abrir',
     });
     this.panel_.addControls(this.controls_);
     map.addPanels(this.panel_);
     if (this.open) {
       this.panel_.open();
     }
+
+    this.control_.on(IDEE.evt.ADDED_TO_MAP, () => {
+      this.fire(IDEE.evt.ADDED_TO_MAP);
+    });
   }
 
   /**
@@ -87,6 +92,6 @@ export default class Mapheader extends IDEE.Plugin {
    */
   destroy() {
     this.map_.removeControls(this.controls_);
-    [this.controls_, this.panel_, this.map_] = [null, null, null];
+    [this.control_, this.controls_, this.panel_, this.map_] = [null, null, null, null];
   }
 }

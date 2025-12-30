@@ -242,6 +242,17 @@
     "obsolete": false
   },
   {
+    "name": "mapfooter",
+    "plugin": "[mapfooter]",
+    "version": "v1.0",
+    "url_es": "mapfooter.jsp?language=es",
+    "url_en": "mapfooter.jsp?language=en",
+    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/mapfooter",
+    "image": "img/api-logo.png",
+    "description": "Plugin que permite mostrar un pie de página en el mapa.",
+    "obsolete": false
+  },
+  {
     "name": "measurebar",
     "plugin": "[measurebar]",
     "version": "v1.0",

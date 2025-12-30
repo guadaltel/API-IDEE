@@ -37,6 +37,7 @@
 </head>
 
 <body>
+    <div id="mapjs" class="m-container"></div>
     <div>
         <label for="selectOpen">Estado de la cabecera (abierta o cerrada)</label>
         <select id="selectOpen">
@@ -67,7 +68,6 @@
         </textarea>
         <input type="button" value="Eliminar Plugin" name="eliminar" id="botonEliminar">
     </div>
-    <div id="mapjs" class="m-container"></div>
     <script type="text/javascript" src="vendor/browser-polyfill.js"></script>
     <script type="text/javascript" src="js/apiidee.ol.min.js"></script>
     <script type="text/javascript" src="js/configuration.js"></script>
@@ -117,7 +117,7 @@
 
         function getOptions() {
             let objeto = {};
-            objeto.open = selectOpen.options[selectOpen.selectedIndex].value;
+            objeto.open = selectOpen.options[selectOpen.selectedIndex].value === "true";
             objeto.htmlCode = areaHtmlCode.value;
             objeto.cssList = areaCssList.value;
             return objeto;
