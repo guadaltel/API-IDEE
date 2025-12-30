@@ -4,11 +4,11 @@ const map = IDEE.map({
   container: 'mapjs',
 });
 
-map.addControls(['scaleline', 'panzoombar']);
+map.addControls(['scaleline', 'panzoombar', ]);
 
 // Configuración de ejemplo para API-IDEE
 const config = {
-  open: true,
+  open: false,
   htmlCode: `
 <header>
 <div id="header-pc">
@@ -20,8 +20,7 @@ const config = {
     <div class="col-6 col-m-12 marginTop20px">
       <div class="col-12 txtCenter"><a href="https://centrodedescargas.cnig.es/CentroDescargas/home" class="txtSupCdDCabenlace" title="Centro de Descargas">Centro de Descargas</a></div>
       <div class="marginTop10px col-12 colorVerdeClaro   txtCenter paddingBottom10px ">Instituto Geográfico Nacional</div>
-      <div class="col-12 colorVerdeClaro   txtCenter  ">Organismo Autónomo Centro Nacional de Información Geográfica</div>
-    </div>
+      <div class="col-12 colorVerdeClaro   txtCenter  ">Organismo Autónomo Centro Nacional de Información Geográfica</div>      </div>
   </div>
 </div>  
 </div>  
@@ -35,3 +34,5 @@ const config = {
 const mp = new Mapheader(config);
 
 map.addPlugin(mp);
+
+map.addPlugin(new IDEE.plugin.Layerswitcher({}));

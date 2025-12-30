@@ -27,6 +27,7 @@ export default class MapheaderControl extends IDEE.Control {
 
     this.config = config;
     this.htmlCode = this.config.htmlCode;
+    this.opened = config.open === true;
     this.cssList = (IDEE.utils.isArray(this.config.cssList) ? this.config.cssList : this.config.cssList.split(',')).map((s) => s.trim());
     this.injectCSS(this.cssList);
     this.templateVars = { vars: { htmlCode: this.htmlCode } };
@@ -104,7 +105,9 @@ export default class MapheaderControl extends IDEE.Control {
       link.href = cssFile;
       link.rel = 'stylesheet';
       link.addEventListener('load', () => {
-        this.checkHeaderheight();
+        if (this.opened) {
+          this.checkHeaderheight();
+        }
       });
       link.media = 'screen';
       document.getElementsByTagName('head')[0].appendChild(link);
@@ -112,37 +115,29 @@ export default class MapheaderControl extends IDEE.Control {
   }
 
   addEvents() {
-    // Esperamos a que el DOM esté listo con los elementos del panel
     setTimeout(() => {
-      this.panelHeight = this.checkHeaderheight();
-      // Selectores de Elementos
-      const btnMapHeaderClosed = document.querySelectorAll('button.m-panel-btn.g-cartografia-flecha-abajo')[0];
-      const btnMapHeaderOpened = document.querySelectorAll('button.m-panel-btn.g-cartografia-flecha-derecha')[0];
-
-      if (btnMapHeaderOpened) {
-        btnMapHeaderOpened.title = 'Ocultar cabecera de página';
+      if (this.opened) {
+        this.checkHeaderheight();
+      } else {
+        this.setTopMargin(false);
       }
-      if (btnMapHeaderClosed) {
-        btnMapHeaderClosed.title = 'Ocultar cabecera de página';
-        // EventListener
-        btnMapHeaderClosed.addEventListener('click', (e) => {
-          const btnMapHeaderOpened2 = document.querySelectorAll('button.m-panel-btn.g-cartografia-flecha-derecha')[0];
-          if (e.target.parentElement.classList.contains('opened')) {
-            if (btnMapHeaderOpened2) {
-              btnMapHeaderOpened2.title = 'Ocultar cabecera de página';
-            }
-            btnMapHeaderClosed.title = 'Ocultar cabecera de página';
+
+      // Selector del botón del panel mapheader
+      const panelMapheader = document.querySelector('div.m-panel.m-mapheader');
+      const btnMapHeader = panelMapheader ? panelMapheader.querySelector('button.m-panel-btn') : null;
+
+      if (btnMapHeader) {
+        btnMapHeader.title = this.opened ? 'Ocultar cabecera de página' : 'Mostrar cabecera de página';
+        btnMapHeader.addEventListener('click', () => {
+          if (this.opened) {
+            btnMapHeader.title = 'Mostrar cabecera de página';
+            this.opened = false;
+            this.setTopMargin(false);
+          } else {
+            btnMapHeader.title = 'Ocultar cabecera de página';
             this.opened = true;
             this.checkHeaderheight();
-            this.setTopMargin(this.opened);
-          } else {
-            if (btnMapHeaderOpened2) {
-              btnMapHeaderOpened2.title = 'Mostrar cabecera de página';
-            }
-            btnMapHeaderClosed.title = 'Mostrar cabecera de página';
-            this.opened = false;
-            this.checkHeaderheight();
-            this.setTopMargin(this.opened);
+            this.setTopMargin(true);
           }
         });
       }
@@ -175,6 +170,15 @@ export default class MapheaderControl extends IDEE.Control {
   }
 
   setTopMargin(opened) {
+    const button = document.querySelectorAll('div.m-panel.m-mapheader>button')[0];
+    if (button) {
+      if (opened) {
+        button.style.setProperty('top', `${this.panelHeight}px`, 'important');
+      } else {
+        button.style.removeProperty('top');
+      }
+    }
+
     let bottomElements = document.querySelectorAll('div.m-top');
     for (let index = 0; index < bottomElements.length; index += 1) {
       const element = bottomElements[index];
