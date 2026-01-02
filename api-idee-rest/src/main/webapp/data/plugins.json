@@ -298,7 +298,7 @@
   {
     "name": "modal",
     "plugin": "[modal]",
-    "version": "v1.0",
+    "version": "v1.0.1",
     "url_es": "modal.jsp?language=es",
     "url_en": "modal.jsp?language=en",
     "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/modal",
@@ -382,17 +382,6 @@
     "image": "img/api-logo.png",
     "description": "Lista de los atributos de cada registro de una capa vectorial.",
     "obsolete": false
-  },
-  {
-    "name": "rescale",
-    "plugin": "[rescale]",
-    "version": "v1.0",
-    "url_es": "rescale.jsp?language=es",
-    "url_en": "rescale.jsp?language=en",
-    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/rescale",
-    "image": "img/api-logo.png",
-    "description": "Hace zoom a la escala elegida.",
-    "obsolete": true
   },
   {
     "name": "selectiondraw",
@@ -525,17 +514,6 @@
     "image": "img/api-logo.png",
     "description": "Plugin que permite navegar entre las vistas visitadas del mapa (hacia adelante y atrás).",
     "obsolete": true
-  },
-  {
-    "name": "viewmanagement",
-    "plugin": "[viewmanagement]",
-    "version": "v1.0",
-    "url_es": "viewmanagement.jsp?language=es",
-    "url_en": "viewmanagement.jsp?language=en",
-    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/viewmanagement",
-    "image": "img/api-logo.png",
-    "description": "Plugin que permite utilizar diferentes herramientas de zoom.",
-    "obsolete": false
   },
   {
     "name": "xylocator",
