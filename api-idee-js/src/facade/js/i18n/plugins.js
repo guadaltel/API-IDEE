@@ -60,10 +60,6 @@ import enQueryattributes from '../../../plugins/queryattributes/src/facade/js/i1
 // import esQuerydatabase from '../../../plugins/querydatabase/src/facade/js/i18n/es';
 // import enQuerydatabase from '../../../plugins/querydatabase/src/facade/js/i18n/en';
 
-// Rescale
-import esRescale from '../../../plugins/rescale/src/facade/js/i18n/es';
-import enRescale from '../../../plugins/rescale/src/facade/js/i18n/en';
-
 // Selectionzoom
 import esSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/es';
 import enSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/en';
@@ -79,10 +75,6 @@ import enStylemanager from '../../../plugins/stylemanager/src/facade/js/i18n/en'
 // Timeline
 import esTimeline from '../../../plugins/timeline/src/facade/js/i18n/es';
 import enTimeline from '../../../plugins/timeline/src/facade/js/i18n/en';
-
-// Viewmanagement
-import esViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/es';
-import enViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/en';
 
 // Locator
 import esLocator from '../../../plugins/locator/src/facade/js/i18n/es';
@@ -167,10 +159,6 @@ const pluginsLanguage = {
     enQuerydatabase,
   },
   */
-  rescale: {
-    esRescale,
-    enRescale,
-  },
   selectionzoom: {
     esSelectionzoom,
     enSelectionzoom,
@@ -186,10 +174,6 @@ const pluginsLanguage = {
   timeline: {
     esTimeline,
     enTimeline,
-  },
-  viewmanagement: {
-    esViewmanagement,
-    enViewmanagement,
   },
   locator: {
     esLocator,
