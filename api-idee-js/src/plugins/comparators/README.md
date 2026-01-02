@@ -3,29 +3,6 @@
 </p>
 <h1 align="center"><strong>API IDEE</strong> <small>🔌 IDEE.plugin.Comparators</small></h1>
 
-<p align="center">
-  <a title="MIT License" href="LICENSE">
-    <img src="https://img.shields.io/badge/license-EUPL-blue.svg">
-  </a>
-  <a title="Node version" href="https://nodejs.org/es">
-    <img src="https://img.shields.io/badge/node-v14.16-blue">
-  </a>
-  <a title="NPM version" href="https://www.npmjs.com/package/npm">
-    <img src="https://img.shields.io/badge/npm-v6.14-blue">
-  </a>
-  <a title="Language" href="https://www.w3schools.com/html/" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=Lang&message=HTML&color=maroon">
-  </a>
-  <a title="Language" href="https://www.w3schools.com/js/" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=Lang&message=Javascript&color=maroon">
-  </a>
-  <a title="Language" href="https://www.w3schools.com/css/" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=Lang&message=CSS3&color=maroon">
-  </a>
-
-  <br />
-  <br />
-</p>
 
 ## Descripción 👷
 
@@ -40,8 +17,14 @@ Los modos de comparación son: Cortina, "spy eye" y modo espejo.
 
 ## Dependencias 👷
 
+Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
+Para uso de implementación OpenLayers:
 - comparators.ol.min.js
 - comparators.ol.min.css
+
+Para uso de implementación Cesium:
+- comparators.cesium.min.js
+- comparators.cesium.min.css
 
 
 ```html
