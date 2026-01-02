@@ -262,6 +262,16 @@
     "image": "img/api-logo.png",
     "description": "Plugin que permite mostrar un pie de página en el mapa.",
     "obsolete": false
+  }, {
+    "name": "maxextzoom",
+    "plugin": "[maxextzoom]",
+    "version": "v1.0",
+    "url_es": "maxextzoom.jsp?language=es",
+    "url_en": "maxextzoom.jsp?language=en",
+    "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/maxextzoom",
+    "image": "img/api-logo.png",
+    "description": "Plugin que permite realizar un zoom a la extensión del mapa.",
+    "obsolete": false
   },
   {
     "name": "measurebar",
