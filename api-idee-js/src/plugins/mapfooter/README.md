@@ -143,6 +143,7 @@ https://componentes.idee.es/api-idee?mapheader=base64=eyJvcGVuIjp0cnVlLCJodG1sQ2
 
    map.addPlugin(mp);
 ```
+
 # 👨‍💻 Desarrollo
 
 Para el stack de desarrollo de este componente se ha utilizado

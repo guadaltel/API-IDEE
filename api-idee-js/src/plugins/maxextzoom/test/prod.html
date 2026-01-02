@@ -30,7 +30,9 @@
         const map = IDEE.map({
             container: 'mapjs',
         });
-        const mp = new IDEE.plugin.MaxExtZoom();
+        const mp = new IDEE.plugin.MaxExtZoom({
+            position: 'TL',
+        });
         map.addPlugin(mp);
     </script>
 </body>

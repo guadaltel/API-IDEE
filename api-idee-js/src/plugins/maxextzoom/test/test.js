@@ -4,7 +4,11 @@ const map = IDEE.map({
   container: 'mapjs',
 });
 
-const mp = new MaxExtZoom();
+window.map = map;
+
+const mp = new MaxExtZoom({
+  position: 'TL',
+});
 
 
 map.addPlugin(mp);
