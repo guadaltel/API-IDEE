@@ -11,9 +11,13 @@ Hace zoom a la escala elegida.
 # Dependencias
 
 Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
-
+Para uso de implementación OpenLayers:
 - **rescale.ol.min.js**
 - **rescale.ol.min.css**
+
+Para uso de implementación Cesium:
+- **rescale.cesium.min.js**
+- **rescale.cesium.min.css**
 
 
 ```html

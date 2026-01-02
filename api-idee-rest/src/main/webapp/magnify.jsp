@@ -50,9 +50,9 @@
         <label for="inputLayers">Layers</label>
         <input type="text" name="layers" id="inputLayers">
         <label for="inputZoomMax">Zoom Max</label>
-        <input type="number" name="zoomMax" id="inputZoomMax">
+        <input type="number" name="zoomMax" id="inputZoomMax" value="16">
         <label for="inputZoom">Zoom</label>
-        <input type="number" name="zoom" id="inputZoom">
+        <input type="number" name="zoom" id="inputZoom" value="5">
         <input type="button" value="Eliminar Plugin" name="eliminar" id="botonEliminar">
     </div>
 

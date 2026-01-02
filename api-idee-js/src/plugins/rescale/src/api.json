@@ -40,9 +40,9 @@
   },
   "metadata": {
     "name": "Rescale",
-    "description": "Zooms to given scale",
-    "text": "Zooms to given scale",
-    "version": "2.0.2",
+    "description": "Plugin que permite realizar un zoom a la escala elegida.",
+    "text": "Plugin que permite realizar un zoom a la escala elegida.",
+    "version": "1.0.1",
     "date": "September 2019",
     "author": "",
     "org": "",

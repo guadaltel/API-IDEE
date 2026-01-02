@@ -49,7 +49,7 @@
       "name": "filteredsearch",
       "versions": [
         {
-          "api-idee": "1.0.0",
+          "api-idee": "1.1.0",
           "js": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.css"
         },
@@ -166,10 +166,25 @@
       ]
     },
     {
+      "name": "magnify",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/magnify/magnify-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/magnify/magnify-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/magnify/magnify.ol.min.js",
+          "css": "${api-idee.url}plugins/magnify/magnify.ol.min.css"
+        }
+      ]
+    },
+    {
       "name": "mapheader",
       "versions": [
         {
-          "api-idee": "1.0.0",
+          "api-idee": "1.1.0",
           "js": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.css"
         },
@@ -184,7 +199,7 @@
       "name": "mapfooter",
       "versions": [
         {
-          "api-idee": "1.0.0",
+          "api-idee": "1.1.0",
           "js": "${api-idee.url}plugins/mapfooter/mapfooter-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/mapfooter/mapfooter-1.0.0.ol.min.css"
         },
@@ -199,7 +214,7 @@
       "name": "maxextzoom",
       "versions": [
         {
-          "api-idee": "1.0.0",
+          "api-idee": "1.1.0",
           "js": "${api-idee.url}plugins/maxextzoom/maxextzoom-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/maxextzoom/maxextzoom-1.0.0.ol.min.css"
         },
@@ -303,6 +318,11 @@
     {
       "name": "rescale",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/rescale/rescale-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/rescale/rescale-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/rescale/rescale-1.0.0.ol.min.js",
@@ -408,6 +428,11 @@
     {
       "name": "viewmanagement",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.0.ol.min.js",
