@@ -19,7 +19,7 @@
     "prebuild:cesium": "node task/create-entrypoint-cesium.js",
     "build": "webpack --config=webpack-config/webpack.production-ol.config.js && webpack --config=webpack-config/webpack.production-cesium.config.js",
     "test-build": "npm run build && live-server --open=test/prod.html",
-    "test:playwright-ol": "playwright test /filteredsearch/test/playwright/ol/* --config=../../../playwright-config/playwright-ol.config.js",
+    "test:playwright-ol": "playwright test /mapheader/test/playwright/ol/* --config=../../../playwright-config/playwright-ol.config.js",
     "test:all": "npm run test:playwright-ol",
     "check": "eslint ./src",
     "fix": "eslint --fix ./src"
@@ -28,7 +28,6 @@
   "devDependencies": {
     "buffer": "^6.0.3",
     "timers-browserify": "^2.0.12",
-    "@playwright/test": "1.50.1",
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.14.8",
     "babel-eslint": "^10.0.1",
