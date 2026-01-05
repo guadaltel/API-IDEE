@@ -12,12 +12,12 @@ Plugin que va a la extensión y posición original del mapa base.
 ## Dependencias
 
 Para uso de implementación OpenLayers:
-- maxextzoom.ol.min.js
-- maxextzoom.ol.min.css
+- **maxextzoom.ol.min.js**
+- **maxextzoom.ol.min.css**
 
 Para uso de implementación Cesium:
-- maxextzoom.cesium.min.js
-- maxextzoom.cesium.min.css
+- **maxextzoom.cesium.min.js**
+- **maxextzoom.cesium.min.css**
 
 ```html
  <link href="https://componentes.idee.es/api-idee/plugins/maxextzoom/maxextzoom.ol.min.css" rel="stylesheet" />

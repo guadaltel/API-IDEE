@@ -88,7 +88,7 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].measurebar = pluginsLanguage.measurebar.enMeasurebar;
     configuration.translations[lang].mousesrs = pluginsLanguage.mousesrs.enMousesrs;
     configuration.translations[lang].printviewmanagement = pluginsLanguage.printviewmanagement
-    .enPrintviewmanagement;
+      .enPrintviewmanagement;
     // configuration.translations[lang].querydatabase = pluginsLanguage
     // .querydatabase.enQuerydatabase;
     configuration.translations[lang].queryattributes = pluginsLanguage.queryattributes

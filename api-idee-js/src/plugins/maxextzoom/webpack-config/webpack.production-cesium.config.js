@@ -5,15 +5,15 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopywebpackPlugin = require('copy-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
-const webpack = require('webpack');
 
 const PJSON_PATH = path.resolve(__dirname, '..', 'package.json');
 const pjson = require(PJSON_PATH);
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'production',
   entry: {
-      'maxextzoom.cesium.min': path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
+    'maxextzoom.cesium.min': path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
     [`maxextzoom-${pjson.version}.cesium.min`]: path.resolve(__dirname, '..', 'src', 'index-cesium.js'),
   },
   output: {
@@ -100,8 +100,8 @@ module.exports = {
         {
           from: 'src/api.json',
           to: 'api.json',
-        },
-        //  {
+        }
+        // , {
         //   from: 'src/facade/assets/images',
         //   to: 'images',
         // },

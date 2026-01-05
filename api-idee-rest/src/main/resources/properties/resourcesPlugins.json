@@ -19,6 +19,11 @@
       "name": "comparators",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/comparators/comparators-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/comparators/comparators-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/comparators/comparators-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/comparators/comparators-1.0.0.ol.min.css"
@@ -138,6 +143,11 @@
     {
       "name": "locator",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/locator/locator-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/locator/locator-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/locator/locator-1.0.0.ol.min.js",

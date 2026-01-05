@@ -14,12 +14,12 @@
 
 Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
 Para uso de implementación OpenLayers:
-- mapfooter.ol.min.js
-- mapfooter.ol.min.css
+- **mapfooter.ol.min.js**
+- **mapfooter.ol.min.css**
 
 Para uso de implementación Cesium:
-- mapfooter.cesium.min.js
-- mapfooter.cesium.min.css
+- **mapfooter.cesium.min.js**
+- **mapfooter.cesium.min.css**
 
 ```html
  <link href="https://componentes.idee.es/api-idee/plugins/mapfooter/mapfooter.ol.min.css" rel="stylesheet" />
@@ -99,7 +99,7 @@ Ejemplo de constructor:
 }
 ```
 ```
-https://componentes.idee.es/api-idee?mapheader=base64=eyJvcGVuIjp0cnVlLCJodG1sQ29kZSI6IjxwPm1pIHBpZSBkZSBww6FnaW5hPC9wPiIsImNzc0xpc3QiOlsiaHR0cHM6Ly93d3cuc2V2aWxsYS5vcmcvKyt0aGVtZSsrYXlzZXZpbGxhL3N0eWxlcy9idWlsZC9wbG9uZXRoZW1lLmF5c2V2aWxsYS5taW4uY3NzIl19
+https://componentes.idee.es/api-idee?mapfooter=base64=eyJvcGVuIjp0cnVlLCJodG1sQ29kZSI6IjxwPm1pIHBpZSBkZSBww6FnaW5hPC9wPiIsImNzc0xpc3QiOlsiaHR0cHM6Ly93d3cuc2V2aWxsYS5vcmcvKyt0aGVtZSsrYXlzZXZpbGxhL3N0eWxlcy9idWlsZC9wbG9uZXRoZW1lLmF5c2V2aWxsYS5taW4uY3NzIl19
 ```
 
 ## Ejemplos de uso
