@@ -11,7 +11,9 @@ import TileEventType from 'ol/source/TileEventType';
 import TileState from 'ol/TileState';
 import MVTFormatter from 'ol/format/MVT';
 import Feature from 'ol/Feature';
+import { get as getProj } from 'ol/proj';
 import RenderFeature from 'ol/render/Feature';
+import { createXYZ } from 'ol/tilegrid';
 import { mode } from 'IDEE/layer/MVT';
 import Vector from './Vector';
 import ImplUtils from '../util/Utils';
@@ -114,6 +116,11 @@ class MVT extends Vector {
     this.tileLoadFunction = vendorOptions?.tileLoadFunction;
 
     /**
+     * MVT tileSize_. Tamaño de la tesela, por defecto 256.
+     */
+    this.tileSize_ = typeof parameters.tileSize === 'number' ? parameters.tileSize : 256;
+
+    /**
      * MVT layers_. Otras capas.
      */
     this.layers_ = parameters.layers;
@@ -178,6 +185,7 @@ class MVT extends Vector {
    */
   addTo(map, addLayer = true) {
     this.map = map;
+    const projection = getProj('EPSG:3857');
 
     if (this.layers_ !== undefined) {
       this.formater_ = new MVTFormatter({
@@ -197,8 +205,12 @@ class MVT extends Vector {
     const source = new OLSourceVectorTile({
       format: this.formater_,
       url,
-      projection: this.projection_,
+      projection,
       tileLoadFunction: this.tileLoadFunction,
+      tileGrid: createXYZ({
+        extent: projection.getExtent(),
+        tileSize: this.getTileSize(),
+      }),
     });
 
     // register events in order to fire the LOAD event
@@ -392,6 +404,18 @@ class MVT extends Vector {
    */
   getProjection() {
     return this.projection_;
+  }
+
+  /**
+   * Deuvuelve el tamaño de la tesela de la capa.
+   *
+   * @public
+   * @function
+   * @returns {Number} Tamaño de la tesela.
+   * @api stable
+   */
+  getTileSize() {
+    return this.tileSize_;
   }
 
   /**
