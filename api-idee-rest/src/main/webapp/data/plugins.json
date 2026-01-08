@@ -420,7 +420,7 @@
   {
     "name": "storymap",
     "plugin": "[storymap]",
-    "version": "v1.0",
+    "version": "v1.0.1",
     "url_es": "storymap.jsp?language=es",
     "url_en": "storymap.jsp?language=en",
     "url_git": "https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-js/src/plugins/storymap",
