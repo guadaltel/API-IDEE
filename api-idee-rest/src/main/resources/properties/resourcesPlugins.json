@@ -424,6 +424,26 @@
           "css": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement.ol.min.css"
         }
       ]
+    },
+    {
+      "name": "viewmanagement",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.css"
+        },
+        {
+          "api-idee": "1.0.0",
+          "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/viewmanagement/viewmanagement.ol.min.js",
+          "css": "${api-idee.url}plugins/viewmanagement/viewmanagement.ol.min.css"
+        }
+      ]
     }
   ]
 }
