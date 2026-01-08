@@ -76,6 +76,10 @@ import enStylemanager from '../../../plugins/stylemanager/src/facade/js/i18n/en'
 import esTimeline from '../../../plugins/timeline/src/facade/js/i18n/es';
 import enTimeline from '../../../plugins/timeline/src/facade/js/i18n/en';
 
+// Viewmanagement
+import esViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/es';
+import enViewmanagement from '../../../plugins/viewmanagement/src/facade/js/i18n/en';
+
 // Locator
 import esLocator from '../../../plugins/locator/src/facade/js/i18n/es';
 import enLocator from '../../../plugins/locator/src/facade/js/i18n/en';
@@ -174,6 +178,10 @@ const pluginsLanguage = {
   timeline: {
     esTimeline,
     enTimeline,
+  },
+  viewmanagement: {
+    esViewmanagement,
+    enViewmanagement,
   },
   locator: {
     esLocator,
