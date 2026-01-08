@@ -414,6 +414,11 @@
       "name": "vectorsmanagement",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.0.ol.min.css"
