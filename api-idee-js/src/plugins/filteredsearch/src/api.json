@@ -30,6 +30,14 @@
       "styles": [
         "filteredsearch.ol.min.css"
       ]
+    },
+    "cesium": {
+      "scripts": [
+        "filteredsearch.cesium.min.js"
+      ],
+      "styles": [
+        "filteredsearch.cesium.min.css"
+      ]
     }
   },
   "metadata": {
@@ -39,7 +47,7 @@
     "version": "1.0.0",
     "date": "Diciembre, 2025",
     "author": "",
-    "org": "Consejería de Hacienda, Industria y Energía. Junta de Andalucía.",
+    "org": "",
     "tags": "idee,plugin",
     "icon": "./facade/assets/icons/icons.svg",
     "centralized": true,

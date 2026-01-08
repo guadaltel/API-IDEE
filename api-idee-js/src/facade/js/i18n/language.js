@@ -65,13 +65,10 @@ export const getTranslation = (lang) => {
       .esQueryattributes;
     // configuration.translations[lang].querydatabase = pluginsLanguage
     // .querydatabase.esQuerydatabase;
-    configuration.translations[lang].rescale = pluginsLanguage.rescale.esRescale;
     configuration.translations[lang].selectionzoom = pluginsLanguage.selectionzoom.esSelectionzoom;
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.esSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.esStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.esTimeline;
-    configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
-      .esViewmanagement;
     configuration.translations[lang].locator = pluginsLanguage.locator.esLocator;
     configuration.translations[lang].locatorscn = pluginsLanguage.locatorscn.esLocatorscn;
     configuration.translations[lang].vectorsmanagement = pluginsLanguage.vectorsmanagement
@@ -90,17 +87,16 @@ export const getTranslation = (lang) => {
     configuration.translations[lang].layerswitcher = pluginsLanguage.layerswitcher.enLayerswitcher;
     configuration.translations[lang].measurebar = pluginsLanguage.measurebar.enMeasurebar;
     configuration.translations[lang].mousesrs = pluginsLanguage.mousesrs.enMousesrs;
+    configuration.translations[lang].printviewmanagement = pluginsLanguage.printviewmanagement
+      .enPrintviewmanagement;
     // configuration.translations[lang].querydatabase = pluginsLanguage
     // .querydatabase.enQuerydatabase;
-    configuration.translations[lang].rescale = pluginsLanguage.rescale.enRescale;
     configuration.translations[lang].queryattributes = pluginsLanguage.queryattributes
       .enQueryattributes;
     configuration.translations[lang].selectionzoom = pluginsLanguage.selectionzoom.enSelectionzoom;
     configuration.translations[lang].sharemap = pluginsLanguage.sharemap.enSharemap;
     configuration.translations[lang].stylemanager = pluginsLanguage.stylemanager.enStylemanager;
     configuration.translations[lang].timeline = pluginsLanguage.timeline.enTimeline;
-    configuration.translations[lang].viewmanagement = pluginsLanguage.viewmanagement
-      .enViewmanagement;
     configuration.translations[lang].locator = pluginsLanguage.locator.enLocator;
     configuration.translations[lang].locatorscn = pluginsLanguage.locatorscn.enLocatorscn;
     configuration.translations[lang].vectorsmanagement = pluginsLanguage.vectorsmanagement

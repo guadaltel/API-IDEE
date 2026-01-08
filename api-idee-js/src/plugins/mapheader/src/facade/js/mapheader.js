@@ -77,4 +77,16 @@ export default class Mapheader extends IDEE.Plugin {
   getMetadata() {
     return this.metadata_;
   }
+
+  /**
+   * This function destroys this plugin
+   *
+   * @public
+   * @function
+   * @api stable
+   */
+  destroy() {
+    this.map_.removeControls(this.controls_);
+    [this.controls_, this.panel_, this.map_] = [null, null, null];
+  }
 }
