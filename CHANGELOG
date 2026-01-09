@@ -49,6 +49,7 @@
 - Se implementa la función setZoomLevels en Mapa para establecer el nivel de zoom junto a las resoluciones correspondientes al nivel.
 - Se inicializa this.ticket_ en la clase Map y se añade al JSDoc.
 - Se modifica el comportamiento de getMaxExtent en WMTS con useCapabilities para que en caso de que el usuario indique maxExtent a la capa devuelva el especificado y no el del capabilities.
+- Mejora la lógica de cálculo de tamaño del canvas en el toImage.
 
 
 01/01/25 - Versión 1.0.0
