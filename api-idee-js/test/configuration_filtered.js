@@ -92,6 +92,42 @@ function fun(IDEE_) {
   IDEE_.config('THEME_URL', `${location.protocol}//componentes-desarrollo.idee.es/api-idee/assets/`);
 
   /**
+   * Predefined WMC files. It is composed of URL,
+   * predefined name and context name.
+   * @type {object}
+   * @public
+   * @api stable
+   */
+  IDEE_.config('predefinedWMC', {
+    /**
+     * Predefined WMC URLs
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'urls': 'https://componentes.idee.es/estaticos/Datos/WMC/context_cdau_callejero.xml,https://componentes.idee.es/estaticos/Datos/WMC/context_cdau_hibrido.xml,https://componentes.idee.es/estaticos/Datos/WMC/context_cdau_satelite.xml,https://componentes.idee.es/estaticos/Datos/WMC/contextCallejeroCache.xml,https://componentes.idee.es/estaticos/Datos/WMC/contextCallejero.xml,https://componentes.idee.es/estaticos/Datos/WMC/callejero2011cache.xml,https://componentes.idee.es/estaticos/Datos/WMC/ortofoto2011cache.xml,https://componentes.idee.es/estaticos/Datos/WMC/hibrido2011cache.xml,https://componentes.idee.es/estaticos/Datos/WMC/contextOrtofoto.xml'.split(',').map(e => e),
+
+    /**
+     * WMC predefined names
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'predefinedNames': 'cdau,cdau_hibrido,cdau_satelite,callejerocacheado,callejero,callejero2011cache,ortofoto2011cache,hibrido2011cache,ortofoto'.split(','),
+
+    /**
+     * WMC context names
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'names': 'Callejero,Hibrido,Satelite,mapa callejero cache,mapa del callejero,Callejero,Ortofoto,HÃ­brido,mapa ortofoto'.split(',')
+  });
+
+  /**
    * TODO
    * @type {object}
    * @public
@@ -252,6 +288,14 @@ function fun(IDEE_) {
   IDEE_.config('MAX_ZOOM', '');
 
   /**
+   * Zoom por defecto.
+   *
+   * @private
+   * @type {Number | String}
+   */
+  IDEE_.config('DEFAULT_ZOOM', '3');
+
+  /**
    * Hace el popup inteligente
    *
    * @private
@@ -282,6 +326,13 @@ function fun(IDEE_) {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location.
+   * @public
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', 16);
 }
 
 fun(window.IDEE);

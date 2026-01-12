@@ -19,6 +19,11 @@
       "name": "comparators",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/comparators/comparators-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/comparators/comparators-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/comparators/comparators-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/comparators/comparators-1.0.0.ol.min.css"
@@ -34,6 +39,11 @@
       "name": "contactlink",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/contactlink/contactlink-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/contactlink/contactlink-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/contactlink/contactlink-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/contactlink/contactlink-1.0.0.ol.min.css"
@@ -42,6 +52,21 @@
           "api-idee": "latest",
           "js": "${api-idee.url}plugins/contactlink/contactlink.ol.min.js",
           "css": "${api-idee.url}plugins/contactlink/contactlink.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "filteredsearch",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/filteredsearch/filteredsearch-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/filteredsearch/filteredsearch.ol.min.js",
+          "css": "${api-idee.url}plugins/filteredsearch/filteredsearch.ol.min.css"
         }
       ]
     },
@@ -64,6 +89,11 @@
       "name": "incicarto",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/incicarto/incicarto-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/incicarto/incicarto-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/incicarto/incicarto-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/incicarto/incicarto-1.0.0.ol.min.css"
@@ -78,6 +108,11 @@
     {
       "name": "infocoordinates",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/infocoordinates/infocoordinates-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/infocoordinates/infocoordinates-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/infocoordinates/infocoordinates-1.0.0.ol.min.js",
@@ -124,6 +159,11 @@
       "name": "locator",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/locator/locator-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/locator/locator-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/locator/locator-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/locator/locator-1.0.0.ol.min.css"
@@ -151,6 +191,66 @@
       ]
     },
     {
+      "name": "magnify",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/magnify/magnify-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/magnify/magnify-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/magnify/magnify.ol.min.js",
+          "css": "${api-idee.url}plugins/magnify/magnify.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "mapheader",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/mapheader/mapheader-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/mapheader/mapheader.ol.min.js",
+          "css": "${api-idee.url}plugins/mapheader/mapheader.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "mapfooter",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/mapfooter/mapfooter-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/mapfooter/mapfooter-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/mapfooter/mapfooter.ol.min.js",
+          "css": "${api-idee.url}plugins/mapfooter/mapfooter.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "maxextzoom",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/maxextzoom/maxextzoom-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/maxextzoom/maxextzoom-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/maxextzoom/maxextzoom.ol.min.js",
+          "css": "${api-idee.url}plugins/maxextzoom/maxextzoom.ol.min.css"
+        }
+      ]
+    },
+    {
       "name": "measurebar",
       "versions": [
         {
@@ -168,6 +268,11 @@
     {
       "name": "modal",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/modal/modal-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/modal/modal-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/modal/modal-1.0.0.ol.min.js",
@@ -237,21 +342,6 @@
           "api-idee": "latest",
           "js": "${api-idee.url}plugins/queryattributes/queryattributes.ol.min.js",
           "css": "${api-idee.url}plugins/queryattributes/queryattributes.ol.min.css"
-        }
-      ]
-    },
-    {
-      "name": "rescale",
-      "versions": [
-        {
-          "api-idee": "1.0.0",
-          "js": "${api-idee.url}plugins/rescale/rescale-1.0.0.ol.min.js",
-          "css": "${api-idee.url}plugins/rescale/rescale-1.0.0.ol.min.css"
-        },
-        {
-          "api-idee": "latest",
-          "js": "${api-idee.url}plugins/rescale/rescale.ol.min.js",
-          "css": "${api-idee.url}plugins/rescale/rescale.ol.min.css"
         }
       ]
     },
@@ -334,6 +424,11 @@
       "name": "vectorsmanagement",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/vectorsmanagement/vectorsmanagement-1.0.0.ol.min.css"
@@ -348,6 +443,11 @@
     {
       "name": "viewmanagement",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/viewmanagement/viewmanagement-1.0.0.ol.min.js",
