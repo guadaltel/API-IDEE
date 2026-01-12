@@ -50,6 +50,7 @@
 - Se inicializa this.ticket_ en la clase Map y se añade al JSDoc.
 - Se modifica el comportamiento de getMaxExtent en WMTS con useCapabilities para que en caso de que el usuario indique maxExtent a la capa devuelva el especificado y no el del capabilities.
 - Mejora la lógica de cálculo de tamaño del canvas en el toImage.
+- Se evita que quede "&" al final de la URL al usar addParameters de Utilidades.
 
 
 01/01/25 - Versión 1.0.0
