@@ -44,11 +44,7 @@ export const getScalePanel = (map, params = {}) => {
       position: Position.BR,
       order: params.order || null,
     });
-    panel.on(EventType.ADDED_TO_MAP, () => {
-      if (map.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-        map.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-      }
-    });
+    map.addUpClass_(panel); // eslint-disable-line no-underscore-dangle
   }
   panel.addClassName('m-with-scale');
   return panel;
@@ -72,11 +68,7 @@ export const getScaleLinePanel = (map) => {
     position: Position.BL,
     tooltip: 'Línea de escala',
   });
-  panel.on(EventType.ADDED_TO_MAP, () => {
-    if (map.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-      map.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-    }
-  });
+  map.addUpClass_(panel); // eslint-disable-line no-underscore-dangle
   return panel;
 };
 
@@ -207,11 +199,7 @@ export const getWMCSelectorPanel = (map) => {
       position: Position.BR,
       className: 'm-map-info',
     });
-    panel.on(EventType.ADDED_TO_MAP, () => {
-      if (map.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-        map.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-      }
-    });
+    map.addUpClass_(panel); // eslint-disable-line no-underscore-dangle
   }
   panel.addClassName('m-with-wmcselector');
   return panel;
