@@ -49,6 +49,30 @@ import FormatWMS from './format/WMS';
 import LayerGroup from './layer/LayerGroup';
 
 /**
+ * Funciones externas getLayer.
+ * @const
+ * @type {Array}
+ * @public
+ */
+const GET_EXTERNAL_LAYER_FUNCTIONS = [];
+
+/**
+ * Funciones externas removeLayer.
+ * @const
+ * @type {Array}
+ * @public
+ */
+const REMOVE_EXTERNAL_LAYER_FUNCTIONS = [];
+
+/**
+ * Funciones externas addLayer.
+ * @const
+ * @type {Array}
+ * @public
+ */
+const ADD_EXTERNAL_LAYER_FUNCTIONS = [];
+
+/**
  * @classdesc
  * Esta clase crea un mapa con un contenedor "div" específico
  *
@@ -321,6 +345,7 @@ class Map extends MObject {
     const layersGroup = this.getLayerGroups(filters);
     const geopackagetileLayers = this.getGeoPackageTile(filters);
     const unknowLayers = this.getUnknowLayers_(filters);
+    const externalLayers = GET_EXTERNAL_LAYER_FUNCTIONS.map((funct) => this[funct](filters));
 
     const layers = wmcLayers
       .concat(kmlLayers)
@@ -337,7 +362,8 @@ class Map extends MObject {
       .concat(tmsLayers)
       .concat(layersGroup)
       .concat(geopackagetileLayers)
-      .concat(unknowLayers);
+      .concat(unknowLayers)
+      .concat(externalLayers);
 
     return layers.sort((layer1, layer2) => FacadeMap.LAYER_SORT(layer1, layer2, this.facadeMap_));
   }
@@ -413,6 +439,7 @@ class Map extends MObject {
         this.addUnknowLayers_([layer]);
         // eslint-disable-next-line no-underscore-dangle
         this.facadeMap_.addUnknowLayers_(layer);
+        ADD_EXTERNAL_LAYER_FUNCTIONS.forEach((funct) => funct([layer]));
       }
     });
 
@@ -520,6 +547,7 @@ class Map extends MObject {
 
     if (unknowLayers.length > 0) {
       this.removeUnknowLayers_(unknowLayers);
+      REMOVE_EXTERNAL_LAYER_FUNCTIONS.forEach((funct) => funct(unknowLayers));
     }
 
     layers.forEach((layer) => {
@@ -3377,7 +3405,10 @@ class Map extends MObject {
    * @api
    */
   updateResolutionsFromBaseLayer() {
-    this.fire(EventType.COMPLETED);
+    if (this._calculatedResolutions === false) {
+      this._calculatedResolutions = true;
+      this.fire(EventType.COMPLETED);
+    }
     this.refresh();
   }
 
@@ -3492,6 +3523,27 @@ class Map extends MObject {
    */
   setFacadeMap(facadeMap) {
     this.facadeMap_ = facadeMap;
+  }
+
+  /**
+   * Este método registra funciones para capas externas.
+   *
+   * @function
+   * @public
+   * @api
+   */
+  static registerExternalFunction(name, type) {
+    const types = {
+      getLayers: GET_EXTERNAL_LAYER_FUNCTIONS,
+      addLayers: ADD_EXTERNAL_LAYER_FUNCTIONS,
+      removeLayers: REMOVE_EXTERNAL_LAYER_FUNCTIONS,
+    };
+
+    const collection = types[type];
+    const notIncluded = collection.find((e) => e === name);
+    if (notIncluded) {
+      collection.push(name);
+    }
   }
 
   /**
