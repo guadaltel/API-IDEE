@@ -14,7 +14,7 @@ test.describe('IDEE.Utils', () => {
       ];
     });
     expect.soft(res[0]).toBe(true);
-    expect.soft(res[1]).toBe(('https://www.ign.es/wms-inspire/unidades-administrativas?request=GetCapabilities&service=WMS&ticket=xx&&version=1.1.0'));
+    expect.soft(res[1]).toBe(('https://www.ign.es/wms-inspire/unidades-administrativas?request=GetCapabilities&service=WMS&ticket=xx&version=1.1.0'));
 
     // Utils - isNumber / isPositiveNumber
     const numberTest = await page.evaluate(() => {

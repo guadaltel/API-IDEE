@@ -244,7 +244,7 @@ export const addParameters = (url, params) => {
       }
     });
     // removes the last '&'
-    if (requestParams.charAt(requestUrl.length - 1) === '&') {
+    if (requestParams.charAt(requestParams.length - 1) === '&') {
       requestParams = requestParams.substring(0, requestParams.length - 1);
     }
   } else if (isString(params)) {
@@ -308,7 +308,9 @@ export const getWMSGetCapabilitiesUrl = (serverUrl, version, ticket) => {
 
   // PATCH: En api-idee 3 no se manda luego aquí tampoco. Hay servicios que dan error....
   //       version
-  wmsGetCapabilitiesUrl = addParameters(wmsGetCapabilitiesUrl, `version=${version}`);
+  if (!isNullOrEmpty(version)) {
+    wmsGetCapabilitiesUrl = addParameters(wmsGetCapabilitiesUrl, `version=${version}`);
+  }
 
   return wmsGetCapabilitiesUrl;
 };

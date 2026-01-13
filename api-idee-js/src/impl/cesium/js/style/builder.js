@@ -17,18 +17,21 @@ import {
   Cartesian2,
   Color,
   Entity,
-  GridMaterialProperty,
   HorizontalOrigin,
-  ImageMaterialProperty,
   LabelGraphics,
   LabelStyle,
   PolylineOutlineMaterialProperty,
   VerticalOrigin,
   HeightReference as CesiumHeightReference,
+  ImageMaterialProperty,
   ModelGraphics,
 } from 'cesium';
 import PointFontSymbol from '../point/FontSymbol';
 import Simple from './Simple';
+import CesiumStyleFillPattern from '../ext/CesiumStyleFillPattern';
+
+const baselineInCesium = [Baseline.TOP, Baseline.BOTTOM, Baseline.BASELINE, Baseline.CENTER];
+const alignInCesium = [Align.LEFT, Align.CENTER, Align.RIGHT];
 
 /**
  * Esta función devuelve el relleno.
@@ -171,7 +174,7 @@ export const getStrokePatern = (options, featureVariable, layer) => {
 export const getLabel = (options, featureVariable, layer) => {
   const DEFAULT_LABEL_COLOR = '#000';
   const DEFAULT_ALIGN = HorizontalOrigin.CENTER;
-  const DEFAULT_BASELINE = VerticalOrigin.TOP;
+  const DEFAULT_BASELINE = VerticalOrigin.CENTER;
 
   let label = {};
   if (options.label) {
@@ -181,15 +184,15 @@ export const getLabel = (options, featureVariable, layer) => {
     const baseline = Simple.getValue(options.label.baseline, featureVariable, layer);
     labelText = {
       font: Simple.getValue(options.label.font, featureVariable, layer) || '10px sans-serif',
-      scale: Simple.getValue(options.label.scale, featureVariable, layer),
+      scale: Simple.getValue(options.label.scale, featureVariable, layer) || 1,
       pixelOffset: new Cartesian2(
         Simple.getValue(
-          options.label.offset ? options.label.offset[0] : undefined,
+          options.label.offset ? options.label.offset[0] : 0,
           featureVariable,
           layer,
         ),
         Simple.getValue(
-          options.label.offset ? options.label.offset[1] : undefined,
+          options.label.offset ? options.label.offset[1] : 0,
           featureVariable,
           layer,
         ),
@@ -199,9 +202,9 @@ export const getLabel = (options, featureVariable, layer) => {
         featureVariable,
         layer,
       )),
-      horizontalOrigin: Object.values(Align).includes(align)
+      horizontalOrigin: alignInCesium.includes(align)
         ? HorizontalOrigin[align.toUpperCase()] : DEFAULT_ALIGN,
-      verticalOrigin: Object.values(Baseline).includes(baseline)
+      verticalOrigin: baselineInCesium.includes(baseline)
         ? VerticalOrigin[baseline.toUpperCase()] : DEFAULT_BASELINE,
       text: textLabel === undefined ? undefined : String(textLabel),
       style: LabelStyle.FILL,
@@ -332,7 +335,7 @@ export const getIconSrc = (options, featureVariable, layer) => {
           1.0,
           Simple.getValue(options.icon.opacity || 1, featureVariable, layer),
         ),
-        scale: Simple.getValue(options.icon.scale, featureVariable, layer),
+        scale: Simple.getValue(options.icon.scale || 1, featureVariable, layer),
         rotation: Simple.getValue(
           options.icon.rotation ? -Number(options.icon.rotation) : 0,
           featureVariable,
@@ -351,14 +354,12 @@ export const getIconSrc = (options, featureVariable, layer) => {
           ) : undefined,
         pixelOffset: new Cartesian2(
           Simple.getValue(options.icon.anchor
-            ? options.icon.anchor[1] : undefined, featureVariable, layer),
+            ? options.icon.anchor[1] : 0, featureVariable, layer),
           Simple.getValue(options.icon.anchor
-            ? options.icon.anchor[0] : undefined, featureVariable, layer),
+            ? options.icon.anchor[0] : 0, featureVariable, layer),
         ),
-        verticalOrigin: Object.values(Baseline).includes(baseline) && options.icon.anchor
-          ? VerticalOrigin[baseline.toUpperCase()] : VerticalOrigin.CENTER,
-        horizontalOrigin: Object.values(Align).includes(align) && options.icon.anchor
-          ? HorizontalOrigin[align.toUpperCase()] : HorizontalOrigin.CENTER,
+        verticalOrigin: baselineInCesium.includes(baseline) && options.icon.anchor,
+        horizontalOrigin: alignInCesium.includes(align) && options.icon.anchor,
         sizeInMeters: false,
       });
     }
@@ -461,7 +462,7 @@ export const getIconForm = (options, featureVariable, layer) => {
  * @function
  *
  * @param {Object} options Opciones ("color", "width", "size",
- * "spacing", "image", "angle", "scale", "offset" y
+ * "spacing", "image", "angle", "scale", "offset", "repeat" y
  * "fill").
  * @param {Object} featureVariable Objetos geográficos.
  * @param {Object} layer Capas.
@@ -479,35 +480,33 @@ export const getFillPatern = (options, featureVariable, layer, fill) => {
     color = Color.fromCssColorString(options.fill.pattern.color).withAlpha(opacity);
   }
   let style = {};
+  const stylePattern = new CesiumStyleFillPattern({
+    pattern: (Simple.getValue(options.fill.pattern.name, featureVariable, layer) || '')
+      .toLowerCase(),
+    color,
+    size: Simple.getValue(options.fill.pattern.size, featureVariable, layer),
+    spacing: Simple.getValue(options.fill.pattern.spacing, featureVariable, layer),
+    image: (Simple.getValue(options.fill.pattern.name, featureVariable, layer) === 'IMAGE')
+      ? Simple.getValue(options.fill.pattern.src, featureVariable, layer)
+      : undefined,
+    angle: Simple.getValue(options.fill.pattern.rotation, featureVariable, layer),
+    scale: Simple.getValue(options.fill.pattern.scale, featureVariable, layer),
+    offset: Simple.getValue(options.fill.pattern.offset, featureVariable, layer),
+    fill: !isNullOrEmpty(fill) && !isNullOrEmpty(fill.material) ? fill.material : undefined,
+  });
 
-  const rotation = Simple.getValue(options.fill.pattern.rotation, featureVariable, layer);
-  const pattern = (Simple.getValue(options.fill.pattern.name, featureVariable, layer) || '')
-    .toLowerCase();
+  const repeatX = options.fill.pattern.repeat ? options.fill.pattern.repeat[0] : 1;
+  const repeatY = options.fill.pattern.repeat ? options.fill.pattern.repeat[1] : 1;
+  const canvas = stylePattern.getImage();
 
-  if (pattern === 'image') {
-    style = {
-      stRotation: rotation,
-      material: new ImageMaterialProperty({
-        image: Simple.getValue(options.fill.pattern.src, featureVariable, layer),
-        color,
-      }),
-    };
-  } else if (fill.type !== 'line') {
-    style = {
-      stRotation: rotation,
-      material: new GridMaterialProperty({
-        color,
-        lineThickness: new Cartesian2(
-          Simple.getValue(options.fill.pattern.size, featureVariable, layer),
-          Simple.getValue(options.fill.pattern.size, featureVariable, layer),
-        ),
-        lineOffset: new Cartesian2(
-          Simple.getValue(options.fill.pattern.offset, featureVariable, layer),
-          Simple.getValue(options.fill.pattern.offset, featureVariable, layer),
-        ),
-      }),
-    };
-  }
+  style = {
+    material: new ImageMaterialProperty({
+      image: canvas,
+      repeat: new Cartesian2(repeatX, repeatY),
+      transparent: true,
+    }),
+  };
+
   return style;
 };
 
@@ -768,7 +767,7 @@ export const getLineStyle = (options, featureVariable, layer) => {
 
   const style = { type: 'line' };
   const stroke = getLineStroke(optionsVar, featureVariable, layer);
-  const fill = getLineFill(optionsVar, featureVariable, layer, stroke);
+  const fill = getLineFill(optionsVar, featureVariable, layer, stroke) || {};
   if (optionsVar.fill && !isNullOrEmpty(optionsVar.fill.pattern)) {
     fill.type = 'line';
     extend(fill, getFillPatern(optionsVar, featureVariable, layer, fill), true);
@@ -815,12 +814,11 @@ export const getPolygonStyle = (options, featureVariable, layer) => {
   // if (optionsVar.stroke && !isNullOrEmpty(optionsVar.stroke.pattern)) {
   //   stroke = getStrokePatern(optionsVar, featureVariable, layer);
   // }
-  const fill = getFill(optionsVar, featureVariable, layer);
+  let fill = getFill(optionsVar, featureVariable, layer);
   const label = getLabel(optionsVar, featureVariable, layer);
-
-  // if (optionsVar.fill && !isNullOrEmpty(optionsVar.fill.pattern)) {
-  //   fill = getFillPatern(optionsVar, featureVariable, layer, fill);
-  // }
+  if (optionsVar.fill && !isNullOrEmpty(optionsVar.fill.pattern)) {
+    fill = getFillPatern(optionsVar, featureVariable, layer, fill);
+  }
 
   extend(style, {
     ...perPositionHeight,
