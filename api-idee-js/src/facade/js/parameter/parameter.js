@@ -4600,7 +4600,7 @@ const osm = (userParameters) => {
   if (!isString(params)) {
     return {
       ...params,
-      type: 'osm',
+      type: 'OSM',
     };
   }
 
