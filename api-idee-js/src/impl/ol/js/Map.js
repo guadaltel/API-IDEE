@@ -3529,6 +3529,9 @@ class Map extends MObject {
    * Este método registra funciones para capas externas.
    *
    * @function
+   * @param {string} name Nombre de la función.
+   * @param {string} type Tipo de función.
+   * Valores posibles: 'getLayers', 'addLayers', 'removeLayers'.
    * @public
    * @api
    */
