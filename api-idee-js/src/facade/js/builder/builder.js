@@ -6,7 +6,6 @@ import {
 } from 'IDEE/util/Utils';
 import Panel from '../ui/Panel';
 import * as Position from '../ui/position';
-import * as EventType from '../event/eventtype';
 import { getValue } from '../i18n/language';
 import Control from '../control/Control';
 import GetFeatureInfo from '../control/GetFeatureInfo';
