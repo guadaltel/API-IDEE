@@ -53,6 +53,7 @@
 - Se evita que quede "&" al final de la URL al usar addParameters de Utilidades.
 - Mejoras sobre las plantillas y Handlebars que permite el registro de funciones tanto en núcleo como en plugins.
 - Se añade comprobación de plantilla en el método getKML (impl).
+- Se añade a getLayerExtent y getExtentRecursive_ (WMS) la posibilidad de especificar una proyección de forma opcional.
 
 
 01/01/25 - Versión 1.0.0
