@@ -324,6 +324,11 @@
       "name": "printviewmanagement",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/printviewmanagement/printviewmanagement-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/printviewmanagement/printviewmanagement-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/printviewmanagement/printviewmanagement-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/printviewmanagement/printviewmanagement-1.0.0.ol.min.css"
@@ -339,6 +344,11 @@
       "name": "queryattributes",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/queryattributes/queryattributes-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/queryattributes/queryattributes-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/queryattributes/queryattributes-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/queryattributes/queryattributes-1.0.0.ol.min.css"
@@ -353,6 +363,11 @@
     {
       "name": "selectionzoom",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/selectionzoom/selectionzoom-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/selectionzoom/selectionzoom-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/selectionzoom/selectionzoom-1.0.0.ol.min.js",
