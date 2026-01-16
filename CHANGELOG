@@ -57,6 +57,7 @@
 - Implementa la lectura de iconos mediante proxy en caso de que no se encuentre en el mismo dominio que la aplicación y tenga el proxy activado para la leyenda en estilos generic de tipo punto.
 - Se sobrescribe el método inview de OL para que se muestren las capas desde el maxResolution especificado por el usuario.. Se comentan los patches optionsFromCapabilities y writePos_ para que funcionen como en OL.
 - Se implementan las capas externas y sus dependencias.
+- Añadido el método privado addUpClass_ para evitar choque con controles wmcselector, scale y scaleline.
 
 
 01/01/25 - Versión 1.0.0
