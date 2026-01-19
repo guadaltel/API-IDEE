@@ -323,8 +323,10 @@ export const projection = (projectionParameter) => {
   // string
   if (isString(projectionParameter)) {
     const baseProjection = projectionParameter.split(/\*/)[0].trim();
+    const units = projectionParameter.split(/\*/)[1]?.trim();
     if (/^(EPSG:)?\d+$/i.test(baseProjection)) {
       projectionVar.code = baseProjection;
+      projectionVar.units = units;
     } else {
       Exception(`El formato del parámetro projection no es correcto. </br>Se usará la proyección por defecto: ${IDEE.config.DEFAULT_PROJ}`);
     }
@@ -333,8 +335,10 @@ export const projection = (projectionParameter) => {
     // y max
     if (!isNull(projectionParameter.code)) {
       const baseProjection = projectionParameter.code.split(/\*/)[0].trim();
+      const units = projectionParameter.code.split(/\*/)[1]?.trim();
       if (/^(EPSG:)?\d+$/i.test(baseProjection)) {
         projectionVar.code = baseProjection;
+        projectionVar.units = units;
       } else {
         Exception(`El formato del parámetro projection no es correcto. </br>Se usará la proyección por defecto: ${IDEE.config.DEFAULT_PROJ}`);
       }
