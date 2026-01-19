@@ -157,6 +157,34 @@ export const getStrokePatern = (options, featureVariable, layer) => {
 };
 
 /**
+ * Esta función devuelve la posición relativa al terreno.
+ * Solo tendrá efecto si el parámetro height de la capa tiene valor.
+ *
+ * @public
+ * @function
+ *
+ * @param {Object} options Opciones.
+ * @param {Object} featureVariable Objetos geográficos.
+ * @param {Object} layer Capas.
+ *
+ * @return {Object} Objeto que indica la posición relativa al terreno.
+ * @api stable
+ */
+export const getHeightReference = (options, featureVariable, layer) => {
+  const opt = { };
+  if (!isNullOrEmpty(options.heightReference)) {
+    const heightReference = Simple.getValue(
+      options.heightReference,
+      featureVariable,
+      layer,
+    );
+    opt.heightReference = Object.values(HeightReference).includes(heightReference)
+      ? CesiumHeightReference[heightReference] : CesiumHeightReference.NONE;
+  }
+  return opt;
+};
+
+/**
  * Esta función devuelve la etiqueta.
  *
  * @public
@@ -208,7 +236,9 @@ export const getLabel = (options, featureVariable, layer) => {
         ? VerticalOrigin[baseline.toUpperCase()] : DEFAULT_BASELINE,
       text: textLabel === undefined ? undefined : String(textLabel),
       style: LabelStyle.FILL,
+      heightReference: getHeightReference(options, featureVariable, layer).heightReference,
     };
+
     if (!isNullOrEmpty(options.label.stroke)) {
       extend(labelText, {
         outlineColor: Color.fromCssColorString(
@@ -219,7 +249,7 @@ export const getLabel = (options, featureVariable, layer) => {
       }, true);
     }
     label = { label: new LabelGraphics(labelText) };
-    label.label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+    // label.label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
   }
   return label;
 };
@@ -232,34 +262,6 @@ export const getLabel = (options, featureVariable, layer) => {
  * @api stable
  */
 export const iconCache = {};
-
-/**
- * Esta función devuelve la posición relativa al terreno.
- * Solo tendrá efecto si el parámetro height de la capa tiene valor.
- *
- * @public
- * @function
- *
- * @param {Object} options Opciones.
- * @param {Object} featureVariable Objetos geográficos.
- * @param {Object} layer Capas.
- *
- * @return {Object} Objeto que indica la posición relativa al terreno.
- * @api stable
- */
-export const getHeightReference = (options, featureVariable, layer) => {
-  const opt = { };
-  if (!isNullOrEmpty(options.heightReference)) {
-    const heightReference = Simple.getValue(
-      options.heightReference,
-      featureVariable,
-      layer,
-    );
-    opt.heightReference = Object.values(HeightReference).includes(heightReference)
-      ? CesiumHeightReference[heightReference] : CesiumHeightReference.NONE;
-  }
-  return opt;
-};
 
 /**
  * Esta función devuelve el icono.
