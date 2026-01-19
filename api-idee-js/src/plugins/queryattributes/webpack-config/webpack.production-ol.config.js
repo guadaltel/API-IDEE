@@ -32,7 +32,7 @@ module.exports = {
       fs: false,
       path: false,
       crypto: false,
-      "assert": require.resolve("assert/"),
+      "assert": false,
     },
   },
   module: {
