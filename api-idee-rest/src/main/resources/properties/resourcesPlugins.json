@@ -4,6 +4,11 @@
       "name": "backimglayer",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/backimglayer/backimglayer-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/backimglayer/backimglayer-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/backimglayer/backimglayer-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/backimglayer/backimglayer-1.0.0.ol.min.css"
@@ -12,6 +17,26 @@
           "api-idee": "latest",
           "js": "${api-idee.url}plugins/backimglayer/backimglayer.ol.min.js",
           "css": "${api-idee.url}plugins/backimglayer/backimglayer.ol.min.css"
+        }
+      ]
+    },
+    {
+      "name": "basic",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/basic/basic-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/basic/basic-1.0.1.ol.min.css"
+        },
+        {
+          "api-idee": "1.0.0",
+          "js": "${api-idee.url}plugins/basic/basic-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/basic/basic-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/basic/basic.ol.min.js",
+          "css": "${api-idee.url}plugins/basic/basic.ol.min.css"
         }
       ]
     },
@@ -74,6 +99,11 @@
       "name": "help",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/help/help-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/help/help-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/help/help-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/help/help-1.0.0.ol.min.css"
@@ -129,6 +159,11 @@
       "name": "information",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/information/information-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/information/information-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/information/information-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/information/information-1.0.0.ol.min.css"
@@ -143,6 +178,11 @@
     {
       "name": "layerswitcher",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/layerswitcher/layerswitcher-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/layerswitcher/layerswitcher-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/layerswitcher/layerswitcher-1.0.0.ol.min.js",
@@ -178,6 +218,11 @@
     {
       "name": "locatorscn",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/locatorscn/locatorscn-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/locatorscn/locatorscn-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/locatorscn/locatorscn-1.0.0.ol.min.js",
@@ -294,6 +339,11 @@
       "name": "mousesrs",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/mousesrs/mousesrs-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/mousesrs/mousesrs-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/mousesrs/mousesrs-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/mousesrs/mousesrs-1.0.0.ol.min.css"
@@ -308,6 +358,11 @@
     {
       "name": "overviewmap",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/overviewmap/overviewmap-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/overviewmap/overviewmap-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/overviewmap/overviewmap-1.0.0.ol.min.js",
@@ -384,6 +439,11 @@
       "name": "sharemap",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/sharemap/sharemap-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/sharemap/sharemap-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/sharemap/sharemap-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/sharemap/sharemap-1.0.0.ol.min.css"
@@ -399,6 +459,11 @@
       "name": "storymap",
       "versions": [
         {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/storymap/storymap-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/storymap/storymap-1.0.1.ol.min.css"
+        },
+        {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/storymap/storymap-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/storymap/storymap-1.0.0.ol.min.css"
@@ -413,6 +478,11 @@
     {
       "name": "stylemanager",
       "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/stylemanager/stylemanager-1.0.1.ol.min.js",
+          "css": "${api-idee.url}plugins/stylemanager/stylemanager-1.0.1.ol.min.css"
+        },
         {
           "api-idee": "1.0.0",
           "js": "${api-idee.url}plugins/stylemanager/stylemanager-1.0.0.ol.min.js",
