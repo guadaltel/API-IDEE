@@ -142,8 +142,8 @@ export default class SaveFeature extends IDEE.impl.Control {
         const oSerializer = new XMLSerializer();
         const wfstRequestText = oSerializer.serializeToString(transactionToExec);
 
-        const fixurl = IDEE.config.ticket
-          ? `${this.layer_.url}&ticket=${IDEE.config.ticket}`
+        const fixurl = IDEE.config.TICKET
+          ? `${this.layer_.url}&ticket=${IDEE.config.TICKET}`
           : this.layer_.url;
         IDEE.remote.post(fixurl, wfstRequestText).then((response) => {
           // clears layer

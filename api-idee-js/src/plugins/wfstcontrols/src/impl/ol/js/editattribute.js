@@ -180,8 +180,8 @@ export default class EditAttribute extends IDEE.impl.Control {
 
       // closes the popup
       this.facadeMap_.removePopup(this.popup_);
-      const fixurl = IDEE.config.ticket
-        ? `${this.layer_.url}&ticket=${IDEE.config.ticket}`
+      const fixurl = IDEE.config.TICKET
+        ? `${this.layer_.url}&ticket=${IDEE.config.TICKET}`
         : this.layer_.url;
       IDEE.remote.post(fixurl, wfstRequestText).then((response) => {
         popupButton.classList.remove('m-savefeature-saving');
