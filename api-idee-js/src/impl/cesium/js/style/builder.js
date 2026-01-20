@@ -249,7 +249,6 @@ export const getLabel = (options, featureVariable, layer) => {
       }, true);
     }
     label = { label: new LabelGraphics(labelText) };
-    // label.label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
   }
   return label;
 };
@@ -594,6 +593,7 @@ export const getLineText = (options, featureVariable, layer) => {
         Simple.getValue(options.label.offset
           ? options.label.offset[1] : undefined, featureVariable, layer),
       ),
+      heightReference: getHeightReference(options, featureVariable, layer).heightReference,
     };
     if (!isNullOrEmpty(label.stroke)) {
       extend(labelText, {
@@ -605,7 +605,6 @@ export const getLineText = (options, featureVariable, layer) => {
       }, true);
     }
     textPathStyle = { label: new LabelGraphics(labelText) };
-    label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
   }
   return textPathStyle;
 };

@@ -23,6 +23,7 @@ import {
   defined,
   Ray,
   SceneMode,
+  Property,
 } from 'cesium';
 import proj4 from 'proj4';
 
@@ -976,48 +977,56 @@ class Utils {
    * @param {Object} geometry Geometría de Cesium.
    * @returns Coordenada central de la geometría.
    */
-  static getCenter(geometry) {
+  static getCenter(geometry, extrudedHeight = undefined) {
     let center;
     if (geometry instanceof PolylineGraphics) {
-      let totalLength = 0;
-      const segmentLengths = [];
-
-      // Calcular longitudes de cada segmento
-      for (let i = 0; i < geometry.positions.getValue().length - 1; i += 1) {
-        const distance = Cartesian3.distance(
-          geometry.positions.getValue()[i],
-          geometry.positions.getValue()[i + 1],
-        );
-        segmentLengths.push(distance);
-        totalLength += distance;
+      let positions = [];
+      // Extraer posiciones
+      if (Array.isArray(geometry)) {
+        positions = geometry;
+      } else if (geometry && geometry.positions) {
+        positions = geometry.positions.getValue
+          ? geometry.positions.getValue() : geometry.positions;
+      } else {
+        throw new Error('No se pudo extraer posiciones de la línea.');
       }
 
-      const halfLength = totalLength / 2;
-      let accumulatedLength = 0;
+      if (!positions || positions.length === 0) return null;
+      if (positions.length === 1) return positions[0];
 
-      // Encontrar el segmento donde se encuentra el punto medio
-      for (let i = 0; i < segmentLengths.length; i += 1) {
-        accumulatedLength += segmentLengths[i];
-        if (accumulatedLength >= halfLength) {
-          const overshoot = accumulatedLength - halfLength;
-          const ratio = (segmentLengths[i] - overshoot) / segmentLengths[i];
+      // Calcular longitudes acumuladas
+      let total = 0;
+      const segLens = [];
+      for (let i = 0; i + 1 < positions.length; i += 1) {
+        const L = Cartesian3.distance(positions[i], positions[i + 1]);
+        segLens.push(L);
+        total += L;
+      }
 
-          // Interpolación lineal entre los puntos
-          return Cartesian3.lerp(
-            geometry.positions.getValue()[i],
-            geometry.positions.getValue()[i + 1],
-            ratio,
-            new Cartesian3(),
-          );
+      // Buscar punto medio a lo largo de la línea
+      const half = total / 2;
+      let acc = 0;
+      for (let i = 0; i < segLens.length; i += 1) {
+        if (acc + segLens[i] >= half) {
+          const remain = half - acc;
+          const t = segLens[i] === 0 ? 0 : remain / segLens[i];
+          const mid = new Cartesian3();
+          Cartesian3.lerp(positions[i], positions[i + 1], t, mid);
+          return mid;
         }
+        acc += segLens[i];
       }
-    } else if (geometry instanceof PolygonGraphics) {
+
+      return positions[positions.length - 1];
+    }
+    if (geometry instanceof PolygonGraphics) {
       const positions = geometry.hierarchy.getValue().positions;
       let Cx = 0;
       let Cy = 0;
       let Cz = 0;
       let totalArea = 0;
 
+      // Calculamos el centroide ponderado por área
       for (let i = 1; i < positions.length - 1; i += 1) {
         const a = positions[0];
         const b = positions[i];
@@ -1027,6 +1036,7 @@ class Utils {
         const v2 = Cartesian3.subtract(c, a, new Cartesian3());
         const cross = Cartesian3.cross(v1, v2, new Cartesian3());
         const Ai = Cartesian3.magnitude(cross);
+
         const x = (a.x + b.x + c.x) / 3;
         const y = (a.y + b.y + c.y) / 3;
         const z = (a.z + b.z + c.z) / 3;
@@ -1037,7 +1047,55 @@ class Utils {
         Cz += Ai * Ri.z;
         totalArea += Ai;
       }
-      return new Cartesian3(Cx / totalArea, Cy / totalArea, Cz / totalArea);
+
+      let centroidCartesian = new Cartesian3(Cx / totalArea, Cy / totalArea, Cz / totalArea);
+
+      // Calculamos la normal del polígono para el offset lateral
+      const a = positions[0];
+      const b = positions[1];
+      let c = positions[2];
+      const v1 = Cartesian3.subtract(b, a, new Cartesian3());
+      const v2 = Cartesian3.subtract(c, a, new Cartesian3());
+      const normal = Cartesian3.cross(v1, v2, new Cartesian3());
+      Cartesian3.normalize(normal, normal);
+
+      // Aplicamos un pequeño offset lateral
+      const lateralOffset = 5; // metros
+      centroidCartesian = Cartesian3.add(
+        centroidCartesian,
+        Cartesian3.multiplyByScalar(normal, lateralOffset, new Cartesian3()),
+        new Cartesian3(),
+      );
+
+      // Convertimos a Cartographic para obtener lon/lat
+      const centroidCarto = Ellipsoid.WGS84.cartesianToCartographic(centroidCartesian);
+      const lon = centroidCarto.longitude;
+      const lat = centroidCarto.latitude;
+
+      // Calcula la cota "superior" del polígono
+      const vertexHeights = positions.map((p) => {
+        c = Ellipsoid.WGS84.cartesianToCartographic(p);
+        return (typeof c.height === 'number') ? c.height : 0;
+      });
+
+      let topHeight = Math.max.apply(null, vertexHeights.concat([
+        (typeof centroidCarto.height === 'number' ? centroidCarto.height : 0),
+      ]));
+
+      if (extrudedHeight) {
+        const extrH = extrudedHeight;
+        if (typeof extrH === 'number') topHeight = Math.max(topHeight, extrH);
+      }
+
+      if (geometry.height) {
+        const baseH = Property.getValueOrUndefined(geometry.height);
+        if (typeof baseH === 'number') topHeight = Math.max(topHeight, baseH);
+      }
+
+      // Offset vertical adicional
+      const verticalOffset = 300; // metros
+
+      return Cartesian3.fromRadians(lon, lat, topHeight + verticalOffset);
     }
     return center;
   }
