@@ -12,7 +12,7 @@ test('Probamos añadir controles desde API', async ({ page }) => {
 
   // Hacer petición a la API para obtener los controles
   const response = await page.evaluate(async () => {
-    const res = await fetch('https://componentes-desarrollo.idee.es/api-idee/api/actions/controls');
+    const res = await fetch(`${IDEE.config.API_IDEE_URL}api/actions/controls`);
     return await res.json();
   });
 
