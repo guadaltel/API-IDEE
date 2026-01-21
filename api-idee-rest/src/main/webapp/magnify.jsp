@@ -48,7 +48,7 @@
             <option value="BL">Abajo Izquierda (BL)</option>
         </select>
         <label for="inputLayers">Layers</label>
-        <input type="text" name="layers" id="inputLayers">
+        <input type="text" name="layers" id="inputLayers" value="OI.OrthoimageCoverage">
         <label for="inputZoomMax">Zoom Max</label>
         <input type="number" name="zoomMax" id="inputZoomMax" value="16">
         <label for="inputZoom">Zoom</label>
@@ -79,7 +79,7 @@
 
         const map = IDEE.map({
             container: 'mapjs',
-            layers: ['OSM'],
+            layers: ['OSM', 'WMTS*https://www.ign.es/wmts/pnoa-ma?*OI.OrthoimageCoverage*EPSG:25830*imagen*true*image/jpeg&projection=EPSG:25830&magnify=TL*OI.OrthoimageCoverage*16'],
             projection: 'EPSG:25830',
         });
 
@@ -109,8 +109,8 @@
         function cambiarTest() {
             let objeto = {};
             objeto.layers = inputLayers.value;
-            objeto.zoomMax = inputZoomMax.value;
-            objeto.zoom = inputZoom.value;
+            objeto.zoomMax = parseInt(inputZoomMax.value);
+            objeto.zoom = parseInt(inputZoom.value);
             objeto.position = selectPosition.options[selectPosition.selectedIndex].value;
             if (mp !== null) {
                 map.removePlugins(mp);
