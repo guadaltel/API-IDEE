@@ -1378,7 +1378,7 @@ export const getLegendGeoJSON = (parameter) => {
 };
 
 /**
- * Analiza el parámetro para obtener la leyenda de la capa GeoJSON.
+ * Analiza el parámetro para obtener el nombre de la capa GeoJSON.
  * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
  *
  * @public
