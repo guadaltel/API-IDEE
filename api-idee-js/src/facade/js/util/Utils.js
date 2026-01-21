@@ -857,6 +857,7 @@ const geometricTypes = [
   'geometrypropertytype',
   'multisurfacepropertytype',
   'multilinestringpropertytype',
+  'multicurvepropertytype',
   'surfacepropertytype',
   'geometrypropertytype',
   'geometryarraypropertytype',

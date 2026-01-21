@@ -554,6 +554,21 @@
           "css": "${api-idee.url}plugins/viewmanagement/viewmanagement.ol.min.css"
         }
       ]
+    },
+    {
+      "name": "wfstcontrols",
+      "versions": [
+        {
+          "api-idee": "1.1.0",
+          "js": "${api-idee.url}plugins/wfstcontrols/wfstcontrols-1.0.0.ol.min.js",
+          "css": "${api-idee.url}plugins/wfstcontrols/wfstcontrols-1.0.0.ol.min.css"
+        },
+        {
+          "api-idee": "latest",
+          "js": "${api-idee.url}plugins/wfstcontrols/wfstcontrols.ol.min.js",
+          "css": "${api-idee.url}plugins/wfstcontrols/wfstcontrols.ol.min.css"
+        }
+      ]
     }
   ]
 }
