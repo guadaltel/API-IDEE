@@ -47,6 +47,14 @@
       "styles": [
         "wfstcontrols.ol.min.css"
       ]
+    },
+    "cesium": {
+      "scripts": [
+        "wfstcontrols.cesium.min.js"
+      ],
+      "styles": [
+        "wfstcontrols.cesium.min.css"
+      ]
     }
   },
   "metadata": {
@@ -71,6 +79,6 @@
       "plugins": [{ "uuid": "", "name": "" }],
       "services": [{ "name": "", "description": "" }]
     },
-    "compatibility": ["4" ,"5", "6"]
+    "compatibility": ["1"]
   }
 }

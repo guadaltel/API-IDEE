@@ -96,12 +96,15 @@ class GML extends OLFormatGML {
   }
 
   /**
-   * @private
-   * @function
-   * @param {Document} data Document.
-   * @return {Object} parsed object.
-   * @api stable
-   */
+    * Procesa el nodo raíz del esquema o del informe de excepción y
+    * prepara el contexto inicial para el parseo de tipos.
+    *
+    * @ppublic
+    * @function
+    * @param {Object} context Contexto de parseo mutable usado por el manejador XML.
+    * @param {Document} node Documento XML completo recibido.
+    * @api
+    */
   readRoot(context, node) {
     const root = node.documentElement;
 
@@ -123,8 +126,8 @@ class GML extends OLFormatGML {
     * nodos hijos del elemento especificado.
     *
     * @function
-    * @param {Object} obj Objeto.
-    * @param {Element} node Nodo.
+    * @param {Object} obj Objeto de contexto a rellenar durante el recorrido.
+    * @param {Element} node Nodo cuyo arbol de hijos se recorre.
     * @public
     * @api
     */
@@ -154,7 +157,7 @@ class GML extends OLFormatGML {
     *
     * @function
     * @param {Element} node Nodo de tipo sección CDATA.
-    * @param {String} def Prefijo.
+    * @param {String} def Prefijo por defecto si no se encuentra el valor.
     * @return {String} Valor del nodo de tipo sección CDATA.
     * @public
     * @api
@@ -181,44 +184,54 @@ class GML extends OLFormatGML {
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Notifica un error cuando el servicio DescribeFeatureType devuelve una excepción.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto de parseo (no se modifica).
+    * @param {Document} node Nodo que contiene el mensaje de error.
+    * @api
+    */
   readogcServiceException(context, node) {
     Dialog.error(`Error en el DescribeFeatureType: ${node.textContent.trim()} `);
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Procesa el elemento principal xsd:schema y continúa con sus hijos.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto de parseo.
+    * @param {Document} node Nodo xsd:schema.
+    * @api
+    */
   readxsdschema(context, node) {
     this.runChildNodes(context, node);
   }
 
   /**
+   * Maneja un nodo xsd:import. Actualmente no requiere procesamiento adicional.
+   *
    * @private
    * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
+   * @param {Object} context Contexto de parseo.
+   * @param {Document} node Nodo xsd:import.
+   * @return {void}
+   * @api
    */
   readxsdimport(context, node) {
     // none
   }
 
   /**
+   * Inicia la definición de un tipo complejo, marcando que se está leyendo un FeatureType.
+   *
    * @private
    * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
+   * @param {Object} context Contexto donde se acumulan los FeatureTypes.
+   * @param {Document} node Nodo xsd:complexType.
+   * @return {void}
+   * @api
    */
   readxsdcomplexType(context, node) {
     this.readingFeatureType = true;
@@ -230,45 +243,54 @@ class GML extends OLFormatGML {
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Procesa el contenido complejo de un tipo, sin modificar el contexto directamente.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto de parseo.
+    * @param {Document} node Nodo xsd:complexContent.
+    * @api
+    */
   readxsdcomplexContent(context, node) {
     this.runChildNodes(context, node);
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Procesa una extensión de tipo dentro de un xsd:complexContent.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto de parseo.
+    * @param {Document} node Nodo xsd:extension.
+    * @api
+    */
   readxsdextension(context, node) {
     this.runChildNodes(context, node);
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Procesa la secuencia de elementos de un tipo complejo.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto de parseo.
+    * @param {Document} node Nodo xsd:sequence.
+    * @api
+    */
   readxsdsequence(context, node) {
     this.runChildNodes(context, node);
   }
 
   /**
-   * @private
-   * @function
-   * @param {Object} obj
-   * @param {Document} node
-   * @api stable
-   */
+    * Procesa cada elemento de la secuencia, diferenciando entre la definición del
+    * tipo y las propiedades de cada FeatureType.
+    *
+    * @private
+    * @function
+    * @param {Object} context Contexto con la colección de FeatureTypes.
+    * @param {Document} node Nodo xsd:element que define un atributo o el nombre del tipo.
+    * @api
+    */
   readxsdelement(context, node) {
     if (isNullOrEmpty(this.featureTypeIdx_)) {
       this.featureTypeIdx_ = 0;

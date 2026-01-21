@@ -464,7 +464,7 @@
       "name": "wfstcontrols",
       "versions": [
         {
-          "api-idee": "1.0.0",
+          "api-idee": "1.1.0",
           "js": "${api-idee.url}plugins/wfstcontrols/wfstcontrols-1.0.0.ol.min.js",
           "css": "${api-idee.url}plugins/wfstcontrols/wfstcontrols-1.0.0.ol.min.css"
         },
