@@ -19,39 +19,39 @@ window.capa = capa;
 mapa.addLayers(capa);
 
 // Example #1: Etiquetas en puntos 2D
-// const point = new Feature('point_2d', {
-//   'type': 'Feature',
-//   'properties': {},
-//   'geometry': {
-//     'type': 'Point',
-//     'coordinates': [
-//       -3.7038,
-//       40.4168,
-//     ],
-//   },
-// });
-// window.point = point;
-// capa.addFeatures([point]);
+const point = new Feature('point_2d', {
+  'type': 'Feature',
+  'properties': {},
+  'geometry': {
+    'type': 'Point',
+    'coordinates': [
+      -3.7038,
+      40.4168,
+    ],
+  },
+});
+window.point = point;
+capa.addFeatures([point]);
 
-// const estilo_point = new Generic({
-//   point: {
-//     radius: 20,
-//     fill: {
-//       color: 'red',
-//     },
-//     label: {
-//       text: 'Punto',
-//       font: 'bold 16px Courier New',
-//       scale: 0.8,
-//       align: 'center',
-//       baseline: 'center',
-//       color: 'blue',
-//       // offset: [0, -20],
-//     },
-//     heightReference: CLAMP_TO_TERRAIN,
-//   },
-// });
-// capa.setStyle(estilo_point);
+const estilo_point = new Generic({
+  point: {
+    radius: 20,
+    fill: {
+      color: 'red',
+    },
+    label: {
+      text: 'Punto',
+      font: 'bold 16px Courier New',
+      scale: 0.8,
+      align: 'center',
+      baseline: 'center',
+      color: 'blue',
+      // offset: [0, -20],
+    },
+    heightReference: CLAMP_TO_TERRAIN,
+  },
+});
+capa.setStyle(estilo_point);
 
 // Example #2: Etiquetas en puntos 3D
 // const point_3d = new Feature('point_3d', {
@@ -229,41 +229,41 @@ mapa.addLayers(capa);
 // capa.setStyle(estilo_line);
 
 // Example #6: Etiquetas en líneas 3D
-const line_3d = new Feature('line_3d', {
-  'type': 'Feature',
-  'properties': {},
-  'geometry': {
-    'type': 'LineString',
-    'coordinates': [
-      [-3.7982077734375097, 38.10767109165957, 10408.312],
-      [-7.725820078125008, 38.12495828299171, 0],
-    ],
-  },
-});
-window.line_3d = line_3d;
+// const line_3d = new Feature('line_3d', {
+//   'type': 'Feature',
+//   'properties': {},
+//   'geometry': {
+//     'type': 'LineString',
+//     'coordinates': [
+//       [-3.7982077734375097, 38.10767109165957, 408.312], // 10408.312
+//       [-7.725820078125008, 38.12495828299171, 0],
+//     ],
+//   },
+// });
+// window.line_3d = line_3d;
 
-capa.addFeatures([line_3d]);
+// capa.addFeatures([line_3d]);
 
-const estilo_line_3d = new Generic({
-  line: {
-    fill: {
-      color: 'green',
-      width: 5,
-    },
-    stroke: {
-      color: 'red',
-      width: 15,
-    },
-    label: {
-      text: 'Línea',
-      font: 'bold 16px Courier New',
-      scale: 0.8,
-      align: 'center',
-      baseline: 'bottom',
-      color: 'blue',
-      // offset: [0, -10],
-    },
-  },
-});
+// const estilo_line_3d = new Generic({
+//   line: {
+//     fill: {
+//       color: 'green',
+//       width: 5,
+//     },
+//     stroke: {
+//       color: 'red',
+//       width: 15,
+//     },
+//     label: {
+//       text: 'Línea',
+//       font: 'bold 16px Courier New',
+//       scale: 0.8,
+//       align: 'center',
+//       baseline: 'center',
+//       color: 'blue',
+//       offset: [0, -10],
+//     },
+//   },
+// });
 
-capa.setStyle(estilo_line_3d);
+// capa.setStyle(estilo_line_3d);

@@ -24,6 +24,7 @@ import {
   Ray,
   SceneMode,
   Property,
+  EllipsoidGeodesic,
 } from 'cesium';
 import proj4 from 'proj4';
 
@@ -980,41 +981,57 @@ class Utils {
   static getCenter(geometry, extrudedHeight = undefined) {
     let center;
     if (geometry instanceof PolylineGraphics) {
-      let positions = [];
-      // Extraer posiciones
+      const ellipsoid = Ellipsoid.WGS84;
+      let positions;
+
       if (Array.isArray(geometry)) {
         positions = geometry;
-      } else if (geometry && geometry.positions) {
+      } else if (geometry?.positions) {
         positions = geometry.positions.getValue
-          ? geometry.positions.getValue() : geometry.positions;
+          ? geometry.positions.getValue()
+          : geometry.positions;
       } else {
-        throw new Error('No se pudo extraer posiciones de la línea.');
+        throw new Error('No se pudieron extraer posiciones');
       }
 
       if (!positions || positions.length === 0) return null;
       if (positions.length === 1) return positions[0];
 
-      // Calcular longitudes acumuladas
-      let total = 0;
-      const segLens = [];
-      for (let i = 0; i + 1 < positions.length; i += 1) {
-        const L = Cartesian3.distance(positions[i], positions[i + 1]);
-        segLens.push(L);
-        total += L;
+      const cartos = positions.map((p) => ellipsoid.cartesianToCartographic(
+        p instanceof Cartesian3 ? p : Cartesian3.clone(p),
+      ));
+
+      let totalDistance = 0;
+      const segments = [];
+
+      for (let i = 0; i < cartos.length - 1; i += 1) {
+        const geodesic = new EllipsoidGeodesic(cartos[i], cartos[i + 1]);
+        const segmentDistance = geodesic.surfaceDistance;
+        segments.push({ carto1: cartos[i], carto2: cartos[i + 1], distance: segmentDistance });
+        totalDistance += segmentDistance;
       }
 
-      // Buscar punto medio a lo largo de la línea
-      const half = total / 2;
-      let acc = 0;
-      for (let i = 0; i < segLens.length; i += 1) {
-        if (acc + segLens[i] >= half) {
-          const remain = half - acc;
-          const t = segLens[i] === 0 ? 0 : remain / segLens[i];
-          const mid = new Cartesian3();
-          Cartesian3.lerp(positions[i], positions[i + 1], t, mid);
-          return mid;
+      if (totalDistance === 0) return positions[0];
+
+      const halfDistance = totalDistance / 2;
+      let accumulatedDistance = 0;
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const seg of segments) {
+        if (accumulatedDistance + seg.distance >= halfDistance) {
+          // Interpolación lineal en cartográficas
+          const fraction = (halfDistance - accumulatedDistance) / seg.distance;
+
+          // Interpolación LINEAL simple en coordenadas cartográficas
+          const midCarto = new Cartographic(
+            CesiumMath.lerp(seg.carto1.longitude, seg.carto2.longitude, fraction),
+            CesiumMath.lerp(seg.carto1.latitude, seg.carto2.latitude, fraction),
+            CesiumMath.lerp(seg.carto1.height || 0, seg.carto2.height || 0, fraction),
+          );
+
+          return ellipsoid.cartographicToCartesian(midCarto);
         }
-        acc += segLens[i];
+        accumulatedDistance += seg.distance;
       }
 
       return positions[positions.length - 1];
