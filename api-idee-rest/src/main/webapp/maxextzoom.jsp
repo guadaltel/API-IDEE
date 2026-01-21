@@ -73,10 +73,7 @@
         IDEE.language.setLang(urlParams.get('language') || 'es');
         const map = IDEE.map({
             container: 'mapjs',
-            zoom: 5,
-            maxZoom: 20,
-            minZoom: 4,
-            center: [-467062.8225, 4783459.6216],
+            maxExtent: [-3267535.078657374, 2900457.9904398364, 2248102.1864131317, 5693133.810152115],
             controls: ['scaleline']
         });
 

@@ -68,7 +68,7 @@ https://componentes.idee.es/api-idee?maxextzoom=position
 ```
 
 ```
-https://componentes.idee.es/api-idee?maxextzoom=TR
+https://componentes.idee.es/api-idee?maxextzoom=TR&maxextent=-3267535.078657374,2900457.9904398364,2248102.1864131317,5693133.810152115
 ```
 
 
@@ -86,7 +86,7 @@ Ejemplo de constructor:
 }
 ```
 ```
-https://componentes.idee.es/api-idee?maxextzoom=base64=eyJwb3NpdGlvbiI6IlRSIn0=
+https://componentes.idee.es/api-idee?maxextzoom=base64=eyJwb3NpdGlvbiI6IlRSIn0=&maxextent=-3267535.078657374,2900457.9904398364,2248102.1864131317,5693133.810152115
 ```
 
 ## Ejemplos de uso
@@ -94,7 +94,8 @@ https://componentes.idee.es/api-idee?maxextzoom=base64=eyJwb3NpdGlvbiI6IlRSIn0=
 ### Ejemplo 1
 ```javascript
   const map = IDEE.map({
-    container: 'map'
+    container: 'map',
+    maxExtent: [-3267535.078657374, 2900457.9904398364, 2248102.1864131317, 5693133.810152115],
   });
 
   const mp = new IDEE.plugin.MaxExtZoom({
@@ -106,7 +107,8 @@ https://componentes.idee.es/api-idee?maxextzoom=base64=eyJwb3NpdGlvbiI6IlRSIn0=
 
 ```javascript
   const map = IDEE.map({
-    container: 'map'
+    container: 'map',
+    maxExtent: [-3267535.078657374, 2900457.9904398364, 2248102.1864131317, 5693133.810152115],
   }); 
 
   const mp = new IDEE.plugin.MaxExtZoom();
