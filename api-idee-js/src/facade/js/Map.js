@@ -3768,7 +3768,7 @@ class Map extends Base {
       const oldProj = this.getProjection();
       projection = parameter.projection(projection);
 
-      if (oldProj.code !== projection.code) {
+      if (oldProj.code !== projection.code || asDefault === true) {
         this.getImpl().setProjection(projection);
         this._defaultProj = (this._defaultProj && (asDefault === true));
         this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
