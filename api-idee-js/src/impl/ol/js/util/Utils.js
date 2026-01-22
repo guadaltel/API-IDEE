@@ -4,8 +4,13 @@
 import Feature from 'IDEE/feature/Feature';
 import * as WKT from 'IDEE/geom/WKT';
 import { isNullOrEmpty, isString, generateRandom } from 'IDEE/util/Utils';
-import { extend, getWidth } from 'ol/extent';
-import { get as getProj, getTransform, transformExtent } from 'ol/proj';
+import { extend, getWidth, getCenter } from 'ol/extent';
+import {
+  get as getProj,
+  getTransform,
+  transformExtent,
+  getPointResolution,
+} from 'ol/proj';
 import OLFeature from 'ol/Feature';
 import RenderFeature from 'ol/render/Feature';
 import Point from 'ol/geom/Point';
@@ -372,46 +377,12 @@ class Utils {
     */
   static getCentroid(geometry) {
     let centroid;
-    let medianIdx;
-    let points;
     if (isNullOrEmpty(geometry)) {
       centroid = null;
     } else if (geometry instanceof RenderFeature) {
       centroid = geometry;
     } else {
-      switch (geometry.getType()) {
-        case 'Point':
-          centroid = geometry.getCoordinates();
-          break;
-        case 'LineString':
-        case 'LinearRing':
-          const coordinates = geometry.getCoordinates();
-          medianIdx = Math.floor(coordinates.length / 2);
-          centroid = coordinates[medianIdx];
-          break;
-        case 'Polygon':
-          centroid = Utils.getCentroid(geometry.getInteriorPoint());
-          break;
-        case 'MultiPoint':
-          points = geometry.getPoints();
-          medianIdx = Math.floor(points.length / 2);
-          centroid = Utils.getCentroid(points[medianIdx]);
-          break;
-        case 'MultiLineString':
-          const lineStrings = geometry.getLineStrings();
-          medianIdx = Math.floor(lineStrings.length / 2);
-          centroid = Utils.getCentroid(lineStrings[medianIdx]);
-          break;
-        case 'MultiPolygon':
-          points = geometry.getInteriorPoints();
-          centroid = Utils.getCentroid(points);
-          break;
-        case 'Circle':
-          centroid = geometry.getCenter();
-          break;
-        default:
-          return null;
-      }
+      centroid = getCenter(geometry.getExtent());
     }
     return centroid;
   }
@@ -694,6 +665,59 @@ class Utils {
       }
     }
     return Math.trunc(scale);
+  }
+
+  /**
+   * Este método obtiene la escala para una resolución dada.
+   *
+   * @function
+   * @param {Number} resolution Resolución del mapa.
+   * @param {View} view Vista del mapa.
+   * @param {Number} dpi DPI del mapa (por defecto 72).
+   * @returns {Number} Escala calculada.
+   * @public
+   * @api
+   */
+  static getScaleForResolution(resolution, view, dpi = 72) {
+    const projection = view.getProjection();
+    const center = view.getCenter();
+    const inchesPerMeter = 39.3700787;
+    const units = projection.getUnits();
+
+    const pointResolution = getPointResolution(projection, resolution, center, units);
+    const scale = pointResolution * inchesPerMeter * dpi;
+
+    return Math.round(scale);
+  }
+
+  /**
+   * Este método ajusta la resolución de la vista del mapa
+   * según la escala proporcionada.
+   *
+   * @function
+   * @param {View} view Vista del mapa.
+   * @param {String} inputValue Valor de entrada para la escala.
+   * @param {Number} dpi DPI del mapa (por defecto 72).
+   * @returns {Number} Resolución de la vista correspondiente a la escala.
+   * @public
+   * @api
+   */
+  static getCurrentScale(view, inputValue, dpi = 72) {
+    const inchesPerMeter = 39.3700787;
+    const scale = parseFloat(inputValue.replace(/\./g, ''));
+    const calculateResolution = (targetScale) => {
+      let resolution = targetScale / (inchesPerMeter * dpi);
+
+      for (let i = 0; i < 3; i + 1) {
+        const currentScale = this.getScaleForResolution(resolution, view, dpi);
+        const error = targetScale - currentScale;
+        resolution *= (targetScale / currentScale);
+
+        if (Math.abs(error) < 1) break;
+      }
+      return resolution;
+    };
+    return calculateResolution(scale);
   }
 }
 export default Utils;

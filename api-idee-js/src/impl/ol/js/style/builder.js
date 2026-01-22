@@ -178,6 +178,7 @@ export const getLabel = (options, featureVariable, layer) => {
       textBaseline: Object.values(Baseline).includes(baseline) ? baseline : DEFAULT_BASELINE,
       text: textLabel === undefined ? undefined : String(textLabel),
       rotation: Simple.getValue(options.label.rotation, featureVariable, layer),
+      overflow: Simple.getValue(options.label.overflow, featureVariable, layer),
     });
     if (!isNullOrEmpty(options.label.stroke)) {
       const { miterlimit, linedashoffset } = options.label.stroke;
@@ -300,7 +301,7 @@ export const getIconForm = (options, featureVariable, layer) => {
     }),
     stroke: options.icon.color ? new OLStyleStroke({
       color: Simple.getValue(options.icon.color, featureVariable, layer),
-      width: 1,
+      width: 2,
     }) : undefined,
     anchor: Simple.getValue(options.icon.anchor, featureVariable, layer),
     anchorXUnits: Simple.getValue(options.icon.anchorxunits, featureVariable, layer),

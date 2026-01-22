@@ -5,6 +5,7 @@
    /*box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 -1px 0px rgba(0, 0, 0, 0.02);*/
    padding: 0px;
    margin: 0px;
+   border: 2px solid white;
 }
 
 .m-wmcselector-container:before {
@@ -12,6 +13,8 @@
 }
 
 .m-wmcselector-select {
+   padding-left: 5px;
+   padding-right: 5px;
    border: none;
    background-color: #FEFEFE;
    color: #6C6C6C;
@@ -20,4 +23,8 @@
    outline: none;
    margin: 0px;
    -webkit-appearance: none;
+}
+
+.m-wmcselector-select > option {
+   color: #6C6C6C;
 }

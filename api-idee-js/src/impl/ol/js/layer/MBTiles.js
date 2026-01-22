@@ -1,7 +1,7 @@
 /**
  * @module IDEE/impl/layer/MBTiles
  */
-import { isNullOrEmpty, extend } from 'IDEE/util/Utils';
+import { isNullOrEmpty, isFunction, extend } from 'IDEE/util/Utils';
 import { get as getProj, transformExtent } from 'ol/proj';
 import OLLayerTile from 'ol/layer/Tile';
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -206,12 +206,20 @@ class MBTiles extends Layer {
 
   /**
    * Devuelve la extensión de la capa.
+   *
+   * @function
+   * @param {Function} callbackFn Función que se ejecuta cuando se obtiene la extensión.
    * @returns {Array} Devuelve la extensión de la capa.
+   * @api
    */
-  getMaxExtent() {
+  getMaxExtent(callbackFn) {
     const extent = this.maxExtent_ || this.getExtentFromProvider();
     if (!extent) {
       this.maxExtent_ = this.map.getExtent();
+    }
+
+    if (isFunction(callbackFn)) {
+      callbackFn(this.maxExtent_);
     }
     return this.maxExtent_;
   }
@@ -258,11 +266,10 @@ class MBTiles extends Layer {
           }
           const resolutions = generateResolutions(extent, DEFAULT_TILE_SIZE, this.maxZoomLevel_);
           this.getExtentFromProvider().then((reprojectedExtent) => {
-            this.maxExtent_ = this.maxExtent_ || reprojectedExtent || extent;
             this.createLayer({
               tileProvider,
               resolutions,
-              extent: this.maxExtent_,
+              extent: this.maxExtent_ || reprojectedExtent || extent,
               sourceExtent: extent,
               projection,
             });
@@ -472,23 +479,6 @@ class MBTiles extends Layer {
       equals = (this.name === obj.name);
     }
     return equals;
-  }
-
-  /**
-   * Este método devuelve una copia de la capa de esta instancia.
-   *
-   * @function
-   * @returns {ol.layer.Tile} Copia de la capa.
-   * @public
-   * @api
-   */
-  cloneOLLayer() {
-    let olLayer = null;
-    if (this.olLayer != null) {
-      const properties = this.olLayer.getProperties();
-      olLayer = new OLLayerTile(properties);
-    }
-    return olLayer;
   }
 }
 export default MBTiles;

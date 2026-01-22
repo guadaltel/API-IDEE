@@ -5,14 +5,24 @@ import MapImpl from 'impl/Map';
 import Base from './Base';
 import { getQuickLayers } from './api-idee';
 import {
-  isUndefined, isNull, isArray, isNullOrEmpty, isFunction, isObject, isString, normalize,
-  concatUrlPaths, escapeJSCode, getEnvolvedExtent,
+  isUndefined,
+  isNull,
+  isArray,
+  isNullOrEmpty,
+  isFunction,
+  isObject,
+  isString,
+  escapeJSCode,
+  getEnvolvedExtent,
+  getResolutionFromScale,
+  getImageMap,
+  generateResolutionsFromExtent,
 } from './util/Utils';
 import { addFileToMap } from './util/LoadFiles';
 import { getValue } from './i18n/language';
 import Exception from './exception/exception';
 import Label from './Label';
-import Popup from './Popup';
+// import Popup from './Popup';
 import Parameters from './parameter/Parameters';
 import * as parameter from './parameter/parameter';
 import * as EventType from './event/eventtype';
@@ -20,14 +30,7 @@ import FeaturesHandler from './handler/Feature';
 import Feature from './feature/Feature';
 import * as Dialog from './dialog';
 import Control from './control/Control';
-import GetFeatureInfo from './control/GetFeatureInfo';
-import Location from './control/Location';
-import Scale from './control/Scale';
-import Rotate from './control/Rotate';
-import ScaleLine from './control/ScaleLine';
-import Panzoom from './control/Panzoom';
-import Panzoombar from './control/Panzoombar';
-import BackgroundLayers from './control/BackgroundLayers';
+import WMCSelector from './control/WMCSelector';
 import Layer from './layer/Layer';
 import * as LayerType from './layer/Type';
 import Vector from './layer/Vector';
@@ -44,7 +47,7 @@ import * as Position from './ui/position';
 import GeoJSON from './layer/GeoJSON';
 import GeoTIFF from './layer/GeoTIFF';
 import MapLibre from './layer/MapLibre';
-import StylePoint from './style/Point';
+import StyleGeneric from './style/Generic';
 import MBTiles from './layer/MBTiles';
 import MBTilesVector from './layer/MBTilesVector';
 import XYZ from './layer/XYZ';
@@ -53,8 +56,9 @@ import OSM from './layer/OSM';
 import LayerGroup from './layer/LayerGroup';
 import Tiles3D from './layer/Tiles3D';
 import Terrain from './layer/Terrain';
+import WMC from './layer/WMC';
 import Attributions from './control/Attributions';
-import ImplementationSwitcher from './control/ImplementationSwitcher';
+import { buildControl, getPanelForControl } from './builder/builder';
 
 /**
  * @classdesc
@@ -89,6 +93,8 @@ class Map extends Base {
    * - viewExtent: Extensión de la vista.
    * - zoom: Zoom del mapa.
    * - zoomConstrains: Restricciones de zoom.
+   * - rotation: Rotación del mapa.
+   * - ticket: Ticket de autenticación.
    * @param { Mx.parameters.MapOptions } options Opciones personalizadas para la implementación
    * proporcionado por el usuario.
    * - verticalExaggeration: Exageración vertical de la escena. Si se establece a 1 no se aplica
@@ -173,9 +179,14 @@ class Map extends Base {
     this._areasContainer = null;
 
     /**
+     * Map: Ticket de autenticación.
+     */
+    this.ticket_ = null;
+
+    /**
      * Map: "Popup".
      */
-    this.popup_ = null;
+    this.popup_ = [];
 
     /**
      * Map: Indica si la proyección utilizada
@@ -241,6 +252,11 @@ class Map extends Base {
      */
     this.collectionCapabilities = [];
 
+    /**
+     * Map: Capas "GeoPackage"
+     */
+    this.geopackages = [];
+
     // Attribution Map
     // + El evento se añade aquí antes de llamar a addLayers
     this.evtSetAttributions_();
@@ -270,7 +286,7 @@ class Map extends Base {
       name: '__draw__',
     }, { displayInLayerSwitcher: false });
 
-    this.drawLayer_.setStyle(new StylePoint(Map.DRAWLAYER_STYLE));
+    this.drawLayer_.setStyle(new StyleGeneric(Map.DRAWLAYER_STYLE));
 
     if (!isNullOrEmpty(MapImpl.Z_INDEX)) {
       this.drawLayer_.setZIndex(MapImpl.Z_INDEX[LayerType.WFS] + 999);
@@ -298,6 +314,11 @@ class Map extends Base {
     if (!isNullOrEmpty(params.maxExtent)) {
       const zoomToMaxExtent = isNullOrEmpty(params.zoom) && isNullOrEmpty(params.bbox);
       this.setMaxExtent(params.maxExtent, zoomToMaxExtent);
+    }
+
+    // wmc
+    if (!isNullOrEmpty(params.wmc)) {
+      this.addWMC(params.wmc);
     }
 
     this.addQuickLayers(IDEE.config.terrain.default);
@@ -328,7 +349,7 @@ class Map extends Base {
     }
 
     // default TMS
-    if (isNullOrEmpty(params.layers) && !isArray(params.layers)) {
+    if (isNullOrEmpty(params.layers) && !isArray(params.layers) && isNullOrEmpty(params.wmc)) {
       this.addLayers(IDEE.config.baseLayer);
     }
 
@@ -348,12 +369,14 @@ class Map extends Base {
       }
       this.setZoom(zoom, inmeters);
     } else if (isNullOrEmpty(params.bbox)) {
-      this.setZoom(3);
+      this.setZoom(IDEE.config.DEFAULT_ZOOM);
     }
 
     // zoomConstrains
     if (!isNullOrEmpty(params.zoomConstrains)) {
       this.setZoomConstrains(params.zoomConstrains);
+    } else if (IDEE.config.MAP_VIEWER_ZOOM_CONSTRAINS !== '' && IDEE.config.MAP_VIEWER_ZOOM_CONSTRAINS !== undefined) {
+      this.setZoomConstrains(IDEE.config.MAP_VIEWER_ZOOM_CONSTRAINS);
     } else {
       this.setZoomConstrains(false);
     }
@@ -372,6 +395,13 @@ class Map extends Base {
     } else if (IDEE.config.MAX_ZOOM !== '') {
       const maxZoom = Number(IDEE.config.MAX_ZOOM);
       this.setMaxZoom(maxZoom);
+    }
+
+    // rotation
+    if (!isNullOrEmpty(params.rotation)) {
+      this.once(EventType.COMPLETED, () => {
+        this.setRotation(params.rotation);
+      });
     }
 
     // label
@@ -443,7 +473,7 @@ class Map extends Base {
    * @param {Object} options Parámetros del control.
    * @api
    */
-  createAttribution(options = {}) {
+  createAttribution(options = {}, control = null) {
     // Comprobar si existe el control
     if (this.getControls().some(({ name }) => name === 'attributions')) {
       return;
@@ -456,7 +486,7 @@ class Map extends Base {
       order,
     } = options;
     try {
-      const atribucionControl = new Attributions({
+      const atribucionControl = !isNullOrEmpty(control) ? control : new Attributions({
         map: this,
         scale,
         collectionsAttributions: collectionsAttributions.map((l) => {
@@ -598,7 +628,7 @@ class Map extends Base {
   }
 
   /**
-   * Este método obtiene las capas que no están en ningún grupo de capas.
+   * Este método obtiene las capas que no están en ningún grupo de capas o sección.
    *
    * @function
    * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Matriz de nombres de capas.
@@ -606,7 +636,8 @@ class Map extends Base {
    * @api
    */
   getRootLayers(layersParamVar) {
-    const layers = this.getLayers(layersParamVar).filter((l) => isNullOrEmpty(l.group));
+    const layers = this.getLayers(layersParamVar)
+      .filter((l) => isNullOrEmpty(l.group) && isNullOrEmpty(l.getSection()));
 
     return layers;
   }
@@ -725,6 +756,9 @@ class Map extends Base {
       switch (parameterVariable.type) {
         case 'WFS':
           layer = new WFS(layerParam, { style: parameterVariable.style });
+          break;
+        case 'WMC':
+          layer = new WMC(layerParam);
           break;
         case 'WMS':
           layer = new WMS(layerParam);
@@ -874,6 +908,73 @@ class Map extends Base {
   }
 
   /**
+   * Este método devuelve las secciones que tenga el mapa.
+   *
+   * @function
+   * @public
+   * @returns {Array<IDEE.layer.Section>} Secciones del mapa.
+   * @api
+   */
+  getSections() {
+    // checks if the implementation can manage layers
+    if (isUndefined(MapImpl.prototype.getSections)) {
+      Exception(getValue('exception').getsections_method);
+    }
+    return this.getImpl().getSections().sort(Map.LAYER_SORT);
+  }
+
+  /**
+   * Añade una sección al mapa.
+   *
+   * @public
+   * @function
+   * @param {Array<IDEE.layer.Section>} sections Secciones a añadir.
+   * @returns {IDEE.Map}
+   * @api
+   */
+  addSections(sections) {
+    let sect = sections;
+    // checks if the parameter is null or empty
+    if (isNull(sect)) {
+      Exception('No ha especificado ninguna sección');
+    }
+    // checks if the implementation can manage groups
+    if (isUndefined(MapImpl.prototype.addSections)) {
+      Exception(getValue('exception').addsections_method);
+    }
+    // parses parameters to Array
+    if (!isArray(sect)) {
+      sect = [sect];
+    }
+    // adds the groups
+    this.getImpl().addSections(sect);
+    return this;
+  }
+
+  /**
+   * Elimina una sección del mapa.
+   *
+   * @function
+   * @public
+   * @param {Array<IDEE.layer.Section>} sections Secciones a eliminar.
+   * @returns {IDEE.Map}
+   * @api
+   */
+  removeSections(sections) {
+    // checks if the parameter is null or empty
+    if (isNull(sections)) {
+      Exception('No ha especificado ninguna sección a eliminar');
+    }
+    // checks if the implementation can manage groups
+    if (isUndefined(this.getImpl().removeSections)) {
+      Exception(getValue('exception').removesections_method);
+    }
+    // removes the layers
+    this.getImpl().removeSections(sections);
+    return this;
+  }
+
+  /**
    * Este método devuelve los grupos que tenga el mapa.
    *
    * @function
@@ -971,6 +1072,147 @@ class Map extends Base {
     }
     // removes the layers
     this.getImpl().removeLayerGroups(layerGroups);
+    return this;
+  }
+
+  /**
+   * Este método obtiene las capas WMC añadidas al mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Opcional.
+   * - Matriz de capas de nombres, tipo WMC.
+   * @returns {Array<WMC>} Matriz de capas, tipo WMC.
+   * @api
+   */
+  getWMC(layersParamVar) {
+    let layersParam = layersParamVar;
+    // checks if the implementation can manage layers
+    if (isUndefined(MapImpl.prototype.getWMC)) {
+      Exception(getValue('exception').getwmc_method);
+    }
+
+    // parses parameters to Array
+    if (isNull(layersParam)) {
+      layersParam = [];
+    } else if (!isArray(layersParam)) {
+      layersParam = [layersParam];
+    }
+
+    // gets the parameters as Layer objects to filter
+    let filters = [];
+    if (layersParam.length > 0) {
+      filters = layersParam.map((layerParam) => {
+        return parameter.layer(layerParam, LayerType.WMC);
+      });
+    }
+
+    // gets the layers
+    const layers = this.getImpl().getWMC(filters).sort(Map.LAYER_SORT);
+
+    return layers;
+  }
+
+  /**
+   * Este método añade capas WMC al mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.WMC>} layersParam Colección u objeto de capa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addWMC(layersParamVar) {
+    let layersParam = layersParamVar;
+    if (!isNullOrEmpty(layersParam)) {
+      // checks if the implementation can manage layers
+      if (isUndefined(MapImpl.prototype.addWMC)) {
+        Exception(getValue('exception').addwmc_method);
+      }
+
+      // parses parameters to Array
+      if (!isArray(layersParam)) {
+        layersParam = [layersParam];
+      }
+
+      // gets the parameters as WMC objects to add
+      const wmcLayers = [];
+      layersParam.forEach((layerParam) => {
+        if (isObject(layerParam) && (layerParam instanceof WMC)) {
+          layerParam.setMap(this);
+          wmcLayers.push(layerParam);
+        } else if (!(layerParam instanceof Layer)) {
+          try {
+            const wmcLayer = new WMC(layerParam, layerParam.options);
+            wmcLayer.setMap(this);
+            wmcLayers.push(wmcLayer);
+          } catch (err) {
+            Dialog.error(err.toString());
+            throw err;
+          }
+        }
+      });
+
+      // adds the layers
+      this.getImpl().addWMC(wmcLayers);
+      this.fire(EventType.ADDED_LAYER, [wmcLayers]);
+      this.fire(EventType.ADDED_WMC, [wmcLayers]);
+
+      /* checks if it should create the WMC control to select WMC */
+      const addedWmcLayers = this.getWMC();
+      const wmcSelected = addedWmcLayers.filter((wmc) => wmc.selected === true)[0];
+      if (wmcSelected == null) {
+        addedWmcLayers[0].select();
+      }
+      if (addedWmcLayers.length > 1) {
+        this.removeControls('wmcselector');
+        this.addControls('wmcselector');
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Este método actualiza el control para seleccionar una capa WMC.
+   *
+   * @function
+   * @public
+   * @api
+   */
+  refreshWMCSelectorControl() {
+    this.removeControls('wmcselector');
+    if (this.getWMC().length === 1) {
+      this.getWMC()[0].select();
+    } else if (this.getWMC().length > 1) {
+      this.addControls(new WMCSelector());
+      const wmcSelected = this.getWMC().filter((wmc) => wmc.selected === true)[0];
+      if (wmcSelected == null) {
+        this.getWMC()[0].select();
+      }
+    }
+  }
+
+  /**
+   * Este método elimina las capas WMC del mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.WMC>} layersParam Matriz de capas de nombres que
+   * desea eliminar.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  removeWMC(layersParam) {
+    if (!isNullOrEmpty(layersParam)) {
+      // checks if the implementation can manage layers
+      if (isUndefined(MapImpl.prototype.removeWMC)) {
+        Exception(getValue('exception').removewmc_method);
+      }
+
+      // gets the layers
+      const wmcLayers = this.getWMC(layersParam);
+      if (wmcLayers.length > 0) {
+        // removes the layers
+        this.getImpl().removeWMC(wmcLayers);
+      }
+    }
     return this;
   }
 
@@ -1074,7 +1316,6 @@ class Map extends Base {
       // gets the layers
       const kmlLayers = this.getKML(layersParam);
       if (kmlLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [kmlLayers]);
         kmlLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1183,7 +1424,6 @@ class Map extends Base {
       // gets the layers
       const wmsLayers = this.getWMS(layersParam);
       if (wmsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wmsLayers]);
         // removes the layers
         this.getImpl().removeWMS(wmsLayers);
       }
@@ -1305,10 +1545,11 @@ class Map extends Base {
   }
 
   /**
-   * Este método agrega las capas de GeoJSON al mapa.
+   * Este método agrega las capas de tipo desconocido al mapa.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @function
-   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Colección u objeto de capa.
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParamVar Colección u objeto de capa.
+   * @api
    */
   addUnknowLayers_(layersParamVar) {
     let layersParam = layersParamVar;
@@ -1348,7 +1589,6 @@ class Map extends Base {
       // gets the layers
       const wfsLayers = this.getWFS(layersParam);
       if (wfsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wfsLayers]);
         wfsLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1461,7 +1701,6 @@ class Map extends Base {
       // gets the layers
       const geotiffLayers = this.getGeoTIFF(layersParam);
       if (geotiffLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [geotiffLayers]);
         geotiffLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1575,7 +1814,6 @@ class Map extends Base {
       // gets the layers
       const mapLibreLayers = this.getMapLibre(layersParam);
       if (mapLibreLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mapLibreLayers]);
         mapLibreLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1690,7 +1928,6 @@ class Map extends Base {
       // gets the layers
       const ogcapifLayers = this.getOGCAPIFeatures(layersParam);
       if (ogcapifLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [ogcapifLayers]);
         ogcapifLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1801,7 +2038,6 @@ class Map extends Base {
       // gets the layers
       const wmtsLayers = this.getWMTS(layersParam);
       if (wmtsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [wmtsLayers]);
         // removes the layers
         this.getImpl().removeWMTS(wmtsLayers);
       }
@@ -1860,7 +2096,6 @@ class Map extends Base {
       }
       const mvtLayers = this.getMVT(layersParam);
       if (mvtLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mvtLayers]);
         mvtLayers.forEach((layer) => {
           this.featuresHandler_.removeLayer(layer);
         });
@@ -1992,7 +2227,6 @@ class Map extends Base {
     if (!isNullOrEmpty(layersParam)) {
       const mbtilesLayers = this.getMBTiles(layersParam);
       if (mbtilesLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mbtilesLayers]);
         this.getImpl().removeMBTiles(mbtilesLayers);
       }
     }
@@ -2079,7 +2313,6 @@ class Map extends Base {
       }
       const mbtilesLayers = this.getMBTilesVector(layersParam);
       if (mbtilesLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [mbtilesLayers]);
         this.getImpl().removeMBTilesVector(mbtilesLayers);
       }
     }
@@ -2172,7 +2405,6 @@ class Map extends Base {
 
       const xyzLayers = this.getXYZs(layersParam);
       if (xyzLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [xyzLayers]);
         this.getImpl().removeXYZ(xyzLayers);
       }
     }
@@ -2265,7 +2497,6 @@ class Map extends Base {
 
       const tmsLayers = this.getTMS(layersParam);
       if (tmsLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [tmsLayers]);
         this.getImpl().removeTMS(tmsLayers);
       }
     }
@@ -2368,7 +2599,6 @@ class Map extends Base {
 
       const tiles3DLayers = this.getTiles3D(layersParam);
       if (tiles3DLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [tiles3DLayers]);
         this.getImpl().removeTiles3D(tiles3DLayers);
       }
     }
@@ -2468,9 +2698,144 @@ class Map extends Base {
 
       const terrainLayers = this.getTerrain(layersParam);
       if (terrainLayers.length > 0) {
-        this.fire(EventType.REMOVED_LAYER, [terrainLayers]);
         this.getImpl().removeTerrain(terrainLayers);
       }
+    }
+    return this;
+  }
+
+  /**
+   * Este método devuelve las capas GeoPackageTile del mapa.
+   *
+   * @function
+   * @param {Object} filters Opcional.
+   * @returns {Array<IDEE.layer.GeoPackageTile>} Capas del mapa.
+   * @api
+   */
+  getGeoPackageTile(filters) {
+    const layers = this.getImpl().getGeoPackageTile(filters).sort(Map.LAYER_SORT);
+
+    return layers;
+  }
+
+  /**
+   * Este método agrega las capas GeoPackageTile al mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.GeoPackageTile>} layersParam Colección u objeto
+   * de capa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addGeoPackageTile(layersParamVar) {
+    let layersParam = layersParamVar;
+    if (!isNullOrEmpty(layersParam)) {
+      // checks if the implementation can manage layers
+      if (isUndefined(MapImpl.prototype.addGeoPackageTile)) {
+        Exception(getValue('exception').addgeopackagetile_method);
+      }
+
+      // parses parameters to Array
+      if (!isArray(layersParam)) {
+        layersParam = [layersParam];
+      }
+
+      const geopackagetileLayers = [];
+      layersParam.forEach((layerParam) => {
+        let geoPackageTile;
+        if (isObject(layerParam) && layerParam.type === LayerType.GeoPackageTile) {
+          geoPackageTile = layerParam;
+        }
+        geopackagetileLayers.push(geoPackageTile);
+      });
+
+      // adds the layers
+      this.getImpl().addGeoPackageTile(geopackagetileLayers);
+      this.fire(EventType.ADDED_LAYER, [geopackagetileLayers]);
+      this.fire(EventType.ADDED_GEOPACKAGE_TILE, [geopackagetileLayers]);
+    }
+    return this;
+  }
+
+  /**
+   * Este método elimina las capas GeoPackageTile del mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Matriz de capas de nombres que
+   * desea eliminar.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  removeGeoPackageTile(layersParam) {
+    if (!isNullOrEmpty(layersParam)) {
+      if (isUndefined(MapImpl.prototype.removeGeoPackageTile)) {
+        Exception(getValue('exception').removegeopackagetile_method);
+      }
+
+      const geopackagetileLayers = this.getGeoPackageTile(layersParam);
+      if (geopackagetileLayers.length > 0) {
+        geopackagetileLayers.forEach((layer) => {
+          this.getFeatureHandler().removeLayer(layer);
+        });
+        this.getImpl().removeGeoPackageTile(geopackagetileLayers);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Este método agrega las capas GeoPackage al mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.GeoPackage>} layersParam Colección u objeto
+   * de capa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addGeoPackage(layersParamVar) {
+    let layersParam = layersParamVar;
+    if (!isNullOrEmpty(layersParam)) {
+      // parses parameters to Array
+      if (!isArray(layersParam)) {
+        layersParam = [layersParam];
+      }
+
+      layersParam.forEach((layerParam) => {
+        if (layerParam && layerParam.type === LayerType.GeoPackage) {
+          layerParam.addTo(this);
+          this.geopackages.push(layerParam);
+        }
+      });
+
+      this.fire(EventType.ADDED_LAYER, [this.geopackages]);
+      this.fire(EventType.ADDED_GEOPACKAGE, [this.geopackages]);
+    }
+    return this;
+  }
+
+  /**
+   * Este método elimina las capas GeoPackage del mapa.
+   *
+   * @function
+   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParamVar Matriz de capas de nombres que
+   * desea eliminar.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  removeGeoPackage(layersParamVar) {
+    let layersParam = layersParamVar;
+    if (!isNullOrEmpty(layersParam)) {
+      if (!isArray(layersParam)) {
+        layersParam = [layersParam];
+      }
+
+      const geopackageLayers = layersParam.filter((layerParam) => layerParam
+        && layerParam.type === LayerType.GeoPackage);
+      geopackageLayers.forEach((layer) => {
+        layer.removeLayers();
+        this.geopackages = this.geopackages
+          .filter((geopackage) => !geopackage.equals(layer));
+      });
     }
     return this;
   }
@@ -2542,6 +2907,24 @@ class Map extends Base {
   }
 
   /**
+   * Este método añade un estilo al control scaleline para que
+   * no choque con los controles scale y wmcselector cuando la pantalla
+   * no es lo suficientemente ancha y los tres controles han sido añadidos.
+   * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+   * @private
+   * @function
+   * @param {Object} panel panel del control.
+   * @api
+   */
+  addUpClass_(panel) {
+    panel.on(EventType.ADDED_TO_MAP, (html) => {
+      if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
+        this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
+      }
+    });
+  }
+
+  /**
    * Este método agrega controles especificados por el usuario.
    *
    * @public
@@ -2551,7 +2934,7 @@ class Map extends Base {
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  addControls(controlsParamVar) {
+  addControls(controlsParamVar, skipCheckDuplicate = false) {
     let controlsParam = controlsParamVar;
     if (!isNullOrEmpty(controlsParam)) {
       // checks if the implementation can manage layers
@@ -2568,151 +2951,57 @@ class Map extends Base {
       const controls = [];
       // for (let i = 0, ilen = controlsParam.length; i < ilen; i++) {
       controlsParam.forEach((controlParamVar) => {
-        let controlParam = controlParamVar;
+        const controlParam = controlParamVar;
         let control;
-        let panel;
         if (isString(controlParam)) {
-          controlParam = normalize(controlParam).split('*');
-          try {
-            switch (controlParam[0]) {
-              case Scale.NAME:
-                const paramsScale = {};
-                controlParam.forEach((p) => {
-                  if (p === 'true') paramsScale.exactScale = Boolean(p);
-                  // eslint-disable-next-line no-restricted-globals
-                  if (!isNaN(p)) paramsScale.order = Number(p);
-                });
-                control = new Scale(paramsScale);
-                panel = this.getPanels('map-info')[0];
-                if (isNullOrEmpty(panel)) {
-                  panel = new Panel('map-info', {
-                    collapsible: false,
-                    className: 'm-map-info',
-                    position: Position.BR,
-                    order: (paramsScale.order) ? paramsScale.order : null,
-                  });
-                  panel.on(EventType.ADDED_TO_MAP, (html) => {
-                    if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                      this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                    }
-                  });
-                }
-                panel.addClassName('m-with-scale');
-                break;
-              case ScaleLine.NAME:
-                control = new ScaleLine();
-                panel = new Panel(ScaleLine.NAME, {
-                  collapsible: false,
-                  className: 'm-scaleline',
-                  position: Position.BL,
-                  tooltip: 'Línea de escala',
-                });
-                panel.on(EventType.ADDED_TO_MAP, (html) => {
-                  if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
-                    this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
-                  }
-                });
-                break;
-              case Panzoombar.NAME:
-                control = new Panzoombar();
-                panel = new Panel(Panzoombar.NAME, {
-                  collapsible: false,
-                  className: 'm-panzoombar',
-                  position: Position.TL,
-                  tooltip: 'Nivel de zoom',
-                });
-                break;
-              case Panzoom.NAME:
-                control = new Panzoom();
-                panel = new Panel(Panzoom.NAME, {
-                  collapsible: false,
-                  className: 'm-panzoom',
-                  position: Position.TL,
-                });
-                break;
-              case Location.NAME:
-                control = new Location();
-                panel = new Panel(Location.NAME, {
-                  collapsible: false,
-                  className: 'm-location',
-                  position: Position.BR,
-                });
-                break;
-              case GetFeatureInfo.NAME:
-                control = new GetFeatureInfo(true);
-                break;
-              case Attributions.NAME:
-                if (controlParam.length === 2) {
-                  this.createAttribution({ collectionsAttributions: [controlParam[1]] });
-                } else {
-                  this.createAttribution();
-                }
+          control = buildControl(controlParam, this);
 
-                return;
-              case Rotate.NAME:
-                control = new Rotate();
-                panel = new Panel(Rotate.name, {
-                  collapsible: false,
-                  className: 'm-rotate',
-                  position: Position.TR,
-                });
-                break;
-              case BackgroundLayers.NAME:
-                control = new BackgroundLayers(this);
-                panel = new Panel(BackgroundLayers.NAME, {
-                  collapsible: false,
-                  position: Position.TR,
-                  className: 'm-plugin-baselayer',
-                });
-                break;
-              case ImplementationSwitcher.NAME:
-                control = new ImplementationSwitcher();
-                panel = new Panel(ImplementationSwitcher.NAME, {
-                  collapsible: true,
-                  position: Position.TR,
-                  className: 'm-implementationswitcher',
-                  collapsedButtonClass: 'g-cartografia-implementacion',
-                  tooltip: getValue('implementationswitcher').title,
-                });
-                break;
-              default:
-                if (/backgroundlayers\*([0-9])+\*(true|false)/.test(controlParam)) {
-                  const idLayer = controlParam.match(/backgroundlayers\*([0-9])+\*(true|false)/)[1];
-                  const visible = controlParam.match(/backgroundlayers\*([0-9])+\*(true|false)/)[2] === 'true';
-                  control = new BackgroundLayers(this, Number.parseInt(idLayer, 10), visible);
-
-                  panel = new Panel(BackgroundLayers.NAME, {
-                    collapsible: false,
-                    position: Position.TR,
-                    className: 'm-plugin-baselayer',
-                  });
-                } else {
-                  const getControlsAvailable = concatUrlPaths([IDEE.config.API_IDEE_URL, '/api/actions/controls']);
-                  Dialog.error(`El control ${controlParam} no está definido. Consulte los controles disponibles <a href='${getControlsAvailable}' target="_blank">aquí</a>`);
-                }
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn(e);
-            control = null;
+          // Skip if control is null (like Attributions which is handled separately)
+          if (isNullOrEmpty(control)) {
+            return;
           }
-        } else if (controlParam instanceof Control) {
+        } else if (isObject(controlParam) && controlParam instanceof Control) {
           control = controlParam;
-        } else {
-          Exception('El control "'.concat(controlParam).concat('" no es un control válido.'));
+          control.builderParams = control.options;
         }
 
-        if (!isNullOrEmpty(panel) && !panel.hasControl(control)) {
-          panel.addControls(control);
-          this.addPanels(panel);
-        } else if (!isNullOrEmpty(control)) {
-          control.addTo(this);
+        const params = control.builderParams || {};
+        const panel = getPanelForControl(control, this, params);
+
+        if (skipCheckDuplicate || !this.hasControl(control)) {
+          if (!isNullOrEmpty(panel) && !this.hasControl(control)) {
+            panel.addControls(control);
+            this.addPanels(panel);
+          } else if (!isNullOrEmpty(control)) {
+            control.addTo(this);
+          }
           controls.push(control);
         }
       });
+
       this.getImpl().addControls(controls);
     }
     return this;
+  }
+
+  /**
+   * Este método comprueba si el mapa tiene un control añadido o no.
+   *
+   * @function
+   * @param {String} control nombre del control a buscar.
+   * @returns {Boolean} Devuelve si el mapa tiene o no el control.
+   * @api
+   */
+  hasControl(control) {
+    let controlName = control;
+    if (control instanceof Control) {
+      controlName = control.name;
+    }
+    const controls = this.getControls();
+    const controlFiltered = controls.find((ctrl) => ctrl.name === controlName);
+    const hasControl = !isNullOrEmpty(controlFiltered);
+
+    return hasControl;
   }
 
   /**
@@ -2764,7 +3053,13 @@ class Map extends Base {
   getMaxExtent() {
     let maxExtent = this.userMaxExtent;
     if (isNullOrEmpty(maxExtent)) {
-      maxExtent = this.getProjection().getExtent();
+      const selectedWmc = this.getWMC().find((wmc) => wmc.selected);
+      if (!isNullOrEmpty(selectedWmc)) {
+        maxExtent = selectedWmc.getMaxExtent();
+      }
+      if (isNullOrEmpty(maxExtent)) {
+        maxExtent = this.getProjection().getExtent();
+      }
     }
     return maxExtent;
   }
@@ -2783,18 +3078,24 @@ class Map extends Base {
     return new Promise((resolve) => {
       let maxExtent = this.userMaxExtent;
       if (isNullOrEmpty(maxExtent)) {
-        const calculateExtents = this.getLayers().filter((layer) => layer.name !== '__draw__').map((l) => l.calculateMaxExtent());
-        Promise.all(calculateExtents).then((extents) => {
-          maxExtent = getEnvolvedExtent(extents);
-          if (isNullOrEmpty(maxExtent)) {
-            maxExtent = this.getProjection().getExtent();
-          }
-          // if the maxExtent is modified while are calculating maxExtent
-          if (!isNullOrEmpty(this.userMaxExtent)) {
-            maxExtent = this.userMaxExtent;
-          }
-          resolve(maxExtent);
-        });
+        const selectedWmc = !isUndefined(MapImpl.prototype.getWMC)
+          ? this.getWMC().find((wmc) => wmc.selected) : null;
+        if (isNullOrEmpty(selectedWmc)) {
+          const calculateExtents = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isVisible()).map((l) => l.calculateMaxExtent());
+          Promise.all(calculateExtents).then((extents) => {
+            maxExtent = getEnvolvedExtent(extents);
+            if (isNullOrEmpty(maxExtent)) {
+              maxExtent = this.getProjection().getExtent();
+            }
+            // if the maxExtent is modified while are calculating maxExtent
+            if (!isNullOrEmpty(this.userMaxExtent)) {
+              maxExtent = this.userMaxExtent;
+            }
+            resolve(maxExtent);
+          });
+        } else {
+          selectedWmc.calculateMaxExtent().then(resolve);
+        }
       } else {
         resolve(maxExtent);
       }
@@ -3151,6 +3452,56 @@ class Map extends Base {
   }
 
   /**
+   * Este método establece el estado de multiWorld
+   * instancia del mapa.
+   *
+   * @public
+   * @function
+   * @param {Boolean} multiWorld Nuevo valor.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  setMultiWorld(multiWorld) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(multiWorld)) {
+      Exception(getValue('exception').no_multiWorld);
+    }
+
+    if (isUndefined(MapImpl.prototype.setMultiWorld)) {
+      Exception(getValue('exception').setMultiWorld_method);
+    }
+
+    try {
+      const multiWorldParam = parameter.multiWorld(multiWorld);
+      this.getImpl().setMultiWorld(multiWorldParam);
+    } catch (err) {
+      Dialog.error(err.toString());
+      throw err;
+    }
+
+    return this;
+  }
+
+  /**
+   * Este método obtiene el estado actual de
+   * multiWorld de la instancia del mapa.
+   *
+   * @public
+   * @function
+   * @returns {Boolean} Valor actual.
+   * @api
+   */
+  getMultiWorld() {
+    if (isUndefined(MapImpl.prototype.getMultiWorld)) {
+      Exception(getValue('exception').getMultiWorld_method);
+    }
+
+    const multiWorld = this.getImpl().getMultiWorld();
+
+    return multiWorld;
+  }
+
+  /**
    * Este método establece el centro para esta
    * instancia del mapa.
    *
@@ -3305,14 +3656,16 @@ class Map extends Base {
    * @public
    * @function
    * @param {String|Array<String>|Array<Number>} resolutionsParam Las resoluciones.
+   * @param {Boolean} optional Indica si las resoluciones son opcionales.
+   * @param {Boolean} propagateToWMS Indica si las resoluciones se deben propagar a las capas WMS.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  setResolutions(resolutionsParam) {
+  setResolutions(resolutionsParam, optional, propagateToWMS = true) {
     // checks if the param is null or empty
-    if (isNullOrEmpty(resolutionsParam)) {
-      Exception(getValue('exception').no_resolutions);
-    }
+    // if (isNullOrEmpty(resolutionsParam)) {
+    //   Exception(getValue('exception').no_resolutions);
+    // }
 
     // checks if the implementation can set the setResolutions
     if (isUndefined(MapImpl.prototype.setResolutions)) {
@@ -3322,7 +3675,7 @@ class Map extends Base {
     // parses the parameter
     const resolutions = parameter.resolutions(resolutionsParam);
 
-    this.getImpl().setResolutions(resolutions);
+    this.getImpl().setResolutions(resolutions, optional, propagateToWMS);
 
     return this;
   }
@@ -3393,7 +3746,7 @@ class Map extends Base {
    *
    * @public
    * @function
-   * @param {String|Mx.Projection} projection EL "bbox".
+   * @param {String|Mx.Projection} projectionParam Proyección a aplicar al mapa.
    * @param {Boolean} asDefault Utiliza la proyección por defecto.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
@@ -3414,9 +3767,12 @@ class Map extends Base {
     try {
       const oldProj = this.getProjection();
       projection = parameter.projection(projection);
-      this.getImpl().setProjection(projection);
-      this._defaultProj = (this._defaultProj && (asDefault === true));
-      this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
+
+      if (oldProj.code !== projection.code) {
+        this.getImpl().setProjection(projection);
+        this._defaultProj = (this._defaultProj && (asDefault === true));
+        this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
+      }
     } catch (err) {
       Dialog.error(err.toString());
       if (String(err).indexOf('El formato del parámetro projection no es correcto') >= 0) {
@@ -3493,6 +3849,32 @@ class Map extends Base {
   }
 
   /**
+   * Este método agrega plugins.
+   *
+   * @public
+   * @function
+   * @param {Array<Plugin>} plugins  Plugins para añadir al mapa.
+   * @returns {Map} Devuelve el estado del mapa.
+   * @api
+   */
+  addPlugins(plugins) {
+    // checks if the param is null or empty
+    if (isNullOrEmpty(plugins)) {
+      Exception(getValue('exception').no_plugins);
+    }
+    let allPlugins = plugins;
+    if (!isArray(plugins)) {
+      allPlugins = [plugins];
+    }
+
+    allPlugins.forEach((plugin) => {
+      this.addPlugin(plugin);
+    });
+
+    return this;
+  }
+
+  /**
    * Este método elimina los complementos especificados del mapa.
    *
    * @function
@@ -3533,20 +3915,25 @@ class Map extends Base {
    */
   getEnvolvedExtent() {
     return new Promise((resolve) => {
-      // 1 check the WMC extent
-      const visibleBaseLayer = this.getBaseLayers().find((layer) => layer.isVisible());
-      if (!isNullOrEmpty(visibleBaseLayer)) {
-        resolve(visibleBaseLayer.getMaxExtent(resolve));
+      const wmcLayer = this.getWMC().find((wmc) => wmc.selected);
+      if (!isNullOrEmpty(wmcLayer)) {
+        wmcLayer.getMaxExtent(resolve);
       } else {
-        const layers = this.getLayers().filter((layer) => layer.name !== '__draw__');
-        Promise.all(layers.map((layer) => layer.calculateMaxExtent()))
-          .then((extents) => {
-            const extentsToCalculate = isNullOrEmpty(extents)
-              ? [this.getProjection().getExtent()]
-              : extents;
-            const envolvedMaxExtent = getEnvolvedExtent(extentsToCalculate);
-            resolve(envolvedMaxExtent);
-          });
+        // 1 check the WMC extent
+        const visibleBaseLayer = this.getBaseLayers().find((layer) => layer.isVisible());
+        if (!isNullOrEmpty(visibleBaseLayer)) {
+          resolve(visibleBaseLayer.getMaxExtent(resolve));
+        } else {
+          const layers = this.getLayers().filter((layer) => layer.name !== '__draw__');
+          Promise.all(layers.map((layer) => layer.calculateMaxExtent()))
+            .then((extents) => {
+              const extentsToCalculate = isNullOrEmpty(extents)
+                ? [this.getProjection().getExtent()]
+                : extents;
+              const envolvedMaxExtent = getEnvolvedExtent(extentsToCalculate);
+              resolve(envolvedMaxExtent);
+            });
+        }
       }
     });
   }
@@ -3593,6 +3980,21 @@ class Map extends Base {
     // }
 
     return this;
+  }
+
+  /**
+   * Este método devuelve el ticket, si se ha establecido, para controlar capas seguras.
+   *
+   * @public
+   * @function
+   * @returns {String} Devuelve el ticket.
+   * @api
+   */
+  getTicket() {
+    if (!isNullOrEmpty(this.ticket_)) {
+      return this.ticket_;
+    }
+    return IDEE.config.TICKET;
   }
 
   /**
@@ -3644,16 +4046,17 @@ class Map extends Base {
   }
 
   /**
-   * Añade la etiqueta.
+   * Añade la etiqueta. Es posible añadir multiples etiquetas a la vez.
    *
    * @function
-   * @param {Array<string>|Array<Mx.parameters.Layer>} layersParam Colecciones de etiquetas.
+   * @param {Label|Array<Label>} labelParam Estquetas o colecciones de etiquetas a añadir.
+   * @param {Array} coordParam Array con las coordenadas de las etiquetas,
+   * o conjunto de Arrays de coordenadas.
+   * @param {boolean} removePrevious Opcional, indica si se eliminan o no las etiquetas anteriores.
+   * Si se añaden multiples etiquetas y el valor no es false, solo añade la última etiqueta.
    * @api
    */
-  addLabel(labelParam, coordParam) {
-    const panMapIfOutOfView = labelParam.panMapIfOutOfView === undefined
-      ? true
-      : labelParam.panMapIfOutOfView;
+  addLabel(labelParam, coordParam, removePrevious = true) {
     // checks if the param is null or empty
     if (isNullOrEmpty(labelParam)) {
       Exception(getValue('exception').no_projection);
@@ -3667,40 +4070,66 @@ class Map extends Base {
     let text = null;
     let coord = null;
 
-    // object
-    if (isObject(labelParam)) {
-      text = escapeJSCode(labelParam.text);
-      coord = labelParam.coord;
-    } else {
-      // string
-      text = escapeJSCode(labelParam);
-      coord = coordParam;
+    let arrayLabel = labelParam;
+    let arrayCoordinate = coordParam;
+
+    if (!isArray(labelParam)) {
+      arrayLabel = [labelParam];
     }
 
-    if (isNullOrEmpty(coord)) {
-      coord = this.getCenter();
-    } else {
-      coord = parameter.center(coord);
+    if (!isUndefined(coordParam) && !isArray(coordParam[0])) {
+      arrayCoordinate = [coordParam];
+    } else if (isUndefined(coordParam)) {
+      arrayCoordinate = [];
     }
 
-    if (isNullOrEmpty(coord)) {
-      this.getInitCenter_().then((initCenter) => {
-        const label = new Label(text, initCenter, panMapIfOutOfView);
-        this.getImpl().addLabel(label);
-      });
-    } else {
-      const label = new Label(text, coord, panMapIfOutOfView);
-      this.getImpl().addLabel(label);
-    }
+    arrayLabel.forEach((element, index) => {
+      const panMapIfOutOfView = element.panMapIfOutOfView === undefined
+        ? true
+        : labelParam.panMapIfOutOfView;
+
+      // object
+      if (isObject(element)) {
+        text = escapeJSCode(element.text);
+        coord = element.coord;
+      } else {
+        // string
+        text = escapeJSCode(element);
+        coord = arrayCoordinate[index];
+      }
+
+      if (isNullOrEmpty(coord)) {
+        coord = this.getCenter();
+      } else {
+        if (isString(coord) && coord.indexOf('[' === -1)) {
+          coord = coord.split(',');
+        } else if (isString(coord[0])) {
+          coord = coord[0].split(',');
+        } else if (isObject(coord[0])) {
+          coord = coord[0];
+        }
+        coord = parameter.center(coord);
+      }
+
+      if (isNullOrEmpty(coord)) {
+        this.getInitCenter_().then((initCenter) => {
+          const label = new Label(text, initCenter, panMapIfOutOfView);
+          this.getImpl().addLabel(label, removePrevious);
+        });
+      } else {
+        const label = new Label(text, coord, panMapIfOutOfView);
+        this.getImpl().addLabel(label, removePrevious);
+      }
+    });
 
     return this;
   }
 
   /**
-   * Devuelve las etiquetas.
+   * Devuelve la etiqueta.
    *
    * @function
-   * @returns {Array<object>} Devuelve las etiquetas.
+   * @returns {Array<Label>} Devuelve las etiquetas.
    * @api
    */
   getLabel() {
@@ -3708,14 +4137,26 @@ class Map extends Base {
   }
 
   /**
+   * Devuelve las etiquetas.
+   *
+   * @function
+   * @returns {Array<Label>} Devuelve las etiquetas.
+   * @api
+   */
+  getLabels() {
+    return this.getImpl().getLabels();
+  }
+
+  /**
    * Elimina las etiquetas.
    *
    * @function
+   * @param {label|Array<Label>} label Etiqueta o array de etiquetas a eliminar.
    * @returns {Array<object>} Devuelve las etiquetas.
    * @api
    */
-  removeLabel() {
-    return this.getImpl().removeLabel();
+  removeLabel(label) {
+    return this.getImpl().removeLabel(label);
   }
 
   /**
@@ -3929,60 +4370,116 @@ class Map extends Base {
   }
 
   /**
-   * Devuelve "Popup".
+   * Devuelve "Popup", en caso de existir más de un popup en el mapa devolverá el primero añadido.
    *
    * @function
    * @api
-   * @returns {Popup} Devuelve "Popup".
+   * @returns {Popup} Devuelve "Popup". Si hay más de uno,devolverá el primero añadido en el mapa.
    */
   getPopup() {
-    return this.popup_;
+    let value = null;
+    if (this.popup_.length === 0) {
+      value = null;
+    } else {
+      value = this.popup_[0];
+    }
+    return value;
   }
 
   /**
-   * Elimina "Popup".
+   * Devuelve todos los "popup" añadidos al mapa.
    *
    * @function
    * @api
+   * @returns {Array<Popup>} Devuelve todos los "popup".
+   */
+  getPopups() {
+    let value = null;
+    if (this.popup_.length === 0) {
+      value = null;
+    } else if (this.popup_.length >= 1) {
+      value = this.popup_;
+    }
+    return value;
+  }
+
+  /**
+   * Elimina "Popup". Es posible eliminar multiples a la vez.
+   *
+   * @function
+   * @param {popup|Array<Popup>} popup "Popup" o array de "popup" a eliminar.
+   * @api
    * @returns {Map} Devuelve el estado del mapa.
    */
-  removePopup() {
+  removePopup(popup) {
     // checks if the implementation can add popups
     if (isUndefined(MapImpl.prototype.removePopup)) {
       Exception(getValue('exception').removepopup_method);
     }
 
-    if (!isNullOrEmpty(this.popup_)) {
-      this.getImpl().removePopup(this.popup_);
-      this.popup_.destroy();
-      this.popup_ = null;
+    if (isNullOrEmpty(popup)) {
+      this.popup_.forEach((elm) => {
+        this.getImpl().removePopup(elm);
+        elm.destroy();
+      });
+      this.popup_ = [];
+    } else if (isArray(popup)) {
+      for (let i = popup.length - 1; i >= 0; i -= 1) {
+        const elm = popup[i];
+        const find = this.popup_.findIndex((element) => element.getId() === elm.getId());
+        this.getImpl().removePopup(this.popup_[find]);
+        this.popup_[find].destroy();
+        this.popup_.splice(find, 1);
+      }
+    } else {
+      this.getImpl().removePopup(popup);
+      popup.destroy();
+      this.popup_.forEach((elm, index) => {
+        if (elm.getId() === popup.getId()) {
+          this.popup_.splice(index, 1);
+        }
+      });
     }
-
     return this;
   }
 
   /**
-   * Añade el "Popup".
+   * Añade el "Popup". Es posible añadir multiples "Popup" a la vez.
    *
    * @function
+   * @param {popup|Array<Popup>} popup "Popup" o array de "Popup" a añadir.
+   * @param {Array} coordinate Array con las coordenadas del popup,
+   * o conjunto de Arrays de coordenadas.
+   * @param {boolean} removePrevious Opcional, indica si se eliminan o no los popups anteriores.
+   * Si se añaden multiples popups y el valor no es false, solo añade el último popup.
    * @api
    * @returns {Map} Devuelve el estado del mapa.
    */
-  addPopup(popup, coordinate) {
+  addPopup(popup, coordinate, removePrevious = true) {
     // checks if the param is null or empty
     if (isNullOrEmpty(popup)) {
       Exception(getValue('exception').no_popup);
     }
 
-    if (!(popup instanceof Popup)) {
-      Exception(getValue('exception').invalid_popup);
+    let arrayPopup = popup;
+    let arrayCoordinate = coordinate;
+
+    if (!isArray(popup)) {
+      arrayPopup = [popup];
     }
 
-    if (!isNullOrEmpty(this.popup_)) {
-      this.removePopup();
+    if (!isArray(coordinate[0])) {
+      arrayCoordinate = [coordinate];
     }
-    this.popup_ = popup;
-    this.popup_.addTo(this, coordinate);
+
+    arrayPopup.forEach((popupAux, index) => {
+      if (removePrevious) {
+        this.removePopup(this.popup_);
+        this.popup_ = [];
+      }
+      this.popup_.push(popupAux);
+      popupAux.addTo(this, arrayCoordinate[index]);
+    });
 
     return this;
   }
@@ -4011,7 +4508,25 @@ class Map extends Base {
    * @api
    */
   on(eventType, listener, optThis) {
-    super.on(eventType, listener, optThis);
+    const idEvent = super.on(eventType, listener, optThis);
+    if ((eventType === EventType.COMPLETED) && (this._finishedMap === true)) {
+      this.fire(EventType.COMPLETED);
+    }
+    return idEvent;
+  }
+
+  /**
+   * Establece la devolución de llamada cuando se carga la instancia.
+   *
+   * @public
+   * @function
+   * @param {IDEE.evt} eventType Tipo de evento.
+   * @param {Function} listener "Callback".
+   * @param {Object} optThis Opciones de la instancia del mapa.
+   * @api
+   */
+  once(eventType, listener, optThis) {
+    super.once(eventType, listener, optThis);
     if ((eventType === EventType.COMPLETED) && (this._finishedMap === true)) {
       this.fire(EventType.COMPLETED);
     }
@@ -4155,6 +4670,32 @@ class Map extends Base {
   }
 
   /**
+   * Establece los niveles de zoom del mapa aplicando las resoluciones correspondientes.
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Number} zoomLevels Niveles de zoom.
+   */
+  setZoomLevels(zoomLevels) {
+    if (!isUndefined(zoomLevels) && !isNullOrEmpty(zoomLevels)) {
+      this.calculateMaxExtent().then((extent) => {
+        const zoom = this.getZoom();
+        const size = this.getMapImpl().getSize();
+        const units = this.getProjection().units;
+        const resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
+        this.setResolutions(resolutions, true);
+        IDEE.config.ZOOM_LEVELS = zoomLevels;
+        if (zoom < zoomLevels) {
+          this.setZoom(zoom);
+        }
+      }).catch((error) => {
+        throw error;
+      });
+    }
+  }
+
+  /**
    * Este método aplica un color al fondo del mapa
    *
    * @function
@@ -4187,6 +4728,147 @@ class Map extends Base {
   get areasContainer() {
     return this._areasContainer;
   }
+
+  /**
+   * Función que devuelve la rotación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {number} Devuelve la rotación del mapa.
+   */
+  getRotation() {
+    if (isUndefined(MapImpl.prototype.getRotation)) {
+      Exception(getValue('exception').no_get_rotation_method);
+    }
+    return (this.getImpl().getRotation()) * (180 / Math.PI);
+  }
+
+  /**
+   * Función que modifica la rotación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @param {number} rotation Valor que indica cuanto va a rotar el mapa.
+   */
+  setRotation(rotation) {
+    if (isUndefined(MapImpl.prototype.setRotation)) {
+      Exception(getValue('exception').no_set_rotation_method);
+    }
+    this.getImpl().setRotation(rotation * (Math.PI / 180));
+  }
+
+  /**
+   * Este método establece la escala más cercana para esta
+   * instancia del mapa.
+   *
+   * @public
+   * @function
+   * @param {Number} scale Escala.
+   * @api
+   */
+  setToClosestScale(scale) {
+    const resolution = getResolutionFromScale(scale, this.getProjection().units);
+    this.getImpl().setToClosestScale(resolution);
+  }
+
+  /**
+   * Función que obtiene el nombre de la implementación del mapa.
+   *
+   * @function
+   * @public
+   * @api
+   * @return {string} Devuelve el nombre de la implementación.
+   */
+  getImplementation() {
+    return this.getImpl().getImplementation();
+  }
+
+  /**
+   * Este método devuelve una captura de pantalla del mapa.
+   *
+   * @function
+   * @public
+   * @param {IDEE.Map} map Mapa del que se obtiene el canvas.
+   * @param {String} type Formato de la imagen resultante.
+   * @param {HTMLCanvasElement} canva Elemento canvas.
+   * @param {Boolean} isPromise Si tiene que devolver una promesa (MapLibre).
+   * @api
+   * @returns {String} Imagen en base64
+   */
+  getImageMap(type = 'image/jpeg', canva = undefined, isPromise = false) {
+    return getImageMap(this, type, canva, isPromise);
+  }
+
+  /**
+   * Este método controla si la interacción de zoom con la rueda del ratón está activa o no.
+   * El valor por defecto es true
+   *
+   * @function
+   * @public
+   * @api
+   * @param {Boolean} active determina si se activa o desactiva el zoom.
+   */
+  enableMouseWheel(active) {
+    this.getImpl().enableMouseWheel(active);
+  }
+
+  /**
+   * Método que devuelve las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {Array<IDEE.Layers>} capas superpuestas.
+   * @api
+   */
+  getOverlayLayers() {
+    const layers = this.getLayers().filter((layer) => layer.name !== '__draw__' && layer.isBase === false);
+    return layers;
+  }
+
+  /**
+   * Método que elimina todas las capas superpuestas añadidas al mapa.
+   *
+   * @function
+   * @public
+   * @returns {IDEE.Map} mapa
+   * @api
+   */
+  removeOverlayLayers() {
+    const layers = this.getOverlayLayers();
+    this.removeLayers(layers);
+    return this;
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   */
+  enablePan(active) {
+    this.getImpl().enablePan(active);
+  }
+
+  /**
+   * Este método permite activar o desactivar la interacción de panneo.
+   * El valor por defecto es true.
+   *
+   * @function
+   * @param {Boolean} active determina si se activa o desactiva el panneo.
+   * @public
+   * @api
+   * @deprecated
+   */
+  enableDrag(active) {
+    // eslint-disable-next-line no-console
+    console.warn(getValue('exception').enableDrag_deprecated);
+    this.enablePan(active);
+  }
 }
 
 /**
@@ -4198,14 +4880,16 @@ class Map extends Base {
  * @api
  */
 Map.DRAWLAYER_STYLE = {
-  fill: {
-    color: '#009e00',
+  point: {
+    fill: {
+      color: '#009e00',
+    },
+    stroke: {
+      color: '#fcfcfc',
+      width: 2,
+    },
+    radius: 7,
   },
-  stroke: {
-    color: '#fcfcfc',
-    width: 2,
-  },
-  radius: 7,
 };
 
 export default Map;

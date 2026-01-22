@@ -63,10 +63,20 @@ module.exports = {
       path: false,
       crypto: false,
       'buffer': require.resolve('buffer/'),
+      util: require.resolve('util/'),
     },
   },
   module: {
     rules: [
+      // PATCH: Modify OpenLayers Layer.js inView function
+      {
+        test: /node_modules[/\\]ol[/\\]layer[/\\]Layer\.js$/,
+        loader: 'string-replace-loader',
+        options: {
+          search: 'resolution >= layerState.maxResolution',
+          replace: 'resolution > layerState.maxResolution',
+        },
+      },
       {
         test: /\.js$/,
         exclude: /(node_modules\/(?!ol)|bower_components)/,
@@ -134,5 +144,6 @@ module.exports = {
   watchOptions: {
     poll: 1000,
   },
+  externals: ['better-sqlite3'],
   devtool: 'eval-source-map',
 };

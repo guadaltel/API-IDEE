@@ -68,7 +68,7 @@ class Attributions extends ControlBase {
     this.urlAttribute = options.urlAttribute || 'Gobierno de España';
     this.options = options;
 
-    this.url_ = options.url || 'https://componentes.idee.es/estaticos/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml';
+    this.url_ = options.url || `${IDEE.config.STATIC_RESOURCES_URL}/Datos/reconocimientos/WMTS_PNOA_20170220/atribucionPNOA_Url.kml`;
     this.type_ = options.type || 'kml';
     this.layerName_ = options.layerName || 'attributions';
     this.layer_ = options.layer;
@@ -142,15 +142,15 @@ class Attributions extends ControlBase {
       });
 
       this.accessibilityTab(html);
-      this.map_.getLayers().forEach(({ attribution, idLayer, isVisible }) => {
-        if (attribution) {
-          if (typeof attribution === 'string') {
-            this.addHTMLContent(attribution, idLayer);
+      this.map_.getLayers().forEach((layer) => {
+        if (layer.attribution) {
+          if (typeof layer.attribution === 'string') {
+            this.addHTMLContent(layer.attribution, layer.id);
           } else {
-            this.addAttributions(attribution);
+            this.addAttributions(layer.attribution);
           }
 
-          this.changeVisibility(idLayer, isVisible());
+          this.changeVisibility(layer.id, layer.isVisible());
         }
       });
       success(html);
@@ -534,7 +534,7 @@ class Attributions extends ControlBase {
       content: new Promise((success) => {
         const html = compileTemplate(myhelp, {
           vars: {
-            urlImages: 'https://componentes.idee.es/estaticos/imagenes/controles',
+            urlImages: `${IDEE.config.STATIC_RESOURCES_URL}/imagenes/controles`,
             translations: {
               help1: textHelp.text1,
               help2: textHelp.text2,

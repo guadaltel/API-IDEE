@@ -67,7 +67,29 @@
     "textHelp": {
       "text1": "The rotation tool allows you to return the viewer to a North orientation.",
       "text2": "To be able to rotate the map in the viewer, it is done with the key combination Shit + Alt + left mouse click + move mouse to rotate."
-    }
+    },
+    "titleCesium": "Movement control",
+    "title_help": "Help",
+    "help": {
+      "title": "Gyroscope control",
+      "title1": "Rotate the view",
+      "text1": "Drag the outer circular ring to rotate the map 360º",
+      "title2": "Tilt the view",
+      "text2": "Select the inner circle and slowly drag it to either side to tilt and/or rotate the map.",
+      "text3": "Also, if you double click you return to the initial view.",
+      "text4": "Additionally, if you hold the CTRL key and drag on the map, you can tilt or rotate the map."
+    },
+    "textHelpCesium": {
+      "text1": "This tool allows you to move and control the camera in a 3D environment, exploring the map from different angles.",
+      "text2": "To rotate the map 360º, click and drag the outer circular ring around the control.",
+      "text3": "To tilt and/or rotate the map, select the inner circle and drag it in any direction. You can also hold the CTRL key and drag the map to achieve the same effect.",
+      "text4": "Double-click the inner circle to quickly return to the initial view.",
+      "text5": "If you need help, click the '?' button located on the right side of the control to open a panel with detailed instructions."
+    },
+    "close_not_show_help": "Close and don't show again",
+    "image1_description": "Rotate view icon",
+    "image2_description": "Tilt view icon",
+    "close_btn": "Close help"
   },
   "mouse": {
     "title": "Pointer coordinates"
@@ -101,8 +123,13 @@
       "text2": "In the dropdown you can see all the available implementations (OpenLayers, Cesium, etc)."
     }
   },
+  "popup": {
+    "msg": "Take me there"
+  },
   "exception": {
     "addto_method": "The used implementation does not have the addTo method",
+    "no_get_rotation_method": "The used implementation does not have the getRotation method",
+    "no_set_rotation_method": "The used implementation does not have the setRotation method",
     "getelement_method": "The used implementation does not have the getElement method",
     "getfeatureinfo_method": "The used implementation can not create GetFeatureInfo controls",
     "mouse_method": "The used implementation can not create Mouse controls",
@@ -172,6 +199,7 @@
     "getzoom_method": "The used implementation does not have the getZoom method.",
     "no_zoom": "You have not specified any zoom.",
     "invalid_zoom": "The specified zoom is invalid.",
+    "invalid_scale": "The specified scale is invalid.",
     "setzoom_method": "The implementation used does not have the setZoom method.",
     "getcenter_method": "The used implementation does not have the getCenter method.",
     "setcenter_method": "The used implementation does not have the setCenter method.",
@@ -281,6 +309,28 @@
     "id_exists": "ID already exists.",
     "transparent_deprecated": "'transparent' parameter has been deprecated, it is recommended to use 'isBase' instead.",
     "getOL3Layer_deprecated": "The getOL3Layer method has been deprecated, it is recommended to use the getLayer method.",
-    "setOL3Layer_deprecated": "The setOL3Layer method has been deprecated, it is recommended to use the setLayer method."
+    "setOL3Layer_deprecated": "The setOL3Layer method has been deprecated, it is recommended to use the setLayer method.",
+    "simple_deprecated": "Simple style (IDEE.style.Point, IDEE.style.Polygon y IDEE.style.Line) has been deprecated, it is recommended to use generic style (IDEE.style.Generic) instead.",
+    "geopackagetile_method": "The implementation used can not create GeoPackageTile layers.",
+    "addgeopackagetile_method": "The implementation used does not have addGeoPackageTile method.",
+    "getgeopackagetile_method": "The implementation used does not have getGeoPackageTile method.",
+    "removegeopackagetile_method": "The implementation used does not have removeGeoPackageTile method.",
+    "wmc_method": "The used implementation can not create WMC layers",
+    "sectionlayer_method": "The used implementation can not create Section layer.",
+    "getsections_method": "The used implementation does not have the getSections method.",
+    "addsections_method": "The used implementation does not have the addSections method.",
+    "removesections_method": "The used implementation does not have the removeSections method.",
+    "not_layergroup_in_section": "It is not possible to add a layer group in a section.",
+    "setzindex_method": "It is not possible to apply zIndex to WMC.",
+    "setlayer_method": "It is not possible to set the implementation layer of a WMC.",
+    "setmaxextent_no_apply": "It is not possible to apply the maximum extension to a WMC.",
+    "setminzoom_no_apply": "It is not possible to apply minimum zoom to the WMC layer.",
+    "setmaxzoom_no_apply": "It is not possible to apply maximum zoom to the WMC layer.",
+    "setminscale_no_apply": "It is not possible to apply minimum scale to the WMC layer.",
+    "setmaxscale_no_apply": "It is not possible to apply maximum scale to the WMC layer.",
+    "wkt_toCQL_method": "The used implementation can not create WKT formatter so it will not include CQL filters.",
+    "animated_method": "The used implementation will not be able to disable or modify the animation.",
+    "deactivatechangeresolution_method": "The used implementation does not have the deactivateChangeResolutionEvent method.",
+    "enableDrag_deprecated": "The enableDrag method of the Map class has been deprecated, it is recommended to use enablePan instead."
   }
 }

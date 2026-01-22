@@ -114,6 +114,15 @@ params.forEach((param) => {
   IDEE.config('PROXY_POST_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.proxy_post.url}`);
 
   /**
+   * The static resources URL
+   * @const
+   * @type {string}
+   * @public
+   * @api stable
+   */
+  IDEE.config('STATIC_RESOURCES_URL', '${api-idee.static_resources.url}');
+
+  /**
    * The path to the api-idee theme
    * @const
    * @type {string}
@@ -121,6 +130,42 @@ params.forEach((param) => {
    * @api stable
    */
   IDEE.config('THEME_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.theme.url}`);
+
+  /**
+   * Predefined WMC files. It is composed of URL,
+   * predefined name and context name.
+   * @type {object}
+   * @public
+   * @api stable
+   */
+  IDEE.config('predefinedWMC', {
+    /**
+     * Predefined WMC URLs
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'urls': '${wmc.urls}'.split(',').map((e) => e),
+
+    /**
+     * WMC predefined names
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'predefinedNames': '${wmc.predefinedNames}'.split(','),
+
+    /**
+     * WMC context names
+     * @const
+     * @type {Array<string>}
+     * @public
+     * @api stable
+     */
+    'names': '${wmc.names}'.split(','),
+  });
 
   /**
    * The path to the api-idee theme
@@ -308,6 +353,14 @@ params.forEach((param) => {
   IDEE.config('MIN_ZOOM', '${minZoom}');
 
   /**
+   * Zoom por defecto.
+   *
+   * @public
+   * @type {Number | String}
+   */
+  IDEE.config('DEFAULT_ZOOM', '${defaultZoom}');
+
+  /**
    * Hace el popup y dialog inteligente
    *
    * @private
@@ -338,5 +391,12 @@ params.forEach((param) => {
       audios: ['250px', '40px'],
     },
   });
+
+  /**
+   * Determina el nivel de zoom cuando se usa el control location.
+   * @public
+   * @type {Number}
+   */
+  IDEE.config('ZOOM_LOCATION', '${zoomLocation}');
   window.M = IDEE;
 }(window.IDEE));

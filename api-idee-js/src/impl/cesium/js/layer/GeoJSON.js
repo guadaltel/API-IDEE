@@ -1,6 +1,7 @@
 /**
  * @module IDEE/impl/layer/GeoJSON
  */
+import ClusteredFeature from 'IDEE/feature/Clustered';
 import { isNullOrEmpty, isObject, isFunction } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import Popup from 'IDEE/Popup';
@@ -205,12 +206,9 @@ class GeoJSON extends Vector {
     this.requestFeatures_().then((features) => {
       if (this.cesiumLayer) {
         this.facadeVector_.clear();
-        this.facadeVector_.addFeatures(features);
-        this.loaded_ = true;
-      } else {
-        this.facadeVector_.addFeatures(features);
-        this.loaded_ = true;
       }
+      this.loaded_ = true;
+      this.facadeVector_.addFeatures(features);
     });
   }
 
@@ -254,7 +252,7 @@ class GeoJSON extends Vector {
    */
   selectFeatures(features, coord, evt) {
     const feature = features[0];
-    if (this.extract === true) {
+    if (!(feature instanceof ClusteredFeature) && (this.extract === true)) {
       // unselects previous features
       this.unselectFeatures();
 

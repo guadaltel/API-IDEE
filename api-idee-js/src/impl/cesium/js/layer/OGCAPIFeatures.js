@@ -1,6 +1,7 @@
 /**
  * @module IDEE/impl/layer/OGCAPIFeatures
  */
+import ClusteredFeature from 'IDEE/feature/Clustered';
 import FormatGeoJSON from 'IDEE/format/GeoJSON';
 import { compileSync as compileTemplate } from 'IDEE/util/Template';
 import geojsonPopupTemplate from 'templates/geojson_popup';
@@ -184,12 +185,12 @@ class OGCAPIFeatures extends Vector {
 
     this.requestFeatures_().then((features) => {
       if (forceNewSource === true || isNullOrEmpty(this.cesiumLayer)) {
-        this.facadeVector_.addFeatures(features);
         this.loaded_ = true;
+        this.facadeVector_.addFeatures(features);
       } else {
         this.facadeVector_.clear();
-        this.facadeVector_.addFeatures(features);
         this.loaded_ = true;
+        this.facadeVector_.addFeatures(features);
       }
     });
   }
@@ -206,7 +207,7 @@ class OGCAPIFeatures extends Vector {
    */
   selectFeatures(features, coord, evt) {
     const feature = features[0];
-    if (this.extract === true) {
+    if (!(feature instanceof ClusteredFeature) && (this.extract === true)) {
       // unselects previous features
       this.unselectFeatures();
 

@@ -20,6 +20,9 @@ import {
   Ellipsoid,
   SceneTransforms,
   Cartesian2,
+  defined,
+  Ray,
+  SceneMode,
 } from 'cesium';
 import proj4 from 'proj4';
 
@@ -185,7 +188,7 @@ const getBoundingExtentFromFeature = (feature) => {
     positions = feature.polygon.hierarchy.getValue().positions;
   } else if (feature.polyline) {
     positions = feature.polyline.positions.getValue();
-  } else if (feature.point || feature.billboard) {
+  } else if (feature.point || feature.billboard || feature.model) {
     // eslint-disable-next-line no-underscore-dangle
     positions = [feature.position._value];
   }
@@ -607,7 +610,7 @@ class Utils {
     }
     if (!isNullOrEmpty(coordinates)) {
       const cartesian = Cartesian3.fromDegrees(coordinates[0], coordinates[1]);
-      const screenPosition = SceneTransforms.wgs84ToWindowCoordinates(map.scene, cartesian);
+      const screenPosition = SceneTransforms.worldToWindowCoordinates(map.scene, cartesian);
       // const canvasCoordinates = map.scene.cartesianToCanvasCoordinates(cartesian);
       pixel = [screenPosition.x, screenPosition.y];
     }
@@ -848,8 +851,39 @@ class Utils {
       geometry = cesiumFeature.billboard;
       // eslint-disable-next-line no-underscore-dangle
       geometry.coordinates = cesiumFeature.position._value;
+    } else if (!isNullOrEmpty(cesiumFeature.model)) {
+      geometry = cesiumFeature.model;
+      // eslint-disable-next-line no-underscore-dangle
+      geometry.coordinates = cesiumFeature.position._value;
     }
     return geometry;
+  }
+
+  /**
+   * Este método convierte un punto de píxeles a metros.
+   *
+   * @function
+   * @param {Cesium.Viewer} viewer Mapa de Cesium.
+   * @param {Cesium.Cartesian3} center Posición 3D del centro del punto.
+   * @param {number} pixels Distancia deseada en píxeles.
+   * @returns {number} Distancia equivalente en metros en el mundo 3D.
+   */
+  static convertPixelsToMeters(map, center, pixels) {
+    const scene = map.scene;
+    const centerScreenPos = scene.cartesianToCanvasCoordinates(center);
+
+    if (!defined(centerScreenPos)) {
+      return 50000;
+    }
+
+    const displacedScreenPos = new Cartesian2(centerScreenPos.x + pixels, centerScreenPos.y);
+    const displacedWorldPos = scene.camera.pickEllipsoid(displacedScreenPos, scene.globe.ellipsoid);
+
+    if (!defined(displacedWorldPos)) {
+      return 50000;
+    }
+
+    return Cartesian3.distance(center, displacedWorldPos);
   }
 
   /**
@@ -897,7 +931,8 @@ class Utils {
 
     if (!isNullOrEmpty(feature.polygon)) {
       type = 'Polygon';
-    } else if (!isNullOrEmpty(feature.point) || !isNullOrEmpty(feature.billboard)) {
+    } else if (!isNullOrEmpty(feature.point) || !isNullOrEmpty(feature.billboard)
+      || !isNullOrEmpty(feature.model)) {
       type = 'Point';
     } else if (!isNullOrEmpty(feature.polyline)) {
       type = 'LineString';
@@ -1036,7 +1071,8 @@ class Utils {
         }
       });
       coord = [coordinates];
-    } else if (!isUndefined(feature.point) || !isUndefined(feature.billboard)) {
+    } else if (!isUndefined(feature.point) || !isUndefined(feature.billboard)
+      || !isUndefined(feature.model)) {
       // eslint-disable-next-line no-underscore-dangle
       const cartographic = Cartographic.fromCartesian(feature.position._value);
       if (is2D) {
@@ -1096,6 +1132,58 @@ class Utils {
       }
     }
     return coord;
+  }
+
+  /**
+   * Obtiene el punto de enfoque de la cámara.
+   *
+   * @param {Viewer} map Implementación del mapa.
+   * @param {boolean} inWorldCoordinates verdadero para obtener el foco en coordenadas mundiales;
+   * en caso contrario en coordenadas del mapa específicas de la proyección, en metros.
+   * @return {Cartesian3} Punto de enfoque de la cámara.
+   */
+  static getCameraFocus(map, inWorldCoordinates, result) {
+    /* eslint-disable no-param-reassign */
+    const unprojectedScratch = new Cartographic();
+    const rayScratch = new Ray();
+    const scene = map.scene;
+    const camera = scene.camera;
+
+    if (scene.mode === SceneMode.MORPHING) {
+      return undefined;
+    }
+
+    if (!defined(result)) {
+      result = new Cartesian3();
+    }
+
+    if (defined(map.trackedEntity)) {
+      result = map.trackedEntity.position.getValue(map.clock.currentTime, result);
+    } else {
+      rayScratch.origin = camera.positionWC;
+      rayScratch.direction = camera.directionWC;
+      result = scene.globe.pick(rayScratch, scene, result);
+    }
+
+    if (!defined(result)) {
+      return undefined;
+    }
+
+    if (scene.mode === SceneMode.SCENE2D || scene.mode === SceneMode.COLUMBUS_VIEW) {
+      result = camera.worldToCameraCoordinatesPoint(result, result);
+
+      if (inWorldCoordinates) {
+        result = scene.globe.ellipsoid.cartographicToCartesian(
+          scene.mapProjection.unproject(result, unprojectedScratch),
+          result,
+        );
+      }
+    } else if (!inWorldCoordinates) {
+      result = camera.worldToCameraCoordinatesPoint(result, result);
+    }
+
+    return result;
+    /* eslint-enable no-param-reassign */
   }
 }
 
