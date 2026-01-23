@@ -45,12 +45,15 @@ export const method = {
  * @param {String} jsonpHandlerName Nombre del identificador.
  * @api
  */
-const createScriptTag = (proxyUrl, jsonpHandlerName) => {
+export const createScriptTag = (proxyUrl, jsonpHandlerName, callback) => {
   const scriptTag = document.createElement('script');
   scriptTag.type = 'text/javascript';
   scriptTag.id = jsonpHandlerName;
   scriptTag.src = proxyUrl;
   scriptTag.setAttribute('async', '');
+  scriptTag.onload = () => {
+    if (callback) callback();
+  };
   window.document.body.appendChild(scriptTag);
 };
 
