@@ -59,7 +59,7 @@
 - Se implementan las capas externas y sus dependencias.
 - Añadido el método privado addUpClass_ para evitar choque con controles wmcselector, scale y scaleline.
 - Se incorporan a API-IDEE los plugins mapheader y mapfooter.
-- Se incorpora test automáticos, se modifica readme y se ajustan librerías en package sobre los plugins queryattributes e infoccordinates.
+- Se incorpora test automáticos, se modifica readme y se ajustan librerías en package sobre los plugins queryattributes, infoccordinates y modal.
 
 
 01/01/25 - Versión 1.0.0
