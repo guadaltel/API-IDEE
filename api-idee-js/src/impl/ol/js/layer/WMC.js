@@ -105,6 +105,12 @@ class WMC extends Layer {
    */
   addTo(map) {
     this.map = map;
+    // eslint-disable-next-line no-underscore-dangle
+    if (isNullOrEmpty(this.map._userZoom)) {
+      this.map.once(EventType.COMPLETED, () => {
+        this.map.setZoom(0);
+      });
+    }
     this.facadeLayer_?.fire(EventType.ADDED_TO_MAP);
   }
 
@@ -218,7 +224,7 @@ class WMC extends Layer {
 
       // eslint-disable-next-line no-underscore-dangle
       this.map._resolutionsBaseLayer = true;
-      this.map.zoomToMaxExtent();
+      this.map.zoomToMaxExtent(true);
 
       // checks if it was the first time to
       // calculate resolutions in that case
