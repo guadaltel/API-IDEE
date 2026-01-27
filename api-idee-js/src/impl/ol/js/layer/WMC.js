@@ -105,12 +105,6 @@ class WMC extends Layer {
    */
   addTo(map) {
     this.map = map;
-    // eslint-disable-next-line no-underscore-dangle
-    if (isNullOrEmpty(this.map._userZoom)) {
-      this.map.once(EventType.COMPLETED, () => {
-        this.map.setZoom(0);
-      });
-    }
     this.facadeLayer_?.fire(EventType.ADDED_TO_MAP);
   }
 
