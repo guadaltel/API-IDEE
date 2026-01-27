@@ -3,65 +3,43 @@
     left: 600px;
 }
 
-.m-left .m-panel.opened div.m-control.m-rotate-container button[class^=g-cartografia-] {
+.m-areas>div.m-area>div.m-panel>div.m-panel-controls>div.m-control.m-rotate-container button[class^="g-cartografia-"]#m-rotate-button {
     color: #fff !important;
     background-color: #71A7D3 !important;
     opacity: 1;
+    cursor: pointer;
+    position: absolute;
+    z-index: 200;
+    padding: 0;
+    /* padding-left: 2px; */
+    left: 23%;
+    top: 23%;
+    font-size: 1.5rem;
+    border-radius: 50%;
 }
 
 #m-rotate-button {
     color: #337ceb;
-    border: 2px solid white;
+    /* border: 2px solid white; */
     border-radius: 20px;
 }
 
-.m-areas > div.m-area > div.m-panel.opened.m-rotate {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-.m-rotate-compass {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.m-rotate-slider {
+  
+    border-radius: 50%;
+    height: 30px;
+    width: 30px;
+    cursor: pointer;
+    position: absolute;
 }
 
 .m-rotate-background-exterior {
   fill: #71a7d3;
 }
 
-.m-rotate-background-exterior,
-.m-rotate-svgPath-svg {
-  position: absolute;
-  width: 99px;
-  height: 99px;
-}
-
-.m-rotate-svgPath-svg {
-  width: 100px;
-}
-
-.m-rotate-exterior-svg {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  overflow: hidden;
-}
-
 .m-rotate-exterior-svg.g-cartografia-exterior-1:before {
   color: #fff;
   font-size: 100px;
-}
-
-.m-rotate-giroscopio-svg {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  box-sizing: content-box;
 }
 
 .m-rotate-giroscopio-svg.g-cartografia-giroscopio:before {
@@ -88,6 +66,30 @@
   text-align: center;
   font-family: 'Muli', 'sans-serif';
   font-size: 18px;
+}
+
+#m-rotate-slider-container {
+    width: 40px;
+    height: 40px;
+    color: #fff !important;
+    background-color: #71A7D3 !important;
+    border: 2px solid white;
+    opacity: 1;
+    border-radius: 50%;
+}
+
+#m-rotate-marker {
+    width: 45px;
+    position: absolute;
+    height: 45px;
+    margin-top: -2.5px;
+    margin-left: -2.5px;
+}
+
+#m-rotate-marker-circle {
+    stroke: #337ceb;
+    fill: #fff;
+    cursor: pointer;
 }
 
 .m-rotate-help-button:hover {
