@@ -64,6 +64,7 @@
 - Se incorpora el método setToClosestScale a la clase Mapa que permite aplicar una resolución al mapa en función de una escala dada.
 - Se resuelve problema con gestión de evento change cuando se llaman a los métodos redraw, addfeatures y removefeatures.
 - El evento ADDED_TO_MAP de Vector se disparará desde fachada.
+- Se añade el método enablePan para permitir o no arrastrar el mapa, y se incluye enableDrag como método deprecado.
 
 
 01/01/25 - Versión 1.0.0
