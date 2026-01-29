@@ -65,6 +65,7 @@
 - Se resuelve problema con gestión de evento change cuando se llaman a los métodos redraw, addfeatures y removefeatures.
 - El evento ADDED_TO_MAP de Vector se disparará desde fachada.
 - Se añade el método enablePan para permitir o no arrastrar el mapa, y se incluye enableDrag como método deprecado.
+- Implementa la posibilidad de rotar en mapa en el control rotate usando la bolita como en Mapea. Soluciona problemas de estilo.
 
 
 01/01/25 - Versión 1.0.0
