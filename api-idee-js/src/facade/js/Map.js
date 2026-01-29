@@ -367,7 +367,7 @@ class Map extends Base {
         if (zoom.length > 1) { inmeters = true; }
         zoom = zoom[0];
       }
-      this.setZoom(zoom, inmeters, false);
+      this.setZoom(zoom, inmeters, true);
     } else if (isNullOrEmpty(params.bbox)) {
       this.setZoom(IDEE.config.DEFAULT_ZOOM, false, false);
     }
@@ -3951,9 +3951,13 @@ class Map extends Base {
   zoomToMaxExtent(keepUserZoom) {
     this.calculateMaxExtent().then((maxExtent) => {
       this.setBbox(maxExtent);
-      if (keepUserZoom === true && !isNullOrEmpty(this._userZoom)) {
+      if (keepUserZoom === true) {
         this.once(EventType.COMPLETED, () => {
-          this.setZoom(this._userZoom);
+          if (!isNullOrEmpty(this._userZoom)) {
+            this.setZoom(this._userZoom);
+          } else {
+            this.setZoom(IDEE.config.DEFAULT_ZOOM);
+          }
         });
       }
       this._finishedMaxExtent = true;
