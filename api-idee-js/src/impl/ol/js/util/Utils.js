@@ -742,6 +742,7 @@ class Utils {
    *
    * @function
    * @param {String} json Objeto GeoJSON a parsear
+   * @param {IDEE.Projection|String} mapProjection proyección del mapa
    * @param {IDEE.Projection|String} featureProjection proyección con la que
    * se va a crear cada una de las features al ser leidas por el formato WKB
    * @returns {Array<IDEE.Feature>} objeto en formato WKB
@@ -769,19 +770,23 @@ class Utils {
    *
    * @function
    * @param {String} json Objeto WKT a parsear
+   * @param {IDEE.Projection|String} mapProjection proyección del mapa
    * @param {IDEE.Projection|String} featureProjection proyección con la que
    * se va a crear cada una de las features al ser leidas por el formato WKB
    * @returns {Array<IDEE.Feature>} objeto en formato WKB
    * @public
    * @api
    */
-  static parseWKTToWKB(wkt, projection) {
+  static parseWKTToWKB(wkt, mapProjection, featureProjection) {
     const wkbFormat = new WKB();
     const wktFormat = new WKTFormat();
-    const olFeature = wktFormat.read(wkt, {
-      featureProjection: projection,
+    const olFeatures = wktFormat.readCollection(wkt, {
+      mapProjection,
+      featureProjection,
     });
-    return wkbFormat.writeFeatures(olFeature.getImpl().getFeature());
+    return olFeatures.map((feature) => {
+      return wkbFormat.writeFeature(feature.getImpl().getFeature());
+    });
   }
 }
 export default Utils;
