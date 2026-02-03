@@ -59,7 +59,7 @@
 - Se implementan las capas externas y sus dependencias.
 - Añadido el método privado addUpClass_ para evitar choque con controles wmcselector, scale y scaleline.
 - Se incorporan a API-IDEE los plugins mapheader y mapfooter.
-- Se incorpora test automáticos, se modifica readme y se ajustan librerías en package sobre los plugins queryattributes, infocoordinates, modal, vectorsmanagement, incicarto, locator y measurebar.
+- Se incorpora test automáticos, se modifica readme y se ajustan librerías en package sobre los siguientes plugins: queryattributes, infocoordinates, modal, vectorsmanagement, incicarto, locator, measurebar, viewmanagement y storymap.
 - Se modifica el comportamiento del método getMaxExtent de MVT para que devuelva el extent en el siguiente orden: el especificado por el usuario, el de la extensión de los features, el especificado en el mapa o el de la proyección en función del que pueda obtener.
 - Se incorpora el método setToClosestScale a la clase Mapa que permite aplicar una resolución al mapa en función de una escala dada.
 - Se resuelve problema con gestión de evento change cuando se llaman a los métodos redraw, addfeatures y removefeatures.
