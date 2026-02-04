@@ -1,56 +1,42 @@
 <p align="center">
   <img src="https://componentes.idee.es/estaticos/imagenes/logos/API_IDEE/API_2/API_2.svg" height="152" />
 </p>
-<h1 align="center"><strong>API IDEE</strong> <small>🔌 IDEE.plugin.MeasureBar</small></h1>
+<h1 align="center"><strong>APICNIG</strong> <small>🔌 M.plugin.Buffer</small></h1>
 
 # Descripción
 
-Herramienta de medición de áreas y distancias.
-Con clicks del ratón se establecen los vértices de la línea/área de medición.
-Manteniendo pulsado SHIFT, la línea/área de edición se dibuja a mano alzada.
+Plugin que genera un buffer o un área de influencia sobre un punto, linea o polígono que se dibuje sobre el mapa y con una equidistancia determinada.
 
-# Dependencias
+## Dependencias
 
 Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
-Para uso de implementación OpenLayers:
-- **measurebar.ol.min.js**
-- **measurebar.ol.min.css**
 
-Para uso de implementación Cesium:
-- **measurebar.cesium.min.js**
-- **modmeasurebaral.cesium.min.css**
+- **buffer.ol.min.js**
+- **buffer.ol.min.css**
+
 
 ```html
- <link href="https://componentes.idee.es/api-idee/plugins/measurebar/measurebar.ol.min.css" rel="stylesheet" />
- <script type="text/javascript" src="https://componentes.idee.es/api-idee/plugins/measurebar/measurebar.ol.min.js"></script>
+ <link href="https://componentes.idee.es/api-idee/plugins/buffer/buffer.ol.min.css" rel="stylesheet" />
+ <script type="text/javascript" src="https://componentes.idee.es/api-idee/plugins/buffer/buffer.ol.min.js"></script>
 ```
 
-# Uso del histórico de versiones
-
-Existe un histórico de versiones de todos los plugins de API-IDEE en [api-idee-legacy](https://github.com/Desarrollos-IDEE/API-IDEE/tree/master/api-idee-legacy/plugins) para hacer uso de versiones anteriores.
-Ejemplo:
-```html
- <link href="https://componentes.idee.es/api-idee/plugins/measurebar/measurebar-1.0.0.ol.min.css" rel="stylesheet" />
- <script type="text/javascript" src="https://componentes.idee.es/api-idee/plugins/measurebar/measurebar-1.0.0.ol.min.js"></script>
-```
-
-# Parámetros
+## Parámetros
 
 El constructor se inicializa con un JSON con los siguientes atributos:
 
 - **position**: Indica la posición donde se mostrará el plugin.
-  - 'TL': (top left) - Arriba a la izquierda (por defecto).
-  - 'TR': (top right) - Arriba a la derecha.
+  - 'TL': (top left) - Arriba a la izquierda.
+  - 'TR': (top right) - Arriba a la derecha (por defecto).
   - 'BL': (bottom left) - Abajo a la izquierda.
   - 'BR': (bottom right) - Abajo a la derecha.
 - **collapsed**: Indica si el plugin viene colapsado de entrada (true/false). Por defecto: true.
 - **collapsible**: Indica si el plugin puede abrirse y cerrarse (true) o si permanece siempre abierto (false). Por defecto: true.
-- **tooltip**: Información emergente para mostrar en el tooltip del plugin (se muestra al dejar el ratón encima del plugin como información). Por defecto: Herramientas de medición
+- **tooltip**: Información emergente para mostrar en el tooltip del plugin (se muestra al dejar el ratón encima del plugin como información). Por defecto: Área de influencia
 
 # API-REST
 
 ```javascript
-URL_API?measurebar=position*collapsed*collapsible*tooltip
+URL_API?buffer=position*collapsed*collapsible*tooltip
 ```
 
 <table>
@@ -81,40 +67,47 @@ URL_API?measurebar=position*collapsed*collapsible*tooltip
   </tr>
 </table>
 
-
 ### Ejemplos de uso API-REST
 
 ```
-https://componentes.idee.es/api-idee?measurebar=TL*true*true*measurebar%20plugin
+https://componentes.idee.es/api-idee?buffer=TR*true*true*buffer%20plugin
 ```
 
 ```
-https://componentes.idee.es/api-idee?measurebar=BL
+https://componentes.idee.es/api-idee?buffer=TL
+```
+### Ejemplos de uso
+
+Para la codificación en base64 del objeto con los parámetros del plugin podemos hacer uso de la utilidad M.utils.encodeBase64.
+Ejemplo:
+```javascript
+M.utils.encodeBase64(obj_params);
 ```
 
-### Ejemplos de uso API-REST en base64
 Ejemplo de constructor del plugin:
 ```javascript
 {
-  position:'TR',
+  position: "TL",
+  collapsed: false,
   collapsible: true,
-  collapsed: true,
-  tooltip: 'Medidas',
+  tooltip: "Buffer"
 }
 ```
 ```
-https://componentes.idee.es/api-idee?measurebar=base64=eyJwb3NpdGlvbiI6IlRSIiwiY29sbGFwc2libGUiOnRydWUsImNvbGxhcHNlZCI6dHJ1ZSwidG9vbHRpcCI6Ik1lZGlkYXMifQ==
+https://componentes.idee.es/api-idee?buffer=base64=eyJwb3NpdGlvbiI6IlRMIiwiY29sbGFwc2VkIjpmYWxzZSwiY29sbGFwc2libGUiOnRydWUsInRvb2x0aXAiOiJCdWZmZXIifQ==
 ```
 
 # Ejemplo de uso
 
 ```javascript
-const map = IDEE.map({
+const map = M.map({
   container: 'map'
 });
 
-const mp = new IDEE.plugin.MeasureBar({
-  position: 'TR',
+const mp = new M.plugin.Buffer({
+  position: 'TL',
+  collapsible: true
+  collapsed: false
 });
 
 map.addPlugin(mp);
@@ -179,6 +172,3 @@ Para la revisión y actualización de las dependencias de los paquetes npm es ne
 $npm i -g npm-check-updates
 $ncu
 ```
-
-## Tabla de compatibilidad de versiones   
-[Consulta el api resourcePlugin](https://componentes.idee.es/api-idee/api/actions/resourcesPlugins?name=measurebar)
