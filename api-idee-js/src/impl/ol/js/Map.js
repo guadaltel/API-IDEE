@@ -3250,7 +3250,7 @@ class Map extends MObject {
     const resolutions = this.facadeMap_.getResolutions();
 
     const olMap = this.getMapImpl();
-    const oldViewProperties = olMap.getView().getProperties();
+    // const oldViewProperties = olMap.getView().getProperties();
     const resolution = olMap.getView().getResolution();
     const userZoom = olMap.getView().getUserZoom();
     const minZoom = olMap.getView().getMinZoom();
@@ -3262,7 +3262,7 @@ class Map extends MObject {
       ? { ...this.objectView, projection: olProjection, extent: this.viewExtent }
       : { ...this.objectView, projection: olProjection });
 
-    newView.setProperties(oldViewProperties);
+    // newView.setProperties(oldViewProperties);
     if (!isNullOrEmpty(resolutions)) {
       newView.setResolutions(resolutions);
     }
@@ -3288,6 +3288,8 @@ class Map extends MObject {
           prevMaxExtent.x.max, prevMaxExtent.y.max,
         ];
       }
+      // console.log(ImplUtils
+      // .transformExtent(prevMaxExtent, olPrevProjection, olProjection));
       this.setBbox(ImplUtils
         .transformExtent(prevMaxExtent, olPrevProjection, olProjection), false);
     }
