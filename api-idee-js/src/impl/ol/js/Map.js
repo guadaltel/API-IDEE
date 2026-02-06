@@ -2688,6 +2688,8 @@ class Map extends MObject {
 
     const view = olMap.getView();
     const newView = new View({ ...view, ...view.getProperties(), extent: maxExtent });
+    // eslint-disable-next-line
+    newView.projection_ = newView.getProperties().projection_;
     olMap.setView(newView);
 
     this.updateResolutionsFromBaseLayer();
