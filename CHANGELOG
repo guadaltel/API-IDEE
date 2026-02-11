@@ -29,7 +29,6 @@
 - Se elimina código innecesario y se soluciona problema con asignación de estilos en capas MBTilesVector.
 - Añadido método activateBaseLayer en Layer, para que cuando una capa base sea eliminada, se active otra si hay.
 - Se implementa la posibilidad de enviar un callback a getMaxExtent de mbtiles.
-- Mejora la visualización de leyendas.
 - Soluciona errores en el comportamiento de isVisible en MVT.
 - Se soluciona un error al devolver el legendURL de una capa Vector con estilos cluster composite.
 - Se elimina el método getFeaturesExtentPromise de GeoJSON para que herede de Vector.
