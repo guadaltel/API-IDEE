@@ -69,6 +69,7 @@
 - Se añade nuevo tipo de capa Geopackage disponible en Mapea (se incluyen los eventos added_geopackage y added_geopackage_tile).
 - Implementado el parámetro rotación en el constructor de mapa.
 - En el método drawPath_ de OLStyleFontSymbol se elimina un +1 que daba un efecto insignificante.
+- Se incorpora a API-IDEE el plugin wfstcontrols.
 
 
 01/01/25 - Versión 1.0.0
