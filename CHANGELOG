@@ -1,19 +1,17 @@
 24/10/25 Versión 2.0.0
 - Se añade el método getImageMap para generar la imagen del mapa.
 - Se soluciona problemas con filtros espaciales en Cesium.
-- Se añaden a utilidades los métodos: getWMTSCapabilities.
 - Se soluciona problema en estilos con patrones en polígonos.
 - No se va a tener en cuenta el label para determinar si un estilo es dinámico o no.
 - Mejora la visualización de leyendas.
 - Se elimina el tipo de capa draw (implementación).
 - Se añade el método enableMouseWheel para controlar la interacción de zoom con la rueda del ratón.
 - Se añaden los métodos get y remove OverlayLayers.
-- Se añaden a utilidades los métodos: removeHTML, replaceNode, classToggle, setEquals, getFeaturesExtent
+- Se añaden a utilidades los métodos: removeHTML, replaceNode, classToggle, setEquals, getFeaturesExtent, getWMTSCapabilities, rgbaToHex y rgbToHex.
 - Mejoras sobre el método getWMSGetCapabilitiesUrl de utilidades.
 - Se elimina replace del método loadInternal_ de JSONP.
 - Se desarrolla la implementación en Cesium del control rotate.
 - Se mejora el lanzamiento del evento REMOVED_FROM_MAP en WMS y LayerGroup.
-- Se añaden a utilidades los métodos: rgbaToHex, rgbToHex
 - Se modifica imagen de dynamicLegend usada en estilos con funciones y se soluciona problemas con estilos genéricos y leyendas con funciones.
 - Se permite añadir nuevas proyecciones con el método addProjections sin tener que ponerlas en forma de array, además se controla el añadido de proyecciones duplicadas.
 - Añadido método hasControl en la clase Map para comprobar si un control está añadido al mapa.
@@ -22,7 +20,7 @@
 - En capas MBTilesVectors tileLoadFunction_ pasa a público por lo que ahora se renombra a tileLoadFunction.
 - MBTilesVector hereda de Vector la funcionalidad extract.
 - Se implementa el uso de ticket en WFS.
-- Se añade el metodo generateRandomStyle a utilidades de estilo.
+- Se añade el método generateRandomStyle a utilidades de estilo.
 - Se configura la URL de recursos estáticos para poder personalizar la URL del despliegue del mismo.
 - Se modifica el desarrollo del método getCentroid de utilidades (implementación).
 - El control location sitúa al usuario y detectará cambios de posición.
