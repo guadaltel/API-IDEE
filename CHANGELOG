@@ -70,6 +70,7 @@
 - Soluciona problemas de reproyección en capas MBTiles y WMC.
 - Se incorpora a API-IDEE el plugin filteredsearch.
 - Se añade nuevo tipo de capa Geopackage disponible en Mapea (se incluyen los eventos added_geopackage y added_geopackage_tile).
+- Implementado el parámetro rotación en el constructor de mapa.
 
 
 01/01/25 - Versión 1.0.0
