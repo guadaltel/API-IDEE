@@ -11,7 +11,6 @@ import {
   get as getProj,
   getTransform,
   transformExtent,
-  getPointResolution,
 } from 'ol/proj';
 import OLFeature from 'ol/Feature';
 import WKB from 'ol/format/WKB';
@@ -681,16 +680,8 @@ class Utils {
    * @public
    * @api
    */
-  static getScaleForResolution(resolution, view, dpi = 72) {
-    const projection = view.getProjection();
-    const center = view.getCenter();
-    const inchesPerMeter = 39.3700787;
-    const units = projection.getUnits();
-
-    const pointResolution = getPointResolution(projection, resolution, center, units);
-    const scale = pointResolution * inchesPerMeter * dpi;
-
-    return Math.round(scale);
+  static getScaleForResolution(resolution) {
+    return Math.round(resolution / 0.00028);
   }
 
   /**
@@ -700,19 +691,19 @@ class Utils {
    * @function
    * @param {View} view Vista del mapa.
    * @param {String} inputValue Valor de entrada para la escala.
-   * @param {Number} dpi DPI del mapa (por defecto 72).
+   * @param {Number} dpi DPI del mapa.
    * @returns {Number} Resolución de la vista correspondiente a la escala.
    * @public
    * @api
    */
-  static getCurrentScale(view, inputValue, dpi = 72) {
+  static getCurrentScale(inputValue, dpi) {
     const inchesPerMeter = 39.3700787;
     const scale = parseFloat(inputValue.replace(/\./g, ''));
     const calculateResolution = (targetScale) => {
       let resolution = targetScale / (inchesPerMeter * dpi);
 
       for (let i = 0; i < 3; i + 1) {
-        const currentScale = this.getScaleForResolution(resolution, view, dpi);
+        const currentScale = this.getScaleForResolution(resolution);
         const error = targetScale - currentScale;
         resolution *= (targetScale / currentScale);
 
