@@ -669,19 +669,30 @@ class Utils {
     return Math.trunc(scale);
   }
 
+  static getRoundScale(scale) {
+    let newScale = scale;
+    if (newScale >= 1000 && newScale <= 950000) {
+      newScale = Math.round(newScale / 1000) * 1000;
+    } else if (newScale >= 950000) {
+      newScale = Math.round(newScale / 1000000) * 1000000;
+    } else {
+      newScale = Math.round(newScale);
+    }
+    return newScale;
+  }
+
   /**
    * Este método obtiene la escala para una resolución dada.
    *
    * @function
    * @param {Number} resolution Resolución del mapa.
-   * @param {View} view Vista del mapa.
-   * @param {Number} dpi DPI del mapa (por defecto 72).
-   * @returns {Number} Escala calculada.
+   * @param {Boolean} exact Devuelve la escala exacta o aproximada.
    * @public
    * @api
    */
-  static getScaleForResolution(resolution) {
-    return Math.round(resolution / 0.00028);
+  static getScaleForResolution(resolution, exact) {
+    const scale = Math.round(resolution / 0.00028);
+    return exact ? scale : Math.round(Utils.getRoundScale(scale));
   }
 
   /**
