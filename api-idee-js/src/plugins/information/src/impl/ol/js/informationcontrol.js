@@ -720,65 +720,66 @@ export default class InformationControl extends IDEE.impl.Control {
   }
 
   parseCSSInfo(text) {
-  let newText = text;
-  try {
-    let styleTag = "";
-    if (text.indexOf('<style type="text/css">') > -1) {
-      styleTag = '<style type="text/css">';
-    } else if (text.indexOf('<style>') > -1) {
-      styleTag = '<style>';
-    }
+    let newText = text;
+    try {
+      let styleTag = '';
+      if (text.indexOf('<style type="text/css">') > -1) {
+        styleTag = '<style type="text/css">';
+      } else if (text.indexOf('<style>') > -1) {
+        styleTag = '<style>';
+      }
 
-    if (styleTag !== "") {
-      const parts = text.split(styleTag);
-      const init = parts[0];
-      const restoDespuesDeStyle = parts.slice(1).join(styleTag);
-      const subParts = restoDespuesDeStyle.split('</style>');
-      const styleContent = subParts[0].trim();
-      const finish = subParts.slice(1).join('</style>');
-      let newStyle = '';
-      const reglas = styleContent.split('}');
-      reglas.forEach((regla) => {
-        if (regla.trim().length > 0) {
-          const subPartes = regla.split('{');
-          if (subPartes.length === 2) {
-            let selectores = subPartes[0].trim();
-            const propiedades = subPartes[1].trim();
-            const prefijo = '.m-information-content-info .m-information-content-info-body';
-            
-            const selectoresProcesados = selectores.split(',').map(s => {
-              const item = s.trim();
-              if (item.indexOf('.m-information-content-info') === 0 || item.length === 0) {
-                return item;
-              }
-              return prefijo + ' ' + item;
-            });
-            newStyle += `\n ${selectoresProcesados.join(', ')} {\n  ${propiedades}\n }`;
+      if (styleTag !== '') {
+        const parts = text.split(styleTag);
+        const init = parts[0];
+        const restAfterStyle = parts.slice(1).join(styleTag);
+        const subParts = restAfterStyle.split('</style>');
+        const styleContent = subParts[0].trim();
+        const finish = subParts.slice(1).join('</style>');
+        const styleParts = [];
+        const rules = styleContent.split('}');
+        rules.forEach((rule) => {
+          if (rule.trim().length > 0) {
+            const ruleParts = rule.split('{');
+            if (ruleParts.length === 2) {
+              const selectors = ruleParts[0].trim();
+              const properties = ruleParts[1].trim();
+              const prefix = '.m-information-content-info .m-information-content-info-body';
+              const processedSelectors = selectors.split(',').map((s) => {
+                const item = s.trim();
+                if (item.indexOf('.m-information-content-info') === 0 || item.length === 0) {
+                  return item;
+                }
+                return `${prefix} ${item}`;
+              });
+              styleParts.push(`\n ${processedSelectors.join(', ')} {\n  ${properties}\n }`);
+            }
+          }
+        });
+        const newStyle = styleParts.join('');
+        newText = `${init}${styleTag}${newStyle}\n</style>${finish}`;
+      }
+      if (newText.indexOf('<link') > -1) {
+        const linkBlock = newText.split('<link');
+        let resultNoLinks = linkBlock[0];
+        for (let i = 1; i < linkBlock.length; i += 1) {
+          const contentTag = linkBlock[i].split('>')[0];
+          if (contentTag.indexOf('stylesheet') > -1 || contentTag.indexOf('.css') > -1) {
+            const afterClosing = linkBlock[i].split('>');
+            afterClosing.shift();
+            resultNoLinks += afterClosing.join('>');
+          } else {
+            resultNoLinks += `<link${linkBlock[i]}`;
           }
         }
-      });
-      newText = init + styleTag + newStyle + '\n</style>' + finish;
-    }
-    if (newText.indexOf('<link') > -1) {
-      const bloquesLink = newText.split('<link');
-      let resultadoSinLinks = bloquesLink[0];
-      for (let i = 1; i < bloquesLink.length; i++) {
-        const contenidoEtiqueta = bloquesLink[i].split('>')[0];
-        if (contenidoEtiqueta.indexOf('stylesheet') > -1 || contenidoEtiqueta.indexOf('.css') > -1) {
-          const trasCierre = bloquesLink[i].split('>');
-          trasCierre.shift(); 
-          resultadoSinLinks += trasCierre.join('>');
-        } else {
-          resultadoSinLinks += '<link' + bloquesLink[i];
-        }
+        newText = resultNoLinks;
       }
-      newText = resultadoSinLinks;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error en parseCSSInfo:', err);
+      newText = text;
     }
-  } catch (err) {
-    console.error("Error en parseCSSInfo:", err);
-    newText = text;
-  }
 
-  return newText;
-}
+    return newText;
+  }
 }
