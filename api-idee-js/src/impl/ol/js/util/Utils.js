@@ -657,18 +657,15 @@ class Utils {
     const ang = pix2[2] - pix2[0];
     // (numero de metros en el mapa / numero de pixeles) / metros por pixel
     let scale = (((mpu * ang) / pix) * 1000) / 0.28;
-    if (!exact === true) {
-      if (scale >= 1000 && scale <= 950000) {
-        scale = Math.round(scale / 1000) * 1000;
-      } else if (scale >= 950000) {
-        scale = Math.round(scale / 1000000) * 1000000;
-      } else {
-        scale = Math.round(scale);
-      }
-    }
+    if (!exact === true) scale = Utils.getRoundScale(scale);
     return Math.trunc(scale);
   }
 
+  /**
+   * Returns an integer representing a valid scale
+   * @param {number} scale
+   * @returns {number}
+   */
   static getRoundScale(scale) {
     let newScale = scale;
     if (newScale >= 1000 && newScale <= 950000) {
