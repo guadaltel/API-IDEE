@@ -689,7 +689,7 @@ class Utils {
    */
   static getScaleForResolution(resolution, exact) {
     const scale = Math.round(resolution / 0.00028);
-    return exact ? scale : Math.round(Utils.getRoundScale(scale));
+    return exact ? Math.round(Utils.getRoundScale(scale)) : scale;
   }
 
   /**
