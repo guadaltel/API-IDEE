@@ -36,7 +36,7 @@ const updateElement = (container, map, exactEscale) => {
   const view = map.getMapImpl().getView();
   const resolution = view.getResolution();
 
-  const scale = Utils.getScaleForResolution(resolution, exactEscale);
+  const scale = Utils.getScaleForResolution(resolution, view, IDEE.config.DPI_OGC, exactEscale);
 
   if (!isNullOrEmpty(scale)) {
     // eslint-disable-next-line no-param-reassign
@@ -161,6 +161,7 @@ class Scale extends Control {
             this.scaleContainer_.textContent = scaleText;
             const view = this.facadeMap_.getMapImpl().getView();
             const resolution = Utils.getCurrentScale(
+              view,
               scaleText,
               IDEE.config.DPI_OGC,
             );
