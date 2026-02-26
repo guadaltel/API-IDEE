@@ -67,7 +67,7 @@ export default class LayerswitcherControl extends IDEE.Control {
   constructor(options = {}) {
     if (IDEE.utils.isUndefined(LayerswitcherImplControl)
       || (IDEE.utils.isObject(LayerswitcherImplControl)
-      && IDEE.utils.isNullOrEmpty(Object.keys(LayerswitcherImplControl)))) {
+        && IDEE.utils.isNullOrEmpty(Object.keys(LayerswitcherImplControl)))) {
       IDEE.exception(getValue('exception.impl'));
     }
 
@@ -205,7 +205,7 @@ export default class LayerswitcherControl extends IDEE.Control {
 
     map.on(IDEE.evt.ADDED_LAYER, (layers) => {
       if (this.modeSelectLayers === 'radio'
-      && this.isCheckedLayerRadio === true) {
+        && this.isCheckedLayerRadio === true) {
         layers.forEach((layer) => {
           if (layer.isBase === false && layer.displayInLayerSwitcher) {
             if (layer instanceof IDEE.layer.LayerGroup) {
@@ -1332,7 +1332,7 @@ export default class LayerswitcherControl extends IDEE.Control {
     const hasPrecharged = (precharged.groups !== undefined && precharged.groups.length > 0)
       || (precharged.services !== undefined && precharged.services.length > 0);
     const codsiActive = this.codsiActive;
-    const accept = '.kml, .zip, .gpx, .geojson, .gml, .json';
+    const accept = ['.kml', '.zip', '.gpx', '.geojson', '.gml', '.json', '.gpkg', '.tif', '.tiff'];
     const addServices = IDEE.template.compileSync(addServicesTemplate, {
       jsonp: true,
       parseToHtml: false,
@@ -1424,7 +1424,9 @@ export default class LayerswitcherControl extends IDEE.Control {
   }
 
   changeFile(inputFile) {
-    IDEE.loadFiles.addFileToMap(this.map_, inputFile.files[0]);
+    /** @type {File} */
+    const file = inputFile.files[0];
+    IDEE.loadFiles.addFileToMap(this.map_, file);
     inputFile.value = '';
     const buttonClose = document.querySelector('div.m-dialog.info div.m-button > button');
     buttonClose.click();
@@ -1433,7 +1435,13 @@ export default class LayerswitcherControl extends IDEE.Control {
   openFileFromUrl(url, extension) {
     if (IDEE.utils.isUrl(url)) {
       const fileName = url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.'));
-      if (['zip', 'kml', 'gpx', 'geojson', 'gml', 'json'].includes(extension) > -1) {
+      if (['tif', 'tiff'].includes(extension)) {
+        IDEE.loadFiles.loadGeotiffLayer(
+          this.map_,
+          url,
+          fileName,
+        );
+      } else if (['zip', 'kml', 'gpx', 'geojson', 'gml', 'json', 'gpkg'].includes(extension)) {
         if (extension === 'zip') {
           this.downloadShp(url, fileName);
         } else {
@@ -1656,8 +1664,8 @@ export default class LayerswitcherControl extends IDEE.Control {
         allServices.forEach((service) => {
           if (service.type === layer.type && this.checkUrls(service.url, layer.url)) {
             if (service.white_list !== undefined && service.white_list.length > 0
-                && service.white_list.indexOf(layer.name) > -1
-                && layerNames.indexOf(layer.name) === -1) {
+              && service.white_list.indexOf(layer.name) > -1
+              && layerNames.indexOf(layer.name) === -1) {
               layers.push(layer);
               layerNames.push(layer.name);
             } else if (service.white_list === undefined && layerNames.indexOf(layer.name) === -1) {
@@ -1677,18 +1685,18 @@ export default class LayerswitcherControl extends IDEE.Control {
     } else if (this.precharged.groups !== undefined && this.precharged.groups.length > 0) {
       this.precharged.groups.forEach((group) => {
         if (group.services !== undefined && group.services.length > 0
-            && group.name === this.filterName) {
+          && group.name === this.filterName) {
           allLayers.forEach((layer) => {
             let insideService = false;
             group.services.forEach((service) => {
               if (service.type === layer.type && this.checkUrls(service.url, layer.url)) {
                 if (service.white_list !== undefined && service.white_list.length > 0
-                    && service.white_list.indexOf(layer.name) > -1
-                    && layerNames.indexOf(layer.name) === -1) {
+                  && service.white_list.indexOf(layer.name) > -1
+                  && layerNames.indexOf(layer.name) === -1) {
                   layers.push(layer);
                   layerNames.push(layer.name);
                 } else if (service.white_list === undefined
-                    && layerNames.indexOf(layer.name) === -1) {
+                  && layerNames.indexOf(layer.name) === -1) {
                   layers.push(layer);
                   layerNames.push(layer.name);
                 }
@@ -2054,7 +2062,7 @@ export default class LayerswitcherControl extends IDEE.Control {
                 if (meta.style !== undefined && meta.style.length > 0) {
                   meta.style.forEach((s) => {
                     if (s.isDefault === true && s.LegendURL !== undefined
-                        && s.LegendURL.length > 0) {
+                      && s.LegendURL.length > 0) {
                       const urlDefaultStyle = s.LegendURL[0].href;
                       this.capabilities[j].setLegendURL(urlDefaultStyle);
                     }

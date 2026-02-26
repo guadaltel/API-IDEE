@@ -187,7 +187,7 @@ export default class Layerswitcher extends IDEE.Plugin {
     this.options = options;
 
     // Posición del plugin
-    this.position_ = options.position || 'TR';
+    this.position_ = options.position ?? 'TR';
 
     // Permite saber si el plugin está colapsado o no
     this.collapsed_ = !IDEE.utils.isUndefined(options.collapsed) ? options.collapsed : true;
