@@ -4,7 +4,7 @@
 import FacadeOSM from 'IDEE/layer/OSM';
 import * as LayerType from 'IDEE/layer/Type';
 import {
-  isUndefined, isNullOrEmpty, generateResolutionsFromExtent, extend,
+  isUndefined, isNullOrEmpty, generateResolutionsFromExtent, getZDirectionFunction, extend,
 } from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import OLLayerTile from 'ol/layer/Tile';
@@ -96,6 +96,11 @@ class OSM extends Layer {
      * OMS tileLoadFunction. Función de carga de tiles.
      */
     this.tileLoadFunction = vendorOptions?.tileLoadFunction;
+
+    /**
+     * OSM zDirection. Función de dirección Z para la carga de teselas.
+     */
+    this.zDirection = vendorOptions?.zDirection || getZDirectionFunction();
 
     /**
      * OSM zIndex_. Índice de la capa, (+5).
@@ -257,10 +262,12 @@ class OSM extends Layer {
         newSource = new SourceXYZ({
           url: this.url,
           tileLoadFunction: this.tileLoadFunction,
+          zDirection: this.zDirection,
         });
       } else {
         newSource = new SourceOSM({
           tileLoadFunction: this.tileLoadFunction,
+          zDirection: this.zDirection,
         });
       }
       this.olLayer.setSource(newSource);
