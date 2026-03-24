@@ -372,9 +372,9 @@ class Map extends Base {
         if (zoom.length > 1) { inmeters = true; }
         zoom = zoom[0];
       }
-      this.setZoom(zoom, inmeters);
+      this.setZoom(zoom, inmeters, true);
     } else if (isNullOrEmpty(params.bbox)) {
-      this.setZoom(IDEE.config.DEFAULT_ZOOM);
+      this.setZoom(IDEE.config.DEFAULT_ZOOM, false, false);
     }
 
     // zoomConstrains
@@ -2921,6 +2921,24 @@ class Map extends Base {
   }
 
   /**
+   * Este método añade un estilo al control scaleline para que
+   * no choque con los controles scale y wmcselector cuando la pantalla
+   * no es lo suficientemente ancha y los tres controles han sido añadidos.
+   * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+   * @private
+   * @function
+   * @param {Object} panel panel del control.
+   * @api
+   */
+  addUpClass_(panel) {
+    panel.on(EventType.ADDED_TO_MAP, (html) => {
+      if (this.getControls(['wmcselector', 'scale', 'scaleline']).length === 3) {
+        this.getControls(['scaleline'])[0].getImpl().getElement().classList.add('ol-scale-line-up');
+      }
+    });
+  }
+
+  /**
    * Este método agrega controles especificados por el usuario.
    *
    * @public
@@ -3294,10 +3312,11 @@ class Map extends Base {
    * @param {Boolean} inmeters Si es verdadero se indica que el zoom dado por parámetro
    * está en metros, en caso contrario como nivel de zoom. En el caso de
    * ser metros a mayor cantidad menor nivel de zoom. Por defecto, es falso.
+   * @param {Boolean} isUserZoom Indica si el zoom es establecido por el usuario.
    * @returns {Map} Devuelve el estado del mapa.
    * @api
    */
-  setZoom(zoomParam, inmeters = false) {
+  setZoom(zoomParam, inmeters = false, isUserZoom = true) {
     // checks if the param is null or empty
     if (isNullOrEmpty(zoomParam)) {
       Exception(getValue('exception').no_zoom);
@@ -3311,7 +3330,7 @@ class Map extends Base {
     try {
       // parses the parameter
       const zoom = parameter.zoom(zoomParam);
-      this._userZoom = zoom;
+      if (isUserZoom) this._userZoom = zoom;
       this.getImpl().setZoom(zoom, inmeters);
     } catch (err) {
       Dialog.error(err.toString());
@@ -3764,7 +3783,7 @@ class Map extends Base {
       const oldProj = this.getProjection();
       projection = parameter.projection(projection);
 
-      if (oldProj.code !== projection.code) {
+      if (oldProj.code !== projection.code || asDefault === true) {
         this.getImpl().setProjection(projection);
         this._defaultProj = (this._defaultProj && (asDefault === true));
         this.fire(EventType.CHANGE_PROJ, [oldProj, projection]);
@@ -3983,8 +4002,15 @@ class Map extends Base {
    */
   zoomToMaxExtent(keepUserZoom) {
     this.calculateMaxExtent().then((maxExtent) => {
-      if (keepUserZoom !== true || isNullOrEmpty(this._userZoom)) {
-        this.setBbox(maxExtent);
+      this.setBbox(maxExtent);
+      if (keepUserZoom === true) {
+        this.once(EventType.COMPLETED, () => {
+          if (!isNullOrEmpty(this._userZoom)) {
+            this.setZoom(this._userZoom);
+          } else {
+            this.setZoom(IDEE.config.DEFAULT_ZOOM);
+          }
+        });
       }
       this._finishedMaxExtent = true;
       this._checkCompleted();

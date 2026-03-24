@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.ign.es/resources/viewer/images/logoApiCnig0.5.png" height="152" />
+  <img src="https://componentes.idee.es/estaticos/imagenes/logos/API_IDEE/API_2/API_2.svg" height="152" />
 </p>
 <h1 align="center"><strong>API IDEE</strong> <small>🔌 IDEE.plugin.FilteredSearch</small></h1>
 
@@ -13,12 +13,12 @@ Plugin que permite aplicar filtros sobre las capas de un mapa y visualizar de fo
 
 Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
 Para uso de implementación OpenLayers:
-- filteredsearch.ol.min.js
-- filteredsearch.ol.min.css
+- **filteredsearch.ol.min.js**
+- **filteredsearch.ol.min.css**
 
 Para uso de implementación Cesium:
-- filteredsearch.cesium.min.js
-- filteredsearch.cesium.min.css
+- **filteredsearch.cesium.min.js**
+- **filteredsearch.cesium.min.css**
 
 ```html
  <link href="https://componentes.idee.es/api-idee/plugins/filteredsearch/filteredsearch.ol.min.css" rel="stylesheet" />
@@ -69,7 +69,7 @@ https://componentes.idee.es/api-idee?filteredsearch=position
 ```
 
 ```
-https://componentes.idee.es/api-idee?filteredsearch=BR
+https://componentes.idee.es/api-idee?filteredsearch=BR&layers=OSM,WFS*RED_REGENTE*https://www.ign.es/wfs/redes-geodesicas?*RED_REGENTE*POINT
 ```
 
 ### Ejemplo de uso API-REST en base64
@@ -87,7 +87,7 @@ Ejemplo de constructor:
 }
 ```
 ```
-https://componentes.idee.es/api-idee?filteredsearch=base64=eyJwb3NpdGlvbiI6IkJSIn0=
+https://componentes.idee.es/api-idee?filteredsearch=base64=eyJwb3NpdGlvbiI6IkJSIn0=&layers=OSM,WFS*RED_REGENTE*https://www.ign.es/wfs/redes-geodesicas?*RED_REGENTE*POINT
 ```
 
     
@@ -165,4 +165,5 @@ $npm i -g npm-check-updates
 $ncu
 ```
 
-
+## Tabla de compatibilidad de versiones   
+[Consulta el api resourcePlugin](https://componentes.idee.es/api-idee/api/actions/resourcesPlugins?name=filteredsearch)

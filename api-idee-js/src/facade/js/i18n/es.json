@@ -266,9 +266,10 @@
     "formatError": "La capa [replace1] de tipo [replace2] no soporta FORMAT",
     "file_size": "El fichero seleccionado sobrepasa el máximo de 20 MB permitido.",
     "file_load": "Error al cargar el fichero.",
+    "file_empty": "Error archivo no detectado",
     "no_geoms": "No se han detectado geometrías en este fichero.",
     "file_load_correct": "Error al cargar el fichero. Compruebe que se trata del fichero correcto.",
-    "file_extension": "No se ha insertado una extensión de archivo permitida. Las permitidas son: KML, SHP(.zip), GPX, GML y GeoJSON.",
+    "file_extension": "No se ha insertado una extensión de archivo permitida. Las permitidas son: KML, SHP(.zip), GPX, GML, GeoJSON, GPKG, TIF and TIFF",
     "no_setprojection": "La implementación usada no puede cambiar la proyección del mapa.",
     "no_zoomconstrains": "La implementación usada no puede utilizar el parámetro zoomConstrains.",
     "setZoomConstrains_method": "La implementación usada no posee el método setIntermediateZooms.",
@@ -332,6 +333,8 @@
     "setminscale_no_apply": "No es posible aplicar la mínima escala a la capa WMC.",
     "setmaxscale_no_apply": "No es posible aplicar la máxima escala a la capa WMC.",
     "wkt_toCQL_method": "La implementación usada no puede crear el formateador WKT por lo que no incluirá filtros CQL.",
+    "animated_method": "La implementación usada no podrá desactivar ni modificar la animación",
+    "deactivatechangeresolution_method": "La implementación usada no posee el método deactivateChangeResolutionEvent",
     "enableDrag_deprecated": "El método enableDrag de la clase Map ha quedado obsoleto, se recomienda usar en su lugar enablePan."
   }
 }

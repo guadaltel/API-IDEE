@@ -5,7 +5,9 @@
 import OLSourceVectorTile from 'ol/source/VectorTile';
 import OLLayerVectorTile from 'ol/layer/VectorTile';
 // import { get as getProj } from 'ol/proj';
-import { isNullOrEmpty, extend, isObject } from 'IDEE/util/Utils';
+import {
+  isNullOrEmpty, extend, isObject, getZDirectionFunction,
+} from 'IDEE/util/Utils';
 import * as EventType from 'IDEE/event/eventtype';
 import TileEventType from 'ol/source/TileEventType';
 import TileState from 'ol/TileState';
@@ -119,6 +121,12 @@ class MVT extends Vector {
      * MVT tileSize_. Tamaño de la tesela, por defecto 256.
      */
     this.tileSize_ = typeof parameters.tileSize === 'number' ? parameters.tileSize : 256;
+     
+    /** MVT zDirection. Función de dirección Z para la carga de teselas.
+     * @private
+     * @type {Function}
+     */
+    this.zDirection = vendorOptions?.zDirection || getZDirectionFunction();
 
     /**
      * MVT layers_. Otras capas.
@@ -198,7 +206,7 @@ class MVT extends Vector {
       });
     }
 
-    const extent = this.maxExtent_ || this.facadeVector_.getMaxExtent();
+    const extent = this.facadeVector_.getMaxExtent();
     const ticket = IDEE.config.TICKET;
     const url = isNullOrEmpty(ticket) ? this.url : `${this.url}?ticket=${ticket}`;
 
@@ -211,6 +219,7 @@ class MVT extends Vector {
         extent: projection.getExtent(),
         tileSize: this.getTileSize(),
       }),
+      zDirection: this.zDirection,
     });
 
     // register events in order to fire the LOAD event

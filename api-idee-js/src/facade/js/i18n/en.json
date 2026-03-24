@@ -265,9 +265,10 @@
     "formatError": "Layer [replace1] of type [replace2] does not support FORMAT.",
     "file_size": "The selected file exceeds the maximum 20 MB allowed.",
     "file_load": "Error when loading the file.",
+    "file_empty": "Error file was not detected",
     "no_geoms": "No geometries have been detected in this file.",
     "file_load_correct": "Error when loading the file. Check that it is the right file.",
-    "file_extension": "A not allowed file extension has been inserted. The allowed ones are: KML, SHP(.zip), GPX, GML and GeoJSON.",
+    "file_extension": "A not allowed file extension has been inserted. The allowed ones are: KML, SHP(.zip), GPX, GML, GeoJSON, GPKG, TIF and TIFF",
     "no_setprojection": "The implementation used cannot change the map projection.",
     "no_zoomconstrains": "The implementation used cannot use the zoomConstrains parameter.",
     "setZoomConstrains_method": "The implementation used does not have the setIntermediateZooms method.",
@@ -331,6 +332,8 @@
     "setminscale_no_apply": "It is not possible to apply minimum scale to the WMC layer.",
     "setmaxscale_no_apply": "It is not possible to apply maximum scale to the WMC layer.",
     "wkt_toCQL_method": "The used implementation can not create WKT formatter so it will not include CQL filters.",
+    "animated_method": "The used implementation will not be able to disable or modify the animation.",
+    "deactivatechangeresolution_method": "The used implementation does not have the deactivateChangeResolutionEvent method.",
     "enableDrag_deprecated": "The enableDrag method of the Map class has been deprecated, it is recommended to use enablePan instead."
   }
 }

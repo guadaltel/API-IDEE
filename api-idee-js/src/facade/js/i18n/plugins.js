@@ -60,10 +60,6 @@ import enQueryattributes from '../../../plugins/queryattributes/src/facade/js/i1
 // import esQuerydatabase from '../../../plugins/querydatabase/src/facade/js/i18n/es';
 // import enQuerydatabase from '../../../plugins/querydatabase/src/facade/js/i18n/en';
 
-// Rescale
-import esRescale from '../../../plugins/rescale/src/facade/js/i18n/es';
-import enRescale from '../../../plugins/rescale/src/facade/js/i18n/en';
-
 // Selectionzoom
 import esSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/es';
 import enSelectionzoom from '../../../plugins/selectionzoom/src/facade/js/i18n/en';
@@ -167,10 +163,6 @@ const pluginsLanguage = {
     enQuerydatabase,
   },
   */
-  rescale: {
-    esRescale,
-    enRescale,
-  },
   selectionzoom: {
     esSelectionzoom,
     enSelectionzoom,

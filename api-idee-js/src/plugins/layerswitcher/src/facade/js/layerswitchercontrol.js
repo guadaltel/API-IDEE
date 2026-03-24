@@ -67,7 +67,7 @@ export default class LayerswitcherControl extends IDEE.Control {
   constructor(options = {}) {
     if (IDEE.utils.isUndefined(LayerswitcherImplControl)
       || (IDEE.utils.isObject(LayerswitcherImplControl)
-      && IDEE.utils.isNullOrEmpty(Object.keys(LayerswitcherImplControl)))) {
+        && IDEE.utils.isNullOrEmpty(Object.keys(LayerswitcherImplControl)))) {
       IDEE.exception(getValue('exception.impl'));
     }
 
@@ -205,7 +205,7 @@ export default class LayerswitcherControl extends IDEE.Control {
 
     map.on(IDEE.evt.ADDED_LAYER, (layers) => {
       if (this.modeSelectLayers === 'radio'
-      && this.isCheckedLayerRadio === true) {
+        && this.isCheckedLayerRadio === true) {
         layers.forEach((layer) => {
           if (layer.isBase === false && layer.displayInLayerSwitcher) {
             if (layer instanceof IDEE.layer.LayerGroup) {
@@ -1159,150 +1159,120 @@ export default class LayerswitcherControl extends IDEE.Control {
           } else if (url.indexOf('{z}/{x}/{y}') >= 0) {
             this.printLayerModal(url, 'xyz');
           } else {
-            const promise = new Promise((success, reject) => {
+            const urlLower = url.toLowerCase();
+            const isWFSPath = urlLower.endsWith('/wfs') || urlLower.includes('service=wfs');
+            const isWMSPath = urlLower.endsWith('/wms') || urlLower.includes('service=wms');
+
+            const promise2 = (isWFSPath) ? Promise.resolve({ text: '' }) : new Promise((success, reject) => {
               const id = setTimeout(() => reject(), 15000);
-              // IDEE.proxy(this.useProxy);
-              IDEE.remote.get(IDEE.utils.getWMTSGetCapabilitiesUrl(url)).then((response) => {
+              IDEE.remote.get(IDEE.utils.getWMSGetCapabilitiesUrl(url, '1.3.0')).then((response2) => {
                 clearTimeout(id);
-                success(response);
+                success(response2);
               });
-              // IDEE.proxy(this.statusProxy);
             });
+            const promisewfs = (isWMSPath) ? Promise.resolve({ text: '' }) : new Promise((success, reject) => {
+              const id = setTimeout(() => reject(), 15000);
+              let urlAux = url;
+              urlAux = IDEE.utils.addParameters(url, 'request=GetCapabilities');
+              urlAux = IDEE.utils.addParameters(urlAux, 'service=WFS');
+              urlAux = IDEE.utils.addParameters(urlAux, { version: '1.3.0' });
 
-            promise.then((response) => {
-              if (response.text && !IDEE.utils.isNullOrEmpty(response.text) && response.text.indexOf('<TileMatrixSetLink>') >= 0 && response.text.indexOf('Operation name="GetTile"') >= 0) {
-                const getCapabilitiesParser = new IDEE.impl.format.WMTSCapabilities();
-                const getCapabilities = getCapabilitiesParser.read(response.xml);
-                this.serviceCapabilities = getCapabilities.capabilities || {};
-                const layers = IDEE.impl.util.wmtscapabilities.getLayers(
-                  getCapabilities.capabilities,
-                  url,
-                  this.map_.getProjection().code,
-                );
-                this.capabilities = this.filterResults(layers);
-                this.showResults();
-              } else {
-                const promise2 = new Promise((success, reject) => {
-                  const id = setTimeout(() => reject(), 15000);
-                  // IDEE.proxy(this.useProxy);
-                  IDEE.remote.get(IDEE.utils.getWMSGetCapabilitiesUrl(url, '1.3.0')).then((response2) => {
-                    clearTimeout(id);
-                    success(response2);
-                  });
-                  // IDEE.proxy(this.statusProxy);
-                });
-                const promisewfs = new Promise((success, reject) => {
-                  const id = setTimeout(() => reject(), 15000);
-                  let urlAux = url;
-                  urlAux = IDEE.utils.addParameters(url, 'request=GetCapabilities');
-                  urlAux = IDEE.utils.addParameters(urlAux, 'service=WFS');
+              IDEE.remote.get(urlAux).then((responsewfs) => {
+                clearTimeout(id);
+                success(responsewfs);
+              });
+            });
+            Promise.all([promise2, promisewfs]).then((response2) => {
+              let wms = false;
+              let wfs = false;
 
-                  urlAux = IDEE.utils.addParameters(urlAux, {
-                    version: '1.3.0',
-                  });
-                  // IDEE.proxy(this.useProxy);
-                  IDEE.remote.get(urlAux).then((responsewfs) => {
-                    clearTimeout(id);
-                    success(responsewfs);
-                  });
-                  // IDEE.proxy(this.statusProxy);
-                });
-                Promise.all([promise2, promisewfs]).then((response2) => {
-                  let wms = false;
-                  let wfs = false;
+              if (!IDEE.utils.isNullOrEmpty(response2[0].text) && response2[0].text.indexOf('<TileMatrixSetLink>') === -1 && response2[0].text.indexOf('<GetMap>') >= 0) {
+                wms = true;
+              }
 
-                  if (!IDEE.utils.isNullOrEmpty(response2[0].text) && response2[0].text.indexOf('<TileMatrixSetLink>') === -1 && response2[0].text.indexOf('<GetMap>') >= 0) {
-                    wms = true;
-                  }
+              if (!IDEE.utils.isNullOrEmpty(response2[1].text) && response2[1].text.indexOf('<TileMatrixSetLink>') === -1 && response2[1].text.indexOf('Operation name="GetFeature"') >= 0) {
+                wfs = true;
+              }
 
-                  if (!IDEE.utils.isNullOrEmpty(response2[1].text) && response2[1].text.indexOf('<TileMatrixSetLink>') === -1 && response2[1].text.indexOf('Operation name="GetFeature"') >= 0) {
-                    wfs = true;
-                  }
-
-                  if (wms || wfs) {
-                    try {
-                      // WMS
-                      if (wms) {
-                        const getCapabilitiesParser = new IDEE.impl.format.WMSCapabilities();
-                        const getCapabilities = getCapabilitiesParser.read(response2[0].xml || new DOMParser().parseFromString(response2[0].text, 'text/xml'));
-                        this.serviceCapabilities = getCapabilities.Service || {};
-                        const getCapabilitiesUtils = new IDEE.impl.GetCapabilities(
-                          getCapabilities,
-                          url,
-                          this.map_.getProjection().code,
-                        );
-                        this.capabilities = this.filterResults(getCapabilitiesUtils.getLayers());
-                        this.capabilities.forEach((layer) => {
-                          try {
-                            this.getParents(getCapabilities, layer);
-                          } catch (err) { /* Continue */ }
-                        });
-                      }
-                      // WFS
-                      let wfsDatas;
-                      if (wfs) {
-                        wfsDatas = this.readWFSCapabilities(response2[1]);
-                      }
-                      this.showResults(wfsDatas);
-                    } catch (error) {
-                      IDEE.dialog.error(getValue('exception.capabilities'), undefined, this.order);
-                      this.removeLoading();
-                    }
-                  } else {
-                    this.checkIfOGCAPIFeatures(url).then((reponseIsJson) => {
-                      if (reponseIsJson === true) {
-                        this.checkIfOGCAPICollection(url).then((responseIsOGC) => {
-                          if (responseIsOGC) {
-                            this.printOGCModal(url);
-                          } else {
-                            IDEE.dialog.error(getValue('exception.ogcfeatures'), undefined, this.order);
-                            this.removeLoading();
-                          }
-                        });
-                      } else {
-                        // IDEE.proxy(this.useProxy);
-                        const extension = url.includes('.') ? url.substring(url.lastIndexOf('.') + 1, url.length) : '';
-                        if (['zip', 'gpx', 'gml'].includes(extension)) {
-                          this.openFileFromUrl(url, extension);
-                        } else {
-                          IDEE.remote.get(url).then((response3) => {
-                            // GEOJSON
-                            if (IDEE.utils.isNullOrEmpty(response3.text)) {
-                              IDEE.remote.get(searchInput.value.trim()).then((response4) => {
-                                if (!IDEE.utils.isNullOrEmpty(response4.text) && response4.text.replaceAll('\r\n', '').replaceAll(' ', '').indexOf('"type":"FeatureCollection"') >= 0) {
-                                  this.printLayerModal(searchInput.value.trim(), 'geojson');
-                                } else {
-                                  IDEE.dialog.error(getValue('exception.capabilities'), undefined, this.order);
-                                  this.removeLoading();
-                                }
-                              });
-                            } else if (response3.text.replaceAll('\r\n', '').replaceAll(' ', '').indexOf('"type":"FeatureCollection"') >= 0) {
-                              this.printLayerModal(url, 'geojson');
-                            } else if (response3.text.indexOf('<kml ') >= 0) {
-                              const parser = new DOMParser();
-                              const xmlDoc = parser.parseFromString(response3.text, 'text/xml');
-                              const folders = xmlDoc.getElementsByTagName('Folder');
-                              let cont = -1;
-                              const names = Array.from(folders).map((folder) => {
-                                cont += 1;
-                                const name = folder.querySelector(':scope > name') ? folder.querySelector(':scope > name').textContent.trim() : `Layer__${cont}`;
-                                return { name };
-                              });
-                              this.printLayerModal(url, 'kml', names);
-                            }
-                          });
-                        }
-                        // IDEE.proxy(this.statusProxy);
-                      }
+              if (wms || wfs) {
+                try {
+                  // WMS
+                  if (wms) {
+                    const getCapabilitiesParser = new IDEE.impl.format.WMSCapabilities();
+                    const getCapabilities = getCapabilitiesParser.read(response2[0].xml || new DOMParser().parseFromString(response2[0].text, 'text/xml'));
+                    this.serviceCapabilities = getCapabilities.Service || {};
+                    const getCapabilitiesUtils = new IDEE.impl.GetCapabilities(
+                      getCapabilities,
+                      url,
+                      this.map_.getProjection().code,
+                    );
+                    this.capabilities = this.filterResults(getCapabilitiesUtils.getLayers());
+                    this.capabilities.forEach((layer) => {
+                      try {
+                        this.getParents(getCapabilities, layer);
+                      } catch (err) { /* Continue */ }
                     });
-                    // IDEE.proxy(this.statusProxy);
                   }
-                }).catch((eerror) => {
+                  // WFS
+                  let wfsDatas;
+                  if (wfs) {
+                    wfsDatas = this.readWFSCapabilities(response2[1]);
+                  }
+                  this.showResults(wfsDatas);
+                } catch (error) {
                   IDEE.dialog.error(getValue('exception.capabilities'), undefined, this.order);
                   this.removeLoading();
+                }
+              } else {
+                this.checkIfOGCAPIFeatures(url).then((reponseIsJson) => {
+                  if (reponseIsJson === true) {
+                    this.checkIfOGCAPICollection(url).then((responseIsOGC) => {
+                      if (responseIsOGC) {
+                        this.printOGCModal(url);
+                      } else {
+                        IDEE.dialog.error(getValue('exception.ogcfeatures'), undefined, this.order);
+                        this.removeLoading();
+                      }
+                    });
+                  } else {
+                    // IDEE.proxy(this.useProxy);
+                    const extension = url.includes('.') ? url.substring(url.lastIndexOf('.') + 1, url.length) : '';
+                    if (['zip', 'gpx', 'gml'].includes(extension)) {
+                      this.openFileFromUrl(url, extension);
+                    } else {
+                      IDEE.remote.get(url).then((response3) => {
+                        // GEOJSON
+                        if (IDEE.utils.isNullOrEmpty(response3.text)) {
+                          IDEE.remote.get(searchInput.value.trim()).then((response4) => {
+                            if (!IDEE.utils.isNullOrEmpty(response4.text) && response4.text.replaceAll('\r\n', '').replaceAll(' ', '').indexOf('"type":"FeatureCollection"') >= 0) {
+                              this.printLayerModal(searchInput.value.trim(), 'geojson');
+                            } else {
+                              IDEE.dialog.error(getValue('exception.capabilities'), undefined, this.order);
+                              this.removeLoading();
+                            }
+                          });
+                        } else if (response3.text.replaceAll('\r\n', '').replaceAll(' ', '').indexOf('"type":"FeatureCollection"') >= 0) {
+                          this.printLayerModal(url, 'geojson');
+                        } else if (response3.text.indexOf('<kml ') >= 0) {
+                          const parser = new DOMParser();
+                          const xmlDoc = parser.parseFromString(response3.text, 'text/xml');
+                          const folders = xmlDoc.getElementsByTagName('Folder');
+                          let cont = -1;
+                          const names = Array.from(folders).map((folder) => {
+                            cont += 1;
+                            const name = folder.querySelector(':scope > name') ? folder.querySelector(':scope > name').textContent.trim() : `Layer__${cont}`;
+                            return { name };
+                          });
+                          this.printLayerModal(url, 'kml', names);
+                        }
+                      });
+                    }
+                    // IDEE.proxy(this.statusProxy);
+                  }
                 });
+                // IDEE.proxy(this.statusProxy);
               }
-            }).catch((err) => {
+            }).catch((eerror) => {
               IDEE.dialog.error(getValue('exception.capabilities'), undefined, this.order);
               this.removeLoading();
             });
@@ -1332,7 +1302,7 @@ export default class LayerswitcherControl extends IDEE.Control {
     const hasPrecharged = (precharged.groups !== undefined && precharged.groups.length > 0)
       || (precharged.services !== undefined && precharged.services.length > 0);
     const codsiActive = this.codsiActive;
-    const accept = '.kml, .zip, .gpx, .geojson, .gml, .json';
+    const accept = ['.kml', '.zip', '.gpx', '.geojson', '.gml', '.json', '.gpkg', '.tif', '.tiff'];
     const addServices = IDEE.template.compileSync(addServicesTemplate, {
       jsonp: true,
       parseToHtml: false,
@@ -1424,7 +1394,9 @@ export default class LayerswitcherControl extends IDEE.Control {
   }
 
   changeFile(inputFile) {
-    IDEE.loadFiles.addFileToMap(this.map_, inputFile.files[0]);
+    /** @type {File} */
+    const file = inputFile.files[0];
+    IDEE.loadFiles.addFileToMap(this.map_, file);
     inputFile.value = '';
     const buttonClose = document.querySelector('div.m-dialog.info div.m-button > button');
     buttonClose.click();
@@ -1433,7 +1405,13 @@ export default class LayerswitcherControl extends IDEE.Control {
   openFileFromUrl(url, extension) {
     if (IDEE.utils.isUrl(url)) {
       const fileName = url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.'));
-      if (['zip', 'kml', 'gpx', 'geojson', 'gml', 'json'].includes(extension) > -1) {
+      if (['tif', 'tiff'].includes(extension)) {
+        IDEE.loadFiles.loadGeotiffLayer(
+          this.map_,
+          url,
+          fileName,
+        );
+      } else if (['zip', 'kml', 'gpx', 'geojson', 'gml', 'json', 'gpkg'].includes(extension)) {
         if (extension === 'zip') {
           this.downloadShp(url, fileName);
         } else {
@@ -1656,8 +1634,8 @@ export default class LayerswitcherControl extends IDEE.Control {
         allServices.forEach((service) => {
           if (service.type === layer.type && this.checkUrls(service.url, layer.url)) {
             if (service.white_list !== undefined && service.white_list.length > 0
-                && service.white_list.indexOf(layer.name) > -1
-                && layerNames.indexOf(layer.name) === -1) {
+              && service.white_list.indexOf(layer.name) > -1
+              && layerNames.indexOf(layer.name) === -1) {
               layers.push(layer);
               layerNames.push(layer.name);
             } else if (service.white_list === undefined && layerNames.indexOf(layer.name) === -1) {
@@ -1677,18 +1655,18 @@ export default class LayerswitcherControl extends IDEE.Control {
     } else if (this.precharged.groups !== undefined && this.precharged.groups.length > 0) {
       this.precharged.groups.forEach((group) => {
         if (group.services !== undefined && group.services.length > 0
-            && group.name === this.filterName) {
+          && group.name === this.filterName) {
           allLayers.forEach((layer) => {
             let insideService = false;
             group.services.forEach((service) => {
               if (service.type === layer.type && this.checkUrls(service.url, layer.url)) {
                 if (service.white_list !== undefined && service.white_list.length > 0
-                    && service.white_list.indexOf(layer.name) > -1
-                    && layerNames.indexOf(layer.name) === -1) {
+                  && service.white_list.indexOf(layer.name) > -1
+                  && layerNames.indexOf(layer.name) === -1) {
                   layers.push(layer);
                   layerNames.push(layer.name);
                 } else if (service.white_list === undefined
-                    && layerNames.indexOf(layer.name) === -1) {
+                  && layerNames.indexOf(layer.name) === -1) {
                   layers.push(layer);
                   layerNames.push(layer.name);
                 }
@@ -2054,7 +2032,7 @@ export default class LayerswitcherControl extends IDEE.Control {
                 if (meta.style !== undefined && meta.style.length > 0) {
                   meta.style.forEach((s) => {
                     if (s.isDefault === true && s.LegendURL !== undefined
-                        && s.LegendURL.length > 0) {
+                      && s.LegendURL.length > 0) {
                       const urlDefaultStyle = s.LegendURL[0].href;
                       this.capabilities[j].setLegendURL(urlDefaultStyle);
                     }

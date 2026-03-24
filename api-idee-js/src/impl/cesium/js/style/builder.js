@@ -30,6 +30,9 @@ import PointFontSymbol from '../point/FontSymbol';
 import Simple from './Simple';
 import CesiumStyleFillPattern from '../ext/CesiumStyleFillPattern';
 
+const baselineInCesium = [Baseline.TOP, Baseline.BOTTOM, Baseline.BASELINE, Baseline.CENTER];
+const alignInCesium = [Align.LEFT, Align.CENTER, Align.RIGHT];
+
 /**
  * Esta función devuelve el relleno.
  * @public
@@ -154,83 +157,6 @@ export const getStrokePatern = (options, featureVariable, layer) => {
 };
 
 /**
- * Esta función devuelve la etiqueta.
- *
- * @public
- * @function
- *
- * @param {Object} options Opciones ("text", "align", "baseline",
- * "font", "rotateWithView", "scale", "offsetX", "offsetY",
- * "fill", "textAlign", "textBaseline", "text" y "rotation").
- * @param {Object} featureVariable Objetos geográficos.
- * @param {Object} layer Capas.
- *
- * @return {Object} Devuelve la etiqueta.
- * @api stable
- */
-export const getLabel = (options, featureVariable, layer) => {
-  const DEFAULT_LABEL_COLOR = '#000';
-  const DEFAULT_ALIGN = HorizontalOrigin.CENTER;
-  const DEFAULT_BASELINE = VerticalOrigin.TOP;
-
-  let label = {};
-  if (options.label) {
-    let labelText = {};
-    const textLabel = Simple.getValue(options.label.text, featureVariable, layer);
-    const align = Simple.getValue(options.label.align, featureVariable, layer);
-    const baseline = Simple.getValue(options.label.baseline, featureVariable, layer);
-    labelText = {
-      font: Simple.getValue(options.label.font, featureVariable, layer) || '10px sans-serif',
-      scale: Simple.getValue(options.label.scale, featureVariable, layer),
-      pixelOffset: new Cartesian2(
-        Simple.getValue(
-          options.label.offset ? options.label.offset[0] : undefined,
-          featureVariable,
-          layer,
-        ),
-        Simple.getValue(
-          options.label.offset ? options.label.offset[1] : undefined,
-          featureVariable,
-          layer,
-        ),
-      ),
-      fillColor: Color.fromCssColorString(Simple.getValue(
-        options.label.color || DEFAULT_LABEL_COLOR,
-        featureVariable,
-        layer,
-      )),
-      horizontalOrigin: Object.values(Align).includes(align)
-        ? HorizontalOrigin[align.toUpperCase()] : DEFAULT_ALIGN,
-      verticalOrigin: Object.values(Baseline).includes(baseline)
-        ? VerticalOrigin[baseline.toUpperCase()] : DEFAULT_BASELINE,
-      text: textLabel === undefined ? undefined : String(textLabel),
-      style: LabelStyle.FILL,
-    };
-    if (!isNullOrEmpty(options.label.stroke)) {
-      extend(labelText, {
-        outlineColor: Color.fromCssColorString(
-          Simple.getValue(options.label.stroke.color, featureVariable, layer) || '#000000',
-        ),
-        outlineWidth: Simple.getValue(options.label.stroke.width, featureVariable, layer) || 1,
-        style: LabelStyle.FILL_AND_OUTLINE,
-      }, true);
-    }
-    label = { label: new LabelGraphics(labelText) };
-    label.label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-  }
-  return label;
-};
-
-/**
- * Esta función devuelve el icono.
- * @public
- * @const
- * @type {Object}
- * @api stable
- */
-export const iconCache = {};
-
-/**
  * Esta función devuelve la posición relativa al terreno.
  * Solo tendrá efecto si el parámetro height de la capa tiene valor.
  *
@@ -257,6 +183,84 @@ export const getHeightReference = (options, featureVariable, layer) => {
   }
   return opt;
 };
+
+/**
+ * Esta función devuelve la etiqueta.
+ *
+ * @public
+ * @function
+ *
+ * @param {Object} options Opciones ("text", "align", "baseline",
+ * "font", "rotateWithView", "scale", "offsetX", "offsetY",
+ * "fill", "textAlign", "textBaseline", "text" y "rotation").
+ * @param {Object} featureVariable Objetos geográficos.
+ * @param {Object} layer Capas.
+ *
+ * @return {Object} Devuelve la etiqueta.
+ * @api stable
+ */
+export const getLabel = (options, featureVariable, layer) => {
+  const DEFAULT_LABEL_COLOR = '#000';
+  const DEFAULT_ALIGN = HorizontalOrigin.CENTER;
+  const DEFAULT_BASELINE = VerticalOrigin.CENTER;
+
+  let label = {};
+  if (options.label) {
+    let labelText = {};
+    const textLabel = Simple.getValue(options.label.text, featureVariable, layer);
+    const align = Simple.getValue(options.label.align, featureVariable, layer);
+    const baseline = Simple.getValue(options.label.baseline, featureVariable, layer);
+    labelText = {
+      font: Simple.getValue(options.label.font, featureVariable, layer) || '10px sans-serif',
+      scale: Simple.getValue(options.label.scale, featureVariable, layer) || 1,
+      pixelOffset: new Cartesian2(
+        Simple.getValue(
+          options.label.offset ? options.label.offset[0] : 0,
+          featureVariable,
+          layer,
+        ),
+        Simple.getValue(
+          options.label.offset ? options.label.offset[1] : 0,
+          featureVariable,
+          layer,
+        ),
+      ),
+      fillColor: Color.fromCssColorString(Simple.getValue(
+        options.label.color || DEFAULT_LABEL_COLOR,
+        featureVariable,
+        layer,
+      )),
+      horizontalOrigin: alignInCesium.includes(align)
+        ? HorizontalOrigin[align.toUpperCase()] : DEFAULT_ALIGN,
+      verticalOrigin: baselineInCesium.includes(baseline)
+        ? VerticalOrigin[baseline.toUpperCase()] : DEFAULT_BASELINE,
+      text: textLabel === undefined ? undefined : String(textLabel),
+      style: LabelStyle.FILL,
+      heightReference: getHeightReference(options, featureVariable, layer).heightReference,
+    };
+
+    if (!isNullOrEmpty(options.label.stroke)) {
+      extend(labelText, {
+        outlineColor: Color.fromCssColorString(
+          Simple.getValue(options.label.stroke.color, featureVariable, layer) || '#000000',
+        ),
+        outlineWidth: Simple.getValue(options.label.stroke.width, featureVariable, layer) || 1,
+        style: LabelStyle.FILL_AND_OUTLINE,
+      }, true);
+    }
+    label = { label: new LabelGraphics(labelText) };
+  }
+  return label;
+};
+
+/**
+ * Esta función devuelve el icono.
+ * @public
+ * @const
+ * @type {Object}
+ * @api stable
+ */
+export const iconCache = {};
 
 /**
  * Esta función devuelve el icono.
@@ -332,7 +336,7 @@ export const getIconSrc = (options, featureVariable, layer) => {
           1.0,
           Simple.getValue(options.icon.opacity || 1, featureVariable, layer),
         ),
-        scale: Simple.getValue(options.icon.scale, featureVariable, layer),
+        scale: Simple.getValue(options.icon.scale || 1, featureVariable, layer),
         rotation: Simple.getValue(
           options.icon.rotation ? -Number(options.icon.rotation) : 0,
           featureVariable,
@@ -351,14 +355,12 @@ export const getIconSrc = (options, featureVariable, layer) => {
           ) : undefined,
         pixelOffset: new Cartesian2(
           Simple.getValue(options.icon.anchor
-            ? options.icon.anchor[1] : undefined, featureVariable, layer),
+            ? options.icon.anchor[1] : 0, featureVariable, layer),
           Simple.getValue(options.icon.anchor
-            ? options.icon.anchor[0] : undefined, featureVariable, layer),
+            ? options.icon.anchor[0] : 0, featureVariable, layer),
         ),
-        verticalOrigin: Object.values(Baseline).includes(baseline) && options.icon.anchor
-          ? VerticalOrigin[baseline.toUpperCase()] : VerticalOrigin.CENTER,
-        horizontalOrigin: Object.values(Align).includes(align) && options.icon.anchor
-          ? HorizontalOrigin[align.toUpperCase()] : HorizontalOrigin.CENTER,
+        verticalOrigin: baselineInCesium.includes(baseline) && options.icon.anchor,
+        horizontalOrigin: alignInCesium.includes(align) && options.icon.anchor,
         sizeInMeters: false,
       });
     }
@@ -591,6 +593,7 @@ export const getLineText = (options, featureVariable, layer) => {
         Simple.getValue(options.label.offset
           ? options.label.offset[1] : undefined, featureVariable, layer),
       ),
+      heightReference: getHeightReference(options, featureVariable, layer).heightReference,
     };
     if (!isNullOrEmpty(label.stroke)) {
       extend(labelText, {
@@ -602,7 +605,6 @@ export const getLineText = (options, featureVariable, layer) => {
       }, true);
     }
     textPathStyle = { label: new LabelGraphics(labelText) };
-    label.disableDepthTestDistance = Number.POSITIVE_INFINITY;
   }
   return textPathStyle;
 };

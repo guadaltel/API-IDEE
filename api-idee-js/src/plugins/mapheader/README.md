@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.ign.es/resources/viewer/images/logoApiCnig0.5.png" height="152" />
+  <img src="https://componentes.idee.es/estaticos/imagenes/logos/API_IDEE/API_2/API_2.svg" height="152" />
 </p>
 <h1 align="center"><strong>API IDEE</strong> <small>🔌 IDEE.plugin.Mapheader</small></h1>
 
@@ -13,12 +13,12 @@
 
 Para que el plugin funcione correctamente es necesario importar las siguientes dependencias en el documento html:
 Para uso de implementación OpenLayers:
-- mapheader.ol.min.js
-- mapheader.ol.min.css
+- **mapheader.ol.min.js**
+- **mapheader.ol.min.css**
 
 Para uso de implementación Cesium:
-- mapheader.cesium.min.js
-- mapheader.cesium.min.css
+- **mapheader.cesium.min.js**
+- **mapheader.cesium.min.css**
 
 ```html
  <link href="https://componentes.idee.es/api-idee/plugins/mapheader/mapheader.ol.min.css" rel="stylesheet" />
@@ -99,7 +99,7 @@ Ejemplo de constructor:
 }
 ```
 ```
-https://componentes.idee.es/api-idee?mapheader=base64=eyJvcGVuIjp0cnVlLCJodG1sQ29kZSI6IjxwPm1pIGPDoWJlY2VyYTwvcD4iLCJjc3NMaXN0IjpbImh0dHBzOi8vY2VudHJvZGVkZXNjYXJnYXMuY25pZy5lcy9DZW50cm9EZXNjYXJnYXMvY3NzL2VzdGlsb3MtY3NzLWNuaWctMjAyNC5jc3MiXX0=
+https://componentes.idee.es/api-idee?mapheader=base64=eyJvcGVuIjp0cnVlLCJodG1sQ29kZSI6IjxwPm1pIGNhYmVjZXJhPC9wPiIsImNzc0xpc3QiOlsiaHR0cHM6Ly9jZW50cm9kZWRlc2Nhcmdhcy5jbmlnLmVzL0NlbnRyb0Rlc2Nhcmdhcy9jc3MvZXN0aWxvcy1jc3MtY25pZy0yMDI0LmNzcyJdfQ==
 ```
 
 ## Ejemplos de uso
@@ -196,4 +196,5 @@ $npm i -g npm-check-updates
 $ncu
 ```
 
-
+## Tabla de compatibilidad de versiones   
+[Consulta el api resourcePlugin](https://componentes.idee.es/api-idee/api/actions/resourcesPlugins?name=mapheader)
