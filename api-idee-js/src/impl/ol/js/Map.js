@@ -3259,6 +3259,10 @@ class Map extends MObject {
     const maxZoom = olMap.getView().getMaxZoom();
     const constrainResolution = olMap.getView().getConstrainResolution();
 
+    if (!this.facadeMap_.getExtentConstrains()) {
+      olProjection.setExtent(undefined);
+    }
+
     // sets the new view
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
       ? { ...this.objectView, projection: olProjection, extent: this.viewExtent }
@@ -3290,10 +3294,10 @@ class Map extends MObject {
           prevMaxExtent.x.max, prevMaxExtent.y.max,
         ];
       }
-      // console.log(ImplUtils
-      // .transformExtent(prevMaxExtent, olPrevProjection, olProjection));
-      this.setBbox(ImplUtils
-        .transformExtent(prevMaxExtent, olPrevProjection, olProjection), false);
+      if (this.facadeMap_.getExtentConstrains()) {
+        this.setBbox(ImplUtils
+          .transformExtent(prevMaxExtent, olPrevProjection, olProjection), false);
+      }
     }
 
     // recalculates resolutions
