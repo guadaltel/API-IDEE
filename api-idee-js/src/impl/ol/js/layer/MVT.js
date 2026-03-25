@@ -121,7 +121,7 @@ class MVT extends Vector {
      * MVT tileSize_. Tamaño de la tesela, por defecto 256.
      */
     this.tileSize_ = typeof parameters.tileSize === 'number' ? parameters.tileSize : 256;
-     
+
     /** MVT zDirection. Función de dirección Z para la carga de teselas.
      * @private
      * @type {Function}
