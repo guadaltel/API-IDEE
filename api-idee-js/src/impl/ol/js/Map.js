@@ -3259,10 +3259,6 @@ class Map extends MObject {
     const maxZoom = olMap.getView().getMaxZoom();
     const constrainResolution = olMap.getView().getConstrainResolution();
 
-    if (!this.facadeMap_.getExtentConstrains()) {
-      olProjection.setExtent(undefined);
-    }
-
     // sets the new view
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
       ? { ...this.objectView, projection: olProjection, extent: this.viewExtent }
