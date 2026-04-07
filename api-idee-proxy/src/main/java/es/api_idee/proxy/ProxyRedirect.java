@@ -406,7 +406,7 @@ public void doPost(HttpServletRequest request, HttpServletResponse response) thr
           String outputBody;
           HttpClient client = null;
           HttpResponse pmResp = null;
-          HttpPost pm;
+          HttpPost pm = null;
           
           try {
             pm = new HttpPost(URLDecoder.decode(serverUrl, "UTF-8"));
@@ -438,7 +438,9 @@ public void doPost(HttpServletRequest request, HttpServletResponse response) thr
           } catch (IOException e) {
             log.error("Error al tratar el contenido de la peticion: " + e.getMessage(), e);
           } finally {
-            pm.releaseConnection();
+            if (pm != null) {
+              pm.releaseConnection();
+            }
           }
         }
       } else {
