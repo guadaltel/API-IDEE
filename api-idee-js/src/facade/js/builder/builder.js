@@ -305,7 +305,7 @@ export const buildControl = (controlParam, map) => {
         builtControl.builderParams = params; // Store params for panel creation
       }
     } else {
-      const getControlsAvailable = concatUrlPaths([window.IDEE.config.MAPEA_URL, '/api/actions/controls']);
+      const getControlsAvailable = concatUrlPaths([window.IDEE.config.API_IDEE_URL, '/api/actions/controls']);
       dialog.error(`El control ${controlName} no está definido. Consulte los controles disponibles <a href='${getControlsAvailable}' target="_blank">aquí</a>`);
     }
   } else if (controlParam instanceof Control) {
