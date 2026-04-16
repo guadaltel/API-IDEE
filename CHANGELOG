@@ -93,6 +93,7 @@
 - Se cambia la estructura del archivo GeoJSON que toma como entrada el parámetro 'precharged' de LayerSwitcher.
 - Se reconoce el parámetro 'type' del servicio cargado en LayerSwitcher.
 - Permite la creación de grupos anidados de capas en LayerSwitcher.
+- Se sube la versión de OpenLayers de la 10.4 a la 10.7.
 
 01/01/25 - Versión 1.0.0
 - Se incluye implementación 3D con Cesium
