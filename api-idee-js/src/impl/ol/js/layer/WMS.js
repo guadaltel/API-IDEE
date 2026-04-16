@@ -296,7 +296,10 @@ class WMS extends LayerBase {
       }
 
       // updates resolutions and keep the zoom
-      const oldBbox = this.map.getBbox();
+      let oldBbox = this.map.getBbox();
+      if (!isNullOrEmpty(this.map.impl_.userBbox_)) {
+        oldBbox = this.map.impl_.userBbox_;
+      }
       if (!isNullOrEmpty(oldBbox)) {
         this.map.setBbox(oldBbox);
       }

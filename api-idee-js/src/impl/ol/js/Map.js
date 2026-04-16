@@ -38,8 +38,8 @@ import { get as getRemote } from 'IDEE/util/Remote';
 import {
   isArray, isNullOrEmpty, isObject, isString, getWMSGetCapabilitiesUrl, getWMTSGetCapabilitiesUrl,
   getScaleFromResolution, includes,
-  // fillResolutions,
-  // generateResolutionsFromExtent,
+  fillResolutions,
+  generateResolutionsFromExtent,
 } from 'IDEE/util/Utils';
 import 'patches';
 import ImplUtils from './util/Utils';
@@ -2687,8 +2687,16 @@ class Map extends MObject {
     const olMap = this.getMapImpl();
 
     const view = olMap.getView();
-    const newView = new View({ ...view, ...view.getProperties(), extent: maxExtent });
-    // eslint-disable-next-line
+    let newView = new View({ ...view, ...view.getProperties(), extent: maxExtent });
+    if (IDEE.config.ACTIVATE_RESOLUTIONS) {
+      newView = new View({
+        ...view,
+        ...view.getProperties(),
+        extent: olExtent,
+        showFullExtent: true,
+      });
+    }
+    // eslint-disable-next-line no-underscore-dangle
     newView.projection_ = newView.getProperties().projection_;
     olMap.setView(newView);
 
@@ -3118,7 +3126,13 @@ class Map extends MObject {
     const minZoom = olMap.getView().getMinZoom();
     const maxZoom = olMap.getView().getMaxZoom();
     const constrainResolution = olMap.getView().getConstrainResolution();
-    const center = olMap.getView().getCenter();
+    let center = olMap.getView().getCenter();
+    // eslint-disable-next-line no-underscore-dangle
+    if (!isNullOrEmpty(this.facadeMap_.userCenter_)) {
+      // eslint-disable-next-line no-underscore-dangle
+      const uc = this.facadeMap_.userCenter_;
+      center = [uc.x, uc.y];
+    }
     const size = olMap.getSize();
 
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
@@ -3409,11 +3423,93 @@ class Map extends MObject {
    * @api
    */
   updateResolutionsFromBaseLayer() {
-    if (this._calculatedResolutions === false) {
-      this._calculatedResolutions = true;
-      this.fire(EventType.COMPLETED);
+    const activateResolutions = IDEE.config.ACTIVATE_RESOLUTIONS === true
+      || IDEE.config.ACTIVATE_RESOLUTIONS === 'true';
+
+    if (!activateResolutions) {
+      if (this._calculatedResolutions === false) {
+        this._calculatedResolutions = true;
+        this.fire(EventType.COMPLETED);
+      }
+      this.refresh();
+      return;
     }
-    this.refresh();
+
+    let resolutions = [];
+
+    // zoom levels
+    let zoomLevels = IDEE.config.ZOOM_LEVELS;
+    if (isNullOrEmpty(zoomLevels) || zoomLevels <= 0) {
+      const maxZoom = !isNullOrEmpty(IDEE.config.MAX_ZOOM) && IDEE.config.MAX_ZOOM !== ''
+        ? Number(IDEE.config.MAX_ZOOM)
+        : 28;
+      const minZoom = !isNullOrEmpty(IDEE.config.MIN_ZOOM) && IDEE.config.MIN_ZOOM !== ''
+        ? Number(IDEE.config.MIN_ZOOM)
+        : 0;
+      zoomLevels = maxZoom - minZoom;
+    }
+
+    // units
+    const units = this.getProjection().units;
+
+    const baseLayer = this.getBaseLayers().filter((bl) => {
+      return bl.isVisible();
+    })[0];
+
+    // gets min/max resolutions from base layer
+    let maxResolution = null;
+    let minResolution = null;
+    if (!isNullOrEmpty(baseLayer)) {
+      minResolution = baseLayer.getImpl().getMinResolution !== undefined
+        ? baseLayer.getImpl().getMinResolution()
+        : null;
+      maxResolution = baseLayer.getImpl().getMaxResolution !== undefined
+        ? baseLayer.getImpl().getMaxResolution()
+        : null;
+      // zoomLevels = baseLayer.getImpl().getNumZoomLevels();
+    }
+
+    if (this.userResolutions_ === null) {
+      if (!isNullOrEmpty(minResolution) && !isNullOrEmpty(maxResolution)) {
+        resolutions = fillResolutions(minResolution, maxResolution, zoomLevels);
+        this.setResolutions(resolutions, true);
+
+        this._resolutionsBaseLayer = true;
+
+        // checks if it was the first time to
+        // calculate resolutions in that case
+        // fires the completed event
+        if (this._calculatedResolutions === false) {
+          this._calculatedResolutions = true;
+          this.fire(EventType.COMPLETED);
+        }
+      } else {
+        this.facadeMap_.calculateMaxExtent().then((extent) => {
+          if (!this._resolutionsBaseLayer && (this.userResolutions_ === null)) {
+            this.getMapImpl().updateSize();
+            const size = this.getMapImpl().getSize();
+            resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
+            this.setResolutions(resolutions, true);
+
+            this._resolutionsEnvolvedExtent = true;
+
+            // checks if it was the first time to
+            // calculate resolutions in that case
+            // fires the completed event
+            if (this._calculatedResolutions === false) {
+              this._calculatedResolutions = true;
+              this.fire(EventType.COMPLETED);
+            }
+          } else
+            if (this._calculatedResolutions === false) {
+              this._calculatedResolutions = true;
+              this.fire(EventType.COMPLETED);
+            }
+        }).catch((error) => {
+          throw error;
+        });
+      }
+    }
   }
 
   /**
