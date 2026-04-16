@@ -3148,7 +3148,7 @@ class Map extends MObject {
     // newView.setConstrainResolution(false);
     // calculates the new resolution
     let newResolution;
-    if (!isNullOrEmpty(resolutions)) {
+    if (!isNullOrEmpty(resolutions) && isNullOrEmpty(this.userBbox_)) {
       if (!isNullOrEmpty(oldZoom)) {
         newResolution = resolutions[Math.round(oldZoom)];
       } else {
@@ -3174,6 +3174,14 @@ class Map extends MObject {
     }
 
     olMap.setView(newView);
+
+    if (!isNullOrEmpty(this.userBbox_)) {
+      const ub = this.userBbox_;
+      const extent = isArray(ub)
+        ? ub
+        : [ub.x.min, ub.y.min, ub.x.max, ub.y.max];
+      olMap.getView().fit(extent, { size: olMap.getSize(), duration: 0 });
+    }
 
     if (propagateToWMS) {
       // sets the resolutions for each layer
