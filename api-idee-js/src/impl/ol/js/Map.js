@@ -3452,16 +3452,13 @@ class Map extends MObject {
     let resolutions = [];
 
     // zoom levels
-    let zoomLevels = IDEE.config.ZOOM_LEVELS;
-    if (isNullOrEmpty(zoomLevels) || zoomLevels <= 0) {
-      const maxZoom = !isNullOrEmpty(IDEE.config.MAX_ZOOM) && IDEE.config.MAX_ZOOM !== ''
-        ? Number(IDEE.config.MAX_ZOOM)
-        : 28;
-      const minZoom = !isNullOrEmpty(IDEE.config.MIN_ZOOM) && IDEE.config.MIN_ZOOM !== ''
-        ? Number(IDEE.config.MIN_ZOOM)
-        : 0;
-      zoomLevels = maxZoom - minZoom;
-    }
+    const maxZoom = !isNullOrEmpty(IDEE.config.MAX_ZOOM) && IDEE.config.MAX_ZOOM !== ''
+      ? Number(IDEE.config.MAX_ZOOM)
+      : 28;
+    const minZoom = !isNullOrEmpty(IDEE.config.MIN_ZOOM) && IDEE.config.MIN_ZOOM !== ''
+      ? Number(IDEE.config.MIN_ZOOM)
+      : 0;
+    const zoomLevels = maxZoom - minZoom;
 
     // units
     const units = this.getProjection().units;
