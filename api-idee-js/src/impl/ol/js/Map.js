@@ -3148,10 +3148,14 @@ class Map extends MObject {
     // newView.setConstrainResolution(false);
     // calculates the new resolution
     let newResolution;
-    if (!isNullOrEmpty(resolutions) && isNullOrEmpty(this.userBbox_)) {
+    // eslint-disable-next-line no-underscore-dangle
+    const facadeUserZoom = this.facadeMap_._userZoom;
+    const userAskedZoom = !isNullOrEmpty(facadeUserZoom);
+    const useZoomIndex = isNullOrEmpty(this.userBbox_) || userAskedZoom;
+    if (!isNullOrEmpty(resolutions) && useZoomIndex) {
       if (!isNullOrEmpty(oldZoom)) {
         newResolution = resolutions[Math.round(oldZoom)];
-      } else {
+      } else if (!userAskedZoom) {
         const bbox = this.facadeMap_.getBbox();
         if (!isNullOrEmpty(bbox)) {
           const oldResolution = newView.getResolutionForExtent([
@@ -3164,6 +3168,8 @@ class Map extends MObject {
           const newResolutionIdx = restDiff.indexOf(Math.min(...restDiff));
           newResolution = resolutions[newResolutionIdx];
         }
+      } else {
+        newResolution = resolutions[Math.round(facadeUserZoom)];
       }
     }
     if (!isNullOrEmpty(resolutions)) {
@@ -3175,7 +3181,7 @@ class Map extends MObject {
 
     olMap.setView(newView);
 
-    if (!isNullOrEmpty(this.userBbox_)) {
+    if (!isNullOrEmpty(this.userBbox_) && !userAskedZoom) {
       const ub = this.userBbox_;
       const extent = isArray(ub)
         ? ub
