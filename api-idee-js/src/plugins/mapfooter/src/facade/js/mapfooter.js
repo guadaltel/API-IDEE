@@ -94,4 +94,19 @@ export default class Mapfooter extends IDEE.Plugin {
     this.map_.removeControls(this.controls_);
     [this.control_, this.controls_, this.panel_, this.map_] = [null, null, null, null];
   }
+
+  /**
+   * Return plugin language
+   *
+   * @public
+   * @function
+   * @param {string} lang type language
+   * @api stable
+   */
+  static getJSONTranslations(lang) {
+    if (lang === 'en' || lang === 'es') {
+      return (lang === 'en') ? en : es;
+    }
+    return IDEE.language.getTranslation(lang).mapfooter;
+  }
 }

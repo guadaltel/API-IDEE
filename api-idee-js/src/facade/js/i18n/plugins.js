@@ -44,6 +44,14 @@ import enLayerswitcher from '../../../plugins/layerswitcher/src/facade/js/i18n/e
 import esMapheader from '../../../plugins/mapheader/src/facade/js/i18n/es';
 import enMapheader from '../../../plugins/mapheader/src/facade/js/i18n/en';
 
+// Mapfooter
+import esMapfooter from '../../../plugins/mapfooter/src/facade/js/i18n/es';
+import enMapfooter from '../../../plugins/mapfooter/src/facade/js/i18n/en';
+
+// Magnify
+import esMagnify from '../../../plugins/magnify/src/facade/js/i18n/es';
+import enMagnify from '../../../plugins/magnify/src/facade/js/i18n/en';
+
 // Measurebar
 import esMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/es';
 import enMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/en';
@@ -156,6 +164,14 @@ const pluginsLanguage = {
   mapheader: {
     esMapheader,
     enMapheader,
+  },
+  mapfooter: {
+    esMapfooter,
+    enMapfooter,
+  },
+  magnify: {
+    esMagnify,
+    enMagnify,
   },
   measurebar: {
     esMeasurebar,
