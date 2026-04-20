@@ -95,6 +95,8 @@
 - Se reconoce el parámetro 'type' del servicio cargado en LayerSwitcher.
 - Permite la creación de grupos anidados de capas en LayerSwitcher.
 - Se sube la versión de OpenLayers de la 10.4 a la 10.7.
+- Se implementa funcionalidad de resoluciones automáticas y configuración para activar dicha funcionalidad.
+- Se implementa multilenguaje en plugin maxextzoom.
 
 01/01/25 - Versión 1.0.0
 - Se incluye implementación 3D con Cesium
