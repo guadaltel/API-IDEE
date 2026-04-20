@@ -40,6 +40,10 @@ import enInformation from '../../../plugins/information/src/facade/js/i18n/en';
 import esLayerswitcher from '../../../plugins/layerswitcher/src/facade/js/i18n/es';
 import enLayerswitcher from '../../../plugins/layerswitcher/src/facade/js/i18n/en';
 
+// Mapheader
+import esMapheader from '../../../plugins/mapheader/src/facade/js/i18n/es';
+import enMapheader from '../../../plugins/mapheader/src/facade/js/i18n/en';
+
 // Measurebar
 import esMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/es';
 import enMeasurebar from '../../../plugins/measurebar/src/facade/js/i18n/en';
@@ -148,6 +152,10 @@ const pluginsLanguage = {
   layerswitcher: {
     esLayerswitcher,
     enLayerswitcher,
+  },
+  mapheader: {
+    esMapheader,
+    enMapheader,
   },
   measurebar: {
     esMeasurebar,

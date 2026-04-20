@@ -79,6 +79,7 @@ export const getTranslation = (lang) => {
       .esFilteredsearch;
     configuration.translations[lang].maxextzoom = pluginsLanguage.maxextzoom.esMaxextzoom;
     configuration.translations[lang].wfstcontrols = pluginsLanguage.wfstcontrols.esWfstcontrols;
+    configuration.translations[lang].mapheader = pluginsLanguage.mapheader.esMapheader;
   } else if (lang === 'en') {
     configuration.translations[lang].backimglayer = pluginsLanguage.backimglayer.enBackimglayer;
     configuration.translations[lang].comparators = pluginsLanguage.comparators.enComparators;
@@ -113,6 +114,7 @@ export const getTranslation = (lang) => {
       .enFilteredsearch;
     configuration.translations[lang].maxextzoom = pluginsLanguage.maxextzoom.enMaxextzoom;
     configuration.translations[lang].wfstcontrols = pluginsLanguage.wfstcontrols.enWfstcontrols;
+    configuration.translations[lang].mapheader = pluginsLanguage.mapheader.enMapheader;
   }
   return configuration.translations[lang];
 };
