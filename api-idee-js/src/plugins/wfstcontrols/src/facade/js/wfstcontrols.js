@@ -9,6 +9,7 @@ import ClearFeature from './clearfeature';
 import SaveFeature from './savefeature';
 import EditAttribute from './editattribute';
 import api from '../../api';
+import { getValue } from './i18n/language';
 
 /**
  * @classdesc
@@ -181,7 +182,7 @@ export default class WFSTControls extends IDEE.Plugin {
     const wfslayer = IDEE.utils.isNullOrEmpty(firstNamedLayer) ? firstLayer : firstNamedLayer;
 
     if (!wfslayer) {
-      IDEE.dialog.error('Ha ocurrido un error al cargar el plugin: No se ha encontrado una capa WFS');
+      IDEE.dialog.error(getValue('exception.WFSlayernotfound'));
       return;
     }
 
@@ -210,7 +211,7 @@ export default class WFSTControls extends IDEE.Plugin {
               throw new Error('getGeometryType returned no value');
             }
           } catch (error) {
-            IDEE.dialog.error('Ha ocurrido un error al cargar el plugin: No se ha podido asignar la geometría de la capa de forma automática, debe hacerlo de forma manual usando el parámetro geometry.');
+            IDEE.dialog.error(getValue('exceptiom.errorgeometryparameter'));
           }
           return true;
         }
@@ -228,7 +229,7 @@ export default class WFSTControls extends IDEE.Plugin {
       try {
         wfslayer.geometry = this.geometry;
       } catch (error) {
-        IDEE.dialog.error('Ha ocurrido un error al cargar el plugin: No se ha podido asignar la geometría de la capa de forma manual.');
+        IDEE.dialog.error(getValue('exception.errorloadingplugin'));
       }
     }
 
@@ -237,10 +238,10 @@ export default class WFSTControls extends IDEE.Plugin {
       className: 'm-edition',
       collapsedButtonClass: 'g-cartografia-editar',
       position: IDEE.ui.position.TL,
-      tooltip: 'Herramientas de edición',
+      tooltip: getValue('tooltip'),
     });
     if (IDEE.utils.isNullOrEmpty(wfslayer)) {
-      IDEE.dialog.error(`Los controles <b>${this.controls.join(',')}</b> no se pueden añadir al mapa porque no existe una capa WFS cargada.`);
+      IDEE.dialog.error(`${getValue('noWFSlayerloaded')}<b>${this.controls.join(',')}</b>${getValue('exception.noWFSlayerloaded1')}`);
     } else {
       let addSave = false;
       let addClear = false;
@@ -368,7 +369,7 @@ export default class WFSTControls extends IDEE.Plugin {
       name: this.layername_,
     })[0];
     if (IDEE.utils.isNullOrEmpty(wfslayer)) {
-      IDEE.dialog.error(`Los capa <b>${layername}</b> no es una capa WFS cargada.`);
+      IDEE.dialog.error(`${getValue('noloadedWFSlayer')}<b>${layername}</b>${getValue('noloadedWFSlayer1')}.`);
     } else {
       const objControls = [];
       if (!IDEE.utils.isNullOrEmpty(this.drawfeature_)) objControls.push(this.drawfeature_);
@@ -436,6 +437,21 @@ export default class WFSTControls extends IDEE.Plugin {
     if (this.numLoadControls_ === this.numControls_) {
       this.fire(IDEE.evt.ADDED_TO_MAP);
     }
+  }
+
+  /**
+   * Return plugin language
+   *
+   * @public
+   * @function
+   * @param {string} lang type language
+   * @api stable
+   */
+  static getJSONTranslations(lang) {
+    if (lang === 'en' || lang === 'es') {
+      return (lang === 'en') ? en : es;
+    }
+    return IDEE.language.getTranslation(lang).wfstcontrols;
   }
 }
 
