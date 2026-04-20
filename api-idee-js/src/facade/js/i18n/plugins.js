@@ -20,6 +20,10 @@ import enContactlink from '../../../plugins/contactlink/src/facade/js/i18n/en';
 import esHelp from '../../../plugins/help/src/facade/js/i18n/es';
 import enHelp from '../../../plugins/help/src/facade/js/i18n/en';
 
+// Maxextzoom
+import esMaxextzoom from '../../../plugins/maxextzoom/src/facade/js/i18n/es';
+import enMaxextzoom from '../../../plugins/maxextzoom/src/facade/js/i18n/en';
+
 // Incicarto
 import esIncicarto from '../../../plugins/incicarto/src/facade/js/i18n/es';
 import enIncicarto from '../../../plugins/incicarto/src/facade/js/i18n/en';
@@ -92,6 +96,10 @@ import enLocatorscn from '../../../plugins/locatorscn/src/facade/js/i18n/en';
 import esVectorsmanagement from '../../../plugins/vectorsmanagement/src/facade/js/i18n/es';
 import enVectorsmanagement from '../../../plugins/vectorsmanagement/src/facade/js/i18n/en';
 
+// Wfstcontrols
+import esWfstcontrols from '../../../plugins/wfstcontrols/src/facade/js/i18n/es';
+import enWfstcontrols from '../../../plugins/wfstcontrols/src/facade/js/i18n/en';
+
 // Filteredsearch
 import esFilteredsearch from '../../../plugins/filteredsearch/src/facade/js/i18n/es';
 import enFilteredsearch from '../../../plugins/filteredsearch/src/facade/js/i18n/en';
@@ -120,6 +128,10 @@ const pluginsLanguage = {
   help: {
     esHelp,
     enHelp,
+  },
+  maxextzoom: {
+    esMaxextzoom,
+    enMaxextzoom,
   },
   incicarto: {
     esIncicarto,
@@ -198,6 +210,10 @@ const pluginsLanguage = {
   filteredsearch: {
     esFilteredsearch,
     enFilteredsearch,
+  },
+  wfstcontrols: {
+    esWfstcontrols,
+    enWfstcontrols,
   },
 };
 

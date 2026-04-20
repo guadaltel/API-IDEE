@@ -12,7 +12,10 @@
     "noWFSlayerloaded": "The controls ",
     "noWFSlayerloaded1": " cannot be added to the map because no WFS layer is loaded",
     "noloadedWFSlayer": "The layer ",
-    "noloadedWFSlayer1": " is not a loaded WFS layer"
+    "noloadedWFSlayer1": " is not a loaded WFS layer",
+    "save_element_before": "You must save the element before",
+    "save_element_error": "An error occurred while saving: ",
+    "save_error_unauthorized": "An error occurred while saving: Unauthorized user"
   },
   "tooltip": "Editing tools",
   "clear": "Clear",
@@ -20,5 +23,7 @@
   "draw": "Draw",
   "save": "Save",
   "edit": "Edit",
-  "modify": "Modify"
+  "modify": "Modify",
+  "save_element_successfully": "The element has been saved successfully",
+  "save_successfully": "The element has been saved successfully"
 }

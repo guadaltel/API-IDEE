@@ -77,6 +77,8 @@ export const getTranslation = (lang) => {
       .esVectorsmanagement;
     configuration.translations[lang].filteredsearch = pluginsLanguage.filteredsearch
       .esFilteredsearch;
+    configuration.translations[lang].maxextzoom = pluginsLanguage.maxextzoom.esMaxextzoom;
+    configuration.translations[lang].wfstcontrols = pluginsLanguage.wfstcontrols.esWfstcontrols;
   } else if (lang === 'en') {
     configuration.translations[lang].backimglayer = pluginsLanguage.backimglayer.enBackimglayer;
     configuration.translations[lang].comparators = pluginsLanguage.comparators.enComparators;
@@ -109,6 +111,8 @@ export const getTranslation = (lang) => {
       .enVectorsmanagement;
     configuration.translations[lang].filteredsearch = pluginsLanguage.filteredsearch
       .enFilteredsearch;
+    configuration.translations[lang].maxextzoom = pluginsLanguage.maxextzoom.enMaxextzoom;
+    configuration.translations[lang].wfstcontrols = pluginsLanguage.wfstcontrols.enWfstcontrols;
   }
   return configuration.translations[lang];
 };

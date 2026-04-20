@@ -12,7 +12,10 @@
     "noWFSlayerloaded": "Los controles ",
     "noWFSlayerloaded1": " no se pueden añadir al mapa porque no existe una capa WFS cargada",
     "noloadedWFSlayer": "La capa ",
-    "noloadedWFSlayer1": " no es una capa WFS cargada"
+    "noloadedWFSlayer1": " no es una capa WFS cargada",
+    "save_element_before": "Debe guardar el elemento previamente",
+    "save_element_error": "Ha ocurrido un error al guardar: ",
+    "save_error_unauthorized": "Ha ocurrido un error al guardar: Usuario no autorizado"
   },
   "tooltip": "Herramientas de edición",
   "clear": "Limpiar",
@@ -20,5 +23,7 @@
   "draw": "Dibujar",
   "save": "Guardar",
   "edit": "Editar",
-  "modify": "Modificar"
+  "modify": "Modificar",
+  "save_element_successfully": "Se ha guardado correctamente el elemento",
+  "save_successfully": "Se ha guardado correctamente"
 }
