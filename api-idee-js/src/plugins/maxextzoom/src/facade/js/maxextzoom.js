@@ -99,4 +99,19 @@ export default class MaxExtZoom extends IDEE.Plugin {
   get name() {
     return 'maxextzoom';
   }
+
+  /**
+   * Return plugin language
+   *
+   * @public
+   * @function
+   * @param {string} lang type language
+   * @api stable
+   */
+  static getJSONTranslations(lang) {
+    if (lang === 'en' || lang === 'es') {
+      return (lang === 'en') ? en : es;
+    }
+    return IDEE.language.getTranslation(lang).wfstcontrols;
+  }
 }
