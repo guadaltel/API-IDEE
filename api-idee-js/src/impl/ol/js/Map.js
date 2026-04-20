@@ -2688,7 +2688,10 @@ class Map extends MObject {
 
     const view = olMap.getView();
     let newView = new View({ ...view, ...view.getProperties(), extent: maxExtent });
-    if (IDEE.config.ACTIVATE_RESOLUTIONS) {
+    const activateResolutionsForView = IDEE.config.ACTIVATE_RESOLUTIONS === true
+      || IDEE.config.ACTIVATE_RESOLUTIONS === 'true'
+      || this.getWMC().length > 0;
+    if (activateResolutionsForView) {
       newView = new View({
         ...view,
         ...view.getProperties(),
@@ -3438,7 +3441,8 @@ class Map extends MObject {
    */
   updateResolutionsFromBaseLayer() {
     const activateResolutions = IDEE.config.ACTIVATE_RESOLUTIONS === true
-      || IDEE.config.ACTIVATE_RESOLUTIONS === 'true';
+      || IDEE.config.ACTIVATE_RESOLUTIONS === 'true'
+      || this.getWMC().length > 0;
 
     if (!activateResolutions) {
       if (this._calculatedResolutions === false) {
