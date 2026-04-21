@@ -4,6 +4,8 @@
 import 'assets/css/mapheader';
 import MapheaderControl from './mapheadercontrol';
 import api from '../../api';
+import en from './i18n/en';
+import es from './i18n/es';
 
 export default class Mapheader extends IDEE.Plugin {
   /**

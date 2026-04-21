@@ -6,6 +6,8 @@ import 'assets/css/magnify';
 import MagnifyControl from './magnifycontrol';
 import api from '../../api';
 import { getValue } from './i18n/language';
+import en from './i18n/en';
+import es from './i18n/es';
 
 export default class Magnify extends IDEE.Plugin {
   /**

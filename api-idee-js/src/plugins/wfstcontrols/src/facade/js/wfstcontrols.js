@@ -10,6 +10,8 @@ import SaveFeature from './savefeature';
 import EditAttribute from './editattribute';
 import api from '../../api';
 import { getValue } from './i18n/language';
+import en from './i18n/en';
+import es from './i18n/es';
 
 /**
  * @classdesc

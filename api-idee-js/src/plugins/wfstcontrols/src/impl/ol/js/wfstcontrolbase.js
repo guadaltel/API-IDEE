@@ -1,6 +1,3 @@
-import en from '../../../facade/js/i18n/en';
-import es from '../../../facade/js/i18n/es';
-
 /**
  * @module IDEE/impl/control/WFSTBase
  */
@@ -98,21 +95,6 @@ export default class WFSTBase extends IDEE.impl.Control {
    * @function
    */
   createInteraction_() {}
-
-  /**
-   * Return plugin language
-   *
-   * @public
-   * @function
-   * @param {string} lang type language
-   * @api stable
-   */
-  static getJSONTranslations(lang) {
-    if (lang === 'en' || lang === 'es') {
-      return (lang === 'en') ? en : es;
-    }
-    return IDEE.language.getTranslation(lang).wfstcontrols;
-  }
 
   /**
    * This function destroys this control and cleaning the HTML

@@ -4,6 +4,8 @@
 import 'assets/css/mapfooter';
 import MapfooterControl from './mapfootercontrol';
 import api from '../../api';
+import en from './i18n/en';
+import es from './i18n/es';
 
 export default class Mapfooter extends IDEE.Plugin {
   /**
