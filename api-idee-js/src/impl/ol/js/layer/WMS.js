@@ -293,7 +293,7 @@ class WMS extends LayerBase {
   setVisible(visibility) {
     this.visibility = visibility;
     // if this layer is base then it hides all base layers
-    if ((visibility === true) && (this.isBase !== false)) {
+    if ((visibility === true) && (this.isBase !== false) && !this.isVisible()) {
       // hides all base layers
       this.map.getBaseLayers()
         .filter((layer) => !layer.equals(this.facadeLayer_) && layer.isVisible())
