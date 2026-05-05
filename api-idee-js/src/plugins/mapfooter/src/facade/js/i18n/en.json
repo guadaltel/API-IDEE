@@ -5,7 +5,7 @@
   "hidefooter": "Hide footer",
   "showfooter": "Show footer",
   "textHelp": {
-    "title": "mapfooter",
+    "title": "MAPFOOTER",
     "paragraph1": "The mapfooter plugin inserts an HTML footer below the viewer (default left bottom panel) with configurable content (htmlCode) and optional styles (cssList), typically for legal notices, links or credits.",
     "screenshot1Alt": "Viewer with footer collapsed; the map uses the full lower height",
     "screenshot1Caption": "help-01.png",

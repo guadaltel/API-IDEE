@@ -5,7 +5,7 @@
   "hideheader": "Hide header",
   "showheader": "Show header",
   "textHelp": {
-    "title": "mapheader",
+    "title": "MAPHEADER",
     "paragraph1": "The mapheader plugin adds a top strip above the viewer with configurable HTML content: institutional logos, title, subtitles and links, typical of download portals or corporate maps.",
     "screenshot1Alt": "Map without institutional header strip; standard viewer controls visible",
     "screenshot1Caption": "help-01.png",
