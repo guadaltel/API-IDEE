@@ -3,5 +3,7 @@
     "impl": "La implementación usada no puede crear controles MapfooterControl"
   },
   "hidefooter": "Ocultar pie de página",
-  "showfooter": "Mostrar pie de página"
+  "showfooter": "Mostrar pie de página",
+  "hide": " Ocultar ",
+  "show": " Mostrar "
 }
