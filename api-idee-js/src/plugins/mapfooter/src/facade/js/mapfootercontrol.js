@@ -118,22 +118,20 @@ export default class MapfooterControl extends IDEE.Control {
   }
 
   addEvents() {
-    setTimeout(() => {
-      this.checkFooterheight();
+    this.checkFooterheight();
 
-      const panelMapfooter = document.querySelector('div.m-panel.m-mapfooter');
-      const btnMapFooter = panelMapfooter ? panelMapfooter.querySelector('button.m-panel-btn') : null;
-      if (!btnMapFooter) {
-        return;
-      }
+    const panelMapfooter = document.querySelector('div.m-panel.m-mapfooter');
+    const btnMapFooter = panelMapfooter ? panelMapfooter.querySelector('button.m-panel-btn') : null;
+    if (!btnMapFooter) {
+      return;
+    }
 
+    btnMapFooter.title = this.opened ? getValue('hidefooter') : getValue('showfooter');
+    btnMapFooter.addEventListener('click', () => {
+      this.opened = !this.opened;
       btnMapFooter.title = this.opened ? getValue('hidefooter') : getValue('showfooter');
-      btnMapFooter.addEventListener('click', () => {
-        this.opened = !this.opened;
-        btnMapFooter.title = this.opened ? getValue('hidefooter') : getValue('showfooter');
-        this.checkFooterheight();
-      });
-    }, 0);
+      this.checkFooterheight();
+    });
   }
 
   checkFooterheight() {

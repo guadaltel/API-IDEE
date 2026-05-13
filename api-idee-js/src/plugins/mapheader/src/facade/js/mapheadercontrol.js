@@ -115,23 +115,21 @@ export default class MapheaderControl extends IDEE.Control {
   }
 
   addEvents() {
-    setTimeout(() => {
-      this.checkHeaderheight();
+    this.checkHeaderheight();
 
-      // Selector del botón del panel mapheader
-      const panelMapheader = document.querySelector('div.m-panel.m-mapheader');
-      const btnMapHeader = panelMapheader ? panelMapheader.querySelector('button.m-panel-btn') : null;
-      if (!btnMapHeader) {
-        return;
-      }
+    // Selector del botón del panel mapheader
+    const panelMapheader = document.querySelector('div.m-panel.m-mapheader');
+    const btnMapHeader = panelMapheader ? panelMapheader.querySelector('button.m-panel-btn') : null;
+    if (!btnMapHeader) {
+      return;
+    }
 
+    btnMapHeader.title = this.opened ? getValue('hideheader') : getValue('showheader');
+    btnMapHeader.addEventListener('click', () => {
+      this.opened = !this.opened;
       btnMapHeader.title = this.opened ? getValue('hideheader') : getValue('showheader');
-      btnMapHeader.addEventListener('click', () => {
-        this.opened = !this.opened;
-        btnMapHeader.title = this.opened ? getValue('hideheader') : getValue('showheader');
-        this.checkHeaderheight();
-      });
-    }, 0);
+      this.checkHeaderheight();
+    });
   }
 
   checkHeaderheight() {
