@@ -152,7 +152,7 @@ class GetCapabilities {
               const bbox = layer.BoundingBox[0];
               this.capabilitiesProj = bbox.crs;
               const projSrc = getProjection(bbox.crs) || getProjection(bbox.srs);
-              const projDest = getProjection(this.projection_.code);
+              const projDest = getProjection(projection);
               let bboxExtent = bbox.extent;
               if (this.isReversedAxisOrder_(bbox.crs, projSrc)) {
                 bboxExtent = [bbox.extent[1], bbox.extent[0], bbox.extent[3], bbox.extent[2]];
@@ -163,10 +163,8 @@ class GetCapabilities {
           } else if (!isNullOrEmpty(layer.LatLonBoundingBox)) {
             const bbox = layer.LatLonBoundingBox[0];
             this.capabilitiesProj = 'EPSG:4326';
-            // if the layer has not the SRS then transformExtent
-            // the latLonBoundingBox which is always present
             const projSrc = getProjection('EPSG:4326');
-            const projDest = getProjection(this.projection_.code);
+            const projDest = getProjection(projection);
             extent = ImplUtils.transformExtent(bbox.extent, projSrc, projDest);
             this.extentAlreadyTransformed_ = true;
           }
