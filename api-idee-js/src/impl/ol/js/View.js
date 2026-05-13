@@ -1,7 +1,7 @@
 /**
  * @module IDEE/impl/View
  */
-import { isNullOrEmpty } from 'IDEE/util/Utils';
+import { isArray, isNullOrEmpty } from 'IDEE/util/Utils';
 import OLView from 'ol/View';
 
 /**
@@ -121,6 +121,9 @@ class View extends OLView {
    * @api
    */
   setResolutions(resolutions) {
+    if (isNullOrEmpty(resolutions) || !isArray(resolutions) || resolutions.length === 0) {
+      return;
+    }
     this.set('resolutions', resolutions);
     this.maxResolution_ = resolutions[0];
     this.minResolution_ = resolutions[resolutions.length - 1];

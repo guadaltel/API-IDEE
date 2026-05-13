@@ -461,6 +461,11 @@ export const generateResolutionsFromExtent = (extentParam, size, zoomLevels) => 
     wExtent = (extent[2] - extent[0]);
     hExtent = (extent[3] - extent[1]);
   }
+  if (!isArray(size) || size.length < 2
+    || !Number.isFinite(size[0]) || !Number.isFinite(size[1])
+    || size[0] <= 0 || size[1] <= 0) {
+    return;
+  }
   const wResolution = wExtent / size[0];
   const hResolution = hExtent / size[1];
 

@@ -3137,6 +3137,11 @@ class Map extends MObject {
       center = [uc.x, uc.y];
     }
     const size = olMap.getSize();
+    if (!isArray(size) || size.length < 2
+      || !Number.isFinite(size[0]) || !Number.isFinite(size[1])
+      || size[0] <= 0 || size[1] <= 0) {
+      return;
+    }
 
     const newView = new View((this.viewExtent !== undefined && this.viewExtent.length === 4)
       ? { ...this.objectView, projection, extent: this.viewExtent }
@@ -3184,12 +3189,14 @@ class Map extends MObject {
 
     olMap.setView(newView);
 
-    if (!isNullOrEmpty(this.userBbox_) && !userAskedZoom) {
+    // eslint-disable-next-line no-underscore-dangle
+    const skipFitForUserCenter = !isNullOrEmpty(this.facadeMap_.userCenter_);
+    if (!isNullOrEmpty(this.userBbox_) && !userAskedZoom && !skipFitForUserCenter) {
       const ub = this.userBbox_;
       const extent = isArray(ub)
         ? ub
         : [ub.x.min, ub.y.min, ub.x.max, ub.y.max];
-      olMap.getView().fit(extent, { size: olMap.getSize(), duration: 0 });
+      olMap.getView().fit(extent, { size, duration: 0 });
     }
 
     if (propagateToWMS) {
@@ -3503,6 +3510,11 @@ class Map extends MObject {
           if (!this._resolutionsBaseLayer && (this.userResolutions_ === null)) {
             this.getMapImpl().updateSize();
             const size = this.getMapImpl().getSize();
+            if (!isArray(size) || size.length < 2
+              || !Number.isFinite(size[0]) || !Number.isFinite(size[1])
+              || size[0] <= 0 || size[1] <= 0) {
+              return;
+            }
             resolutions = generateResolutionsFromExtent(extent, size, zoomLevels, units);
             this.setResolutions(resolutions, true);
 
