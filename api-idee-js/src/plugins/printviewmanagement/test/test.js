@@ -195,9 +195,9 @@ const mp = new PrintViewManagement({
   printermap: {
     tooltip: 'TEST TOOLTIP printermap', // Tooltip del botón para escoger esta opción
     filterTemplates: [
-      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/templateConBorde.html`,
-      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/templateConCabezeraYBorde.html`,
-      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/templateConFooterYBorde.html`,
+      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/mapaConMarco.html`,
+      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/mapaConCabeceraYMarco.html`,
+      `${IDEE.config.STATIC_RESOURCES_URL}/plantillas/html/mapaConPieYMarco.html`,
     ], // Array de paths que hacen referencia a las plantillas a elegir por el usuario
     showDefaultTemplate: true, // Si se quiere mostrar la opción de elegir la plantilla por defecto que tiene el plugin
     defaultDpiOptions: [72, 150, 300], // Valores DPI a elegir en el modo de impresión printermap

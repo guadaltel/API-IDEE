@@ -136,9 +136,9 @@ El constructor se inicializa con un JSON con los siguientes atributos:
   - **filterTemplates**: Listado de rutas realtivas o absolutas de las cuales se obtendrán cada una de las plantillas a elegir en el modo de impresión. Por defecto:
   ```JavaScript
   "filterTemplates": [
-    "https://componentes.idee.es/estaticos/plantillas/html/templateConBorde.html",
-    "https://componentes.idee.es/estaticos/plantillas/html/templateConCabezeraYBorde.html",
-    "https://componentes.idee.es/estaticos/plantillas/html/templateConFooterYBorde.html",
+    "https://componentes.idee.es/estaticos/plantillas/html/mapaConMarco.html",
+    "https://componentes.idee.es/estaticos/plantillas/html/mapaConCabeceraYMarco.html",
+    "https://componentes.idee.es/estaticos/plantillas/html/mapaConPieYMarco.html",
     ],
   ```
   - **defaultOpenControl**: Indica el control que aparecerá abierto al inicio. Por defecto: 0.
@@ -444,9 +444,9 @@ const mp = new IDEE.plugin.PrintViewManagement({
   },
   printermap: {
     filterTemplates: [
-      "https://componentes.idee.es/estaticos/plantillas/html/templateConBorde.html",
-      "https://componentes.idee.es/estaticos/plantillas/html/templateConCabezeraYBorde.html",
-      "https://componentes.idee.es/estaticos/plantillas/html/templateConFooterYBorde.html",
+      "https://componentes.idee.es/estaticos/plantillas/html/mapaConMarco.html",
+      "https://componentes.idee.es/estaticos/plantillas/html/mapaConCabeceraYMarco.html",
+      "https://componentes.idee.es/estaticos/plantillas/html/mapaConPieYMarco.html",
     ],
     showDefaultTemplate: true,
     defaultDpiOptions: [72, 150, 300],
