@@ -301,7 +301,7 @@ params.forEach((param) => {
 
   /**
    * MAP Viewer - Zoom Constrains
-   * 
+   *
    * @private
    * @type {Object}
    */
@@ -309,7 +309,7 @@ params.forEach((param) => {
 
   /**
    * Map Viewer - Extent constrains
-   * 
+   *
    * @private
    * @type {Object}
    */
@@ -333,7 +333,7 @@ params.forEach((param) => {
 
   /**
    * MAP Viewer - DPI (Dots per inch)
-   * 
+   *
    * @private
    * @type {Number}
    */
@@ -341,7 +341,7 @@ params.forEach((param) => {
 
   /**
    * MAP Viewer - DPI OGC (Dots per inch for OGC services)
-   * 
+   *
    * @private
    * @type {Number}
    */
