@@ -244,7 +244,7 @@ export default class WFSTControls extends IDEE.Plugin {
       tooltip: getValue('tooltip'),
     });
     if (IDEE.utils.isNullOrEmpty(wfslayer)) {
-      IDEE.dialog.error(`${getValue('noWFSlayerloaded')}<b>${this.controls.join(',')}</b>${getValue('exception.noWFSlayerloaded1')}`);
+      IDEE.dialog.error(`${getValue('exception.noWFSlayerloaded')}<b>${this.controls.join(',')}</b>${getValue('exception.noWFSlayerloaded1')}`);
     } else {
       let addSave = false;
       let addClear = false;
@@ -372,7 +372,7 @@ export default class WFSTControls extends IDEE.Plugin {
       name: this.layername_,
     })[0];
     if (IDEE.utils.isNullOrEmpty(wfslayer)) {
-      IDEE.dialog.error(`${getValue('noloadedWFSlayer')}<b>${layername}</b>${getValue('noloadedWFSlayer1')}.`);
+      IDEE.dialog.error(`${getValue('exception.noloadedWFSlayer')}<b>${layername}</b>${getValue('exception.noloadedWFSlayer1')}.`);
     } else {
       const objControls = [];
       if (!IDEE.utils.isNullOrEmpty(this.drawfeature_)) objControls.push(this.drawfeature_);
