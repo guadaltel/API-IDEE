@@ -92,6 +92,7 @@
 - Se soluciona problema al usar estilo categórico con un estilo genérico e icono sin tener el proxy activado.
 - Se soluciona problema con capas geojson con source GeometryCollection.
 - Se genera en legacy el versionado de 1.0.0 y se modifica la versión del proyecto a la 1.1.0.
+- Se soluciona problema al activar resoluciones automáticas y cargar capa wms sin zoom.
 - Se pueden importar archivos .tif, .tiff y .gpkg y se implementa mejora a la hora de añadir archivos pesados en el plugin LayerSwitcher.
 - Se crean métodos en Utils para la transformación de formato GeoJSON y WKT a WKB, tanto a nivel de feature como de capa.
 - La información recibida de un servicio en formato GeoJSON o KML se proyecta en la proyección estándar de estos formatos, EPSG:4326.
