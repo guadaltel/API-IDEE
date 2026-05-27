@@ -87,7 +87,7 @@
 - Se soluciona problemas con cambio de proyección.
 - Se soluciona problema con el almacenado de altitud en el plugin infocoordinates.
 - Se soluciona la visualización de objetos geográficos de tipo "GeometryCollection".
-- Se implementa multilenguaje en los plugins mapheader, mapfooter, maxextzoom, magnify y filteredsearch.
+- Se implementa multilenguaje en los plugins mapheader, mapfooter, maxextzoom, magnify, filteredsearch y wfstcontrols.
 - Se implementa el método getHelp en los plugins filteredsearch, magnify, mapheader, mapfooter, maxextzoom y wfstcontrols.
 - Se soluciona problema al usar estilo categórico con un estilo genérico e icono sin tener el proxy activado.
 - Se soluciona problema con capas geojson con source GeometryCollection.
