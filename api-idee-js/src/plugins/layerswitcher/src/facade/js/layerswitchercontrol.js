@@ -425,9 +425,10 @@ export default class LayerswitcherControl extends IDEE.Control {
 
   // Esta función renderiza la plantilla
   async render() {
-    const listLayer = document.getElementById('m-layerswitcher-content').childElementCount;
+    const contentElement = this.template_.querySelector('#m-layerswitcher-content');
+    const listLayer = contentElement.childElementCount;
 
-    if (listLayer === 0) {
+    if (listLayer === 0 || this.statusShowHideAllLayers === undefined) {
       this.statusShowHideAllLayers = this.map_.getLayers().find((layer) => {
         if (layer.isBase === false && layer.displayInLayerSwitcher) {
           // RANGE ¿?
