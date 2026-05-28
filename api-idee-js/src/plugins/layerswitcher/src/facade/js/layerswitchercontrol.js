@@ -325,8 +325,11 @@ export default class LayerswitcherControl extends IDEE.Control {
       && !IDEE.utils.isNullOrEmpty(layer.capabilitiesMetadata.abstract);
 
     return new Promise((success) => {
-      let hasStyles = (hasMetadata && layer.capabilitiesMetadata.style.length > 1)
-        || (layer instanceof IDEE.layer.Vector && !IDEE.utils.isNullOrEmpty(layer.predefinedStyles)
+      let hasStyles = (hasMetadata
+        && layer.capabilitiesMetadata.style !== undefined
+        && layer.capabilitiesMetadata.style.length > 1)
+        || (layer instanceof IDEE.layer.Vector
+          && !IDEE.utils.isNullOrEmpty(layer.predefinedStyles)
           && layer.predefinedStyles.length > 1);
       if (layer.type === 'KML') {
         if (layer.options === null) {
@@ -1165,14 +1168,14 @@ export default class LayerswitcherControl extends IDEE.Control {
             const isWMSPath = urlLower.endsWith('/wms') || urlLower.includes('service=wms');
 
             const promise2 = (isWFSPath) ? Promise.resolve({ text: '' }) : new Promise((success, reject) => {
-              const id = setTimeout(() => reject(), 15000);
+              const id = setTimeout(() => success({ text: '' }), 15000);
               IDEE.remote.get(IDEE.utils.getWMSGetCapabilitiesUrl(url, '1.3.0')).then((response2) => {
                 clearTimeout(id);
                 success(response2);
-              });
+              }).catch(() => { clearTimeout(id); success({ text: '' }); });
             });
             const promisewfs = (isWMSPath) ? Promise.resolve({ text: '' }) : new Promise((success, reject) => {
-              const id = setTimeout(() => reject(), 15000);
+              const id = setTimeout(() => success({ text: '' }), 15000);
               let urlAux = url;
               urlAux = IDEE.utils.addParameters(url, 'request=GetCapabilities');
               urlAux = IDEE.utils.addParameters(urlAux, 'service=WFS');
@@ -1181,26 +1184,132 @@ export default class LayerswitcherControl extends IDEE.Control {
               IDEE.remote.get(urlAux).then((responsewfs) => {
                 clearTimeout(id);
                 success(responsewfs);
-              });
+              }).catch(() => { clearTimeout(id); success({ text: '' }); });
             });
-            Promise.all([promise2, promisewfs]).then((response2) => {
+
+            const promisewmts = (isWFSPath || isWMSPath) ? Promise.resolve({ text: '' }) : new Promise((success) => {
+              const id = setTimeout(() => success({ text: '' }), 15000); // En vez de reject, éxito vacío
+              let urlAux = url;
+              urlAux = IDEE.utils.addParameters(url, 'request=GetCapabilities');
+              urlAux = IDEE.utils.addParameters(urlAux, 'service=WMTS');
+
+              IDEE.remote.get(urlAux).then((responsewmts) => {
+                clearTimeout(id);
+                success(responsewmts);
+              }).catch(() => { clearTimeout(id); success({ text: '' }); });
+            });
+
+            Promise.all([promise2, promisewfs, promisewmts]).then((responses) => {
               let wms = false;
               let wfs = false;
+              let wmts = false;
 
-              if (!IDEE.utils.isNullOrEmpty(response2[0].text) && response2[0].text.indexOf('<TileMatrixSetLink>') === -1 && response2[0].text.indexOf('<GetMap>') >= 0) {
+              const responseWMS = responses[0];
+              const responseWFS = responses[1];
+              const responseWMTS = responses[2];
+
+              const hasWmtsTag = (res) => res && !IDEE.utils.isNullOrEmpty(res.text)
+                && (res.text.toLowerCase().indexOf('<tilematrixset>') >= 0
+                || res.text.toLowerCase().indexOf('<tilematrixsetlink>') >= 0
+                || res.text.toLowerCase().indexOf('wmts_capabilities') >= 0);
+
+              const hasWmsTag = (res) => res && !IDEE.utils.isNullOrEmpty(res.text)
+                && (res.text.toLowerCase().indexOf('getmap') >= 0
+                || res.text.toLowerCase().indexOf('wms_capabilities') >= 0
+                || res.text.toLowerCase().indexOf('wmt_ms_capabilities') >= 0);
+
+              const hasWfsTag = (res) => res && !IDEE.utils.isNullOrEmpty(res.text)
+                && (res.text.toLowerCase().indexOf('name="getfeature"') >= 0
+                || res.text.toLowerCase().indexOf('wfs_capabilities') >= 0);
+
+              if (hasWmtsTag(responseWMTS) || hasWmtsTag(responseWMS)) {
+                wmts = true;
+              } else if (!wmts && hasWmsTag(responseWMS)) {
                 wms = true;
-              }
-
-              if (!IDEE.utils.isNullOrEmpty(response2[1].text) && response2[1].text.indexOf('<TileMatrixSetLink>') === -1 && response2[1].text.indexOf('Operation name="GetFeature"') >= 0) {
+              } else if (!wmts && hasWfsTag(responseWFS)) {
                 wfs = true;
               }
 
-              if (wms || wfs) {
+              if (wms || wfs || wmts) {
                 try {
+                  // WMTS
+                  if (wmts) {
+                    const validRes = hasWmtsTag(responseWMTS) ? responseWMTS : responseWMS;
+                    const getCapabilitiesParser = new IDEE.impl.format.WMTSCapabilities();
+
+                    // Leer el objeto bruto que devuelve el parser
+                    const parsedData = getCapabilitiesParser.read(validRes.xml || new DOMParser().parseFromString(validRes.text, 'text/xml'));
+
+                    const getCapabilities = parsedData.capabilities || parsedData;
+                    const serviceIdentification = getCapabilities.ServiceIdentification
+                      || getCapabilities.serviceIdentification;
+                    this.serviceCapabilities = serviceIdentification || {};
+
+                    const layers = [];
+
+                    // Buscar los Contents y las Layers
+                    const contents = getCapabilities.Contents
+                      || getCapabilities.contents || getCapabilities;
+                    let layerList = contents.Layer || contents.layer || contents.layers;
+
+                    // Si el servidor devuelve una sola capa, se convierte en array
+                    if (layerList && !Array.isArray(layerList)) {
+                      layerList = [layerList];
+                    }
+
+                    if (layerList && layerList.length > 0) {
+                      layerList.forEach((layerInfo) => {
+                        // Extracción segura
+                        const identifier = layerInfo.Identifier || layerInfo.identifier || `layer_${Math.random()}`;
+                        const title = layerInfo.Title || layerInfo.title || identifier;
+                        const abstract = layerInfo.Abstract || layerInfo.abstract || '';
+
+                        // Rescatar el sistema de coordenadas
+                        let matrixSet = 'EPSG:3857';
+                        const links = layerInfo.TileMatrixSetLink || layerInfo.tileMatrixSetLink;
+                        if (links && links.length > 0) {
+                          matrixSet = links[0].TileMatrixSet || links[0].tileMatrixSet || matrixSet;
+                        }
+
+                        // Rescatar el formato de imagen
+                        let format = 'image/png';
+                        const formats = layerInfo.Format || layerInfo.format;
+                        if (formats && formats.length > 0) {
+                          format = formats[0];
+                        }
+
+                        // Construir la capa WMTS
+                        const wmtsLayer = new IDEE.layer.WMTS({
+                          url,
+                          name: identifier,
+                          legend: title,
+                          matrixSet,
+                          format,
+                        });
+
+                        // Forzar metadatos
+                        wmtsLayer.capabilitiesMetadata = {
+                          abstract,
+                          attribution: getCapabilities.ServiceProvider
+                            || getCapabilities.serviceProvider
+                            || {},
+                        };
+
+                        layers.push(wmtsLayer);
+                      });
+                    } else {
+                      console.error('No se encontró la estructura de capas WMTS:', getCapabilities);
+                    }
+
+                    // Pasar las capas por la lista blanca/filtros y se asignan
+                    this.capabilities = this.filterResults(layers);
+                  }
+
                   // WMS
                   if (wms) {
                     const getCapabilitiesParser = new IDEE.impl.format.WMSCapabilities();
-                    const getCapabilities = getCapabilitiesParser.read(response2[0].xml || new DOMParser().parseFromString(response2[0].text, 'text/xml'));
+                    const getCapabilities = getCapabilitiesParser.read(responseWMS.xml || new DOMParser().parseFromString(responseWMS.text, 'text/xml'));
+
                     this.serviceCapabilities = getCapabilities.Service || {};
                     const getCapabilitiesUtils = new IDEE.impl.GetCapabilities(
                       getCapabilities,
@@ -1217,7 +1326,7 @@ export default class LayerswitcherControl extends IDEE.Control {
                   // WFS
                   let wfsDatas;
                   if (wfs) {
-                    wfsDatas = this.readWFSCapabilities(response2[1]);
+                    wfsDatas = this.readWFSCapabilities(responseWFS);
                   }
                   this.showResults(wfsDatas);
                 } catch (error) {
@@ -1303,6 +1412,7 @@ export default class LayerswitcherControl extends IDEE.Control {
 
     if (precharged && precharged.groups && !Array.isArray(precharged.groups[0].services)) {
       precharged = this.normalizePrecharged(precharged);
+      this.precharged = precharged;
     }
 
     const hasPrecharged = (precharged.groups !== undefined && precharged.groups.length > 0)
@@ -2062,7 +2172,7 @@ export default class LayerswitcherControl extends IDEE.Control {
             this.capabilities[j].options.origen = this.capabilities[j].type;
             const legendUrl = this.capabilities[j].getLegendURL();
             const meta = this.capabilities[j].capabilitiesMetadata;
-            if ((legendUrl.indexOf('GetLegendGraphic') > -1 || legendUrl.indexOf(`${IDEE.config.STATIC_RESOURCES_URL}/imagenes/leyenda/legend-default.png`) > -1) && meta !== undefined && meta.style.length > 0) {
+            if ((legendUrl.indexOf('GetLegendGraphic') > -1 || legendUrl.indexOf(`${IDEE.config.STATIC_RESOURCES_URL}/imagenes/leyenda/legend-default.png`) > -1) && meta !== undefined && meta.style !== undefined && meta.style.length > 0) {
               if (meta.style[0].LegendURL !== undefined && meta.style[0].LegendURL.length > 0) {
                 const style = meta.style[0].LegendURL[0].OnlineResource;
                 if (style !== undefined && style !== null) {
