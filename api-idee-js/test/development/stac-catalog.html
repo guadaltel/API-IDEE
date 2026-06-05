@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="idee" content="yes">
+
+    <title>PRUEBA DESARROLLO STAC CATALOG</title>
+    <style rel="stylesheet">
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: Poppins, sans-serif;
+      }
+
+      #map {
+        height: 50%;
+      }
+
+      #map>.ol-viewport {
+        height: 100% !important;
+      }
+
+      #panel {
+        height: 25%;
+        overflow: auto;
+        padding: 0.75rem 1rem;
+        background: #fff;
+        border-top: 1px solid #ccc;
+      }
+
+      #panel fieldset {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 0 0 0.75rem;
+        padding: 0.5rem 0.75rem;
+      }
+
+      #panel legend {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 0.25rem;
+      }
+
+      .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        align-items: center;
+      }
+
+      .form-row label {
+        font-size: 12px;
+        min-width: 90px;
+      }
+
+      .form-row input,
+      .form-row select,
+      .form-row textarea {
+        flex: 1;
+        min-width: 180px;
+        font-size: 12px;
+        padding: 0.25rem 0.5rem;
+      }
+
+      .form-row textarea {
+        min-height: 48px;
+        font-family: monospace;
+      }
+
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .buttons button {
+        font-size: 12px;
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+      }
+
+      #results {
+        height: 30%;
+        overflow: auto;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 12px;
+        background: #f5f5f5;
+        border-top: 1px solid #ccc;
+        white-space: pre-wrap;
+        margin: 0;
+      }
+
+      .makidentist:before {
+        content: '\e814';
+        color: 'red'
+      }
+    </style>
+
+  </head>
+
+  <body>
+    <div id="map" class="map"></div>
+
+    <div id="panel">
+      <fieldset>
+        <legend>Configuración</legend>
+        <div class="form-row">
+          <label for="catalog-url">URL catálogo</label>
+          <input id="catalog-url" type="text" value="https://earth-search.aws.element84.com/v1">
+        </div>
+        <div class="form-row">
+          <label for="collection-id">collectionId</label>
+          <input id="collection-id" type="text" placeholder="sentinel-2-pre-c1-l2a">
+          <label for="item-id">itemId</label>
+          <input id="item-id" type="text" placeholder="ID del item">
+          <label for="query-limit">limit</label>
+          <input id="query-limit" type="number" min="1" value="10">
+        </div>
+        <div class="form-row">
+          <label for="token-user">usuario</label>
+          <input id="token-user" type="text" placeholder="usuario">
+          <label for="token-password">password</label>
+          <input id="token-password" type="password" placeholder="password">
+        </div>
+        <div class="form-row">
+          <label for="query-filters">filtros Simples</label>
+          <textarea id="query-filters" placeholder='{"bbox": [-5, 36, -4, 37]}'></textarea>
+        </div>
+        <div class="form-row">
+          <label for="filter-format">formato filtro</label>
+          <select id="filter-format">
+            <option value="stac-query">stac-query</option>
+            <option value="cql-json">cql-json</option>
+            <option value="cql2-json">cql2-json</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="filter-body">filtro Avanzado</label>
+          <textarea id="filter-body">{"eo:cloud_cover": {"lt": 20}}</textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Funciones Catalog</legend>
+        <div class="buttons">
+          <button type="button" id="btn-getToken">getToken()</button>
+          <button type="button" id="btn-getCollections">getCollections()</button>
+          <button type="button" id="btn-getQueryableFields">getQueryableFields()</button>
+          <button type="button" id="btn-getItems">getItems()</button>
+          <button type="button" id="btn-getItem">getItem()</button>
+          <button type="button" id="btn-getFilteredItems">getFilteredItems()</button>
+          <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced()</button>
+          <button type="button" id="btn-clear">Limpiar resultados</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <pre id="results">Pulsa un botón para ejecutar una función de Catalog.</pre>
+    <script src="/config.js" charset="utf-8"></script>
+    <script src="/stac-catalog.js" charset="utf-8"></script>
+  </body>
+
+</html>
