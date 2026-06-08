@@ -117,6 +117,12 @@
           <input id="catalog-url" type="text" value="https://earth-search.aws.element84.com/v1">
         </div>
         <div class="form-row">
+          <label for="public">público</label>
+          <input id="public" type="checkbox" value="true">
+          <label for="auth-url">URL autenticación</label>
+          <input id="auth-url" type="text" value="https://gneis.desarrollo.guadaltel.es/o/custom-auth">
+        </div>
+        <div class="form-row">
           <label for="collection-id">collectionId</label>
           <input id="collection-id" type="text" placeholder="sentinel-2-pre-c1-l2a">
           <label for="item-id">itemId</label>
@@ -151,7 +157,7 @@
       <fieldset>
         <legend>Funciones Catalog</legend>
         <div class="buttons">
-          <button type="button" id="btn-getToken">getToken()</button>
+          <button type="button" id="btn-authenticate">authenticate()</button>
           <button type="button" id="btn-getCollections">getCollections()</button>
           <button type="button" id="btn-getQueryableFields">getQueryableFields()</button>
           <button type="button" id="btn-getItems">getItems()</button>

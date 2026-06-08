@@ -11,6 +11,8 @@ const STAC_FILTER_LANG = {
 
 const resultsEl = document.getElementById('results');
 const catalogUrlInput = document.getElementById('catalog-url');
+const authUrlInput = document.getElementById('auth-url');
+const publicInput = document.getElementById('public');
 const collectionIdInput = document.getElementById('collection-id');
 const itemIdInput = document.getElementById('item-id');
 const tokenUserInput = document.getElementById('token-user');
@@ -126,14 +128,18 @@ const clearResults = () => {
 
 const getCatalog = () => {
 	const url = catalogUrlInput.value.trim();
+	const authUrl = authUrlInput.value.trim();
+	const publicCatalog = publicInput.checked;
 	if (!url) {
 		throw new Error('La URL del catálogo es obligatoria');
 	}
-	if (catalog && catalog.getUrl() !== url) {
-		catalog.setUrl(url);
-	} else {
-		catalog = new Catalog({ url });
+	if (!catalog) {
+		catalog = new Catalog({ url, authUrl, public: publicCatalog });
 		window.catalog = catalog;
+	} else if (catalog.getUrl() !== url) {		
+		catalog.setUrl(url);
+	} else if (catalog.public !== publicCatalog) {
+		catalog.public = publicCatalog;
 	}
 	return catalog;
 };
@@ -208,13 +214,13 @@ window.STAC_FILTER_LANG = STAC_FILTER_LANG;
 window.stacLayers = stacLayers;
 window.clearStacResults = clearResults;
 
-document.getElementById('btn-getToken').addEventListener('click', runHandler('getToken(user, password)', () => {
+document.getElementById('btn-authenticate').addEventListener('click', runHandler('authenticate(user, password)', () => {
 	const user = tokenUserInput.value.trim();
 	const password = tokenPasswordInput.value;
 	if (!user || !password) {
-		throw new Error('usuario y password son obligatorios para getToken()');
+		throw new Error('usuario y password son obligatorios para authenticate()');
 	}
-	return getCatalog().getToken(user, password).then((response) => JSON.parse(response.text));
+	getCatalog().authenticate(user, password);
 }));
 
 document.getElementById('btn-getCollections').addEventListener('click', runHandler('getCollections()', () => {

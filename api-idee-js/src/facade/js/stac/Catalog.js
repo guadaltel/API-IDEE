@@ -1,14 +1,13 @@
 /**
  * @module IDEE/stac
  */
-import { get as remoteGet, post as remotePost } from 'IDEE/util/Remote';
 import { addParameters, isObject } from 'IDEE/util/Utils';
 import { useproxy } from 'IDEE/api-idee';
 import Response from 'IDEE/util/Response';
 import Base from '../Base';
 
 /**
- * Realiza una petición POST JSON con la cabecera Content-Type adecuada.
+ * Realiza una petición POST.
  *
  * @function
  * @param {string} url URL del servicio.
@@ -16,7 +15,7 @@ import Base from '../Base';
  * @returns {Promise<Response>} Promesa con la respuesta.
  * @private
  */
-const postJson = (url, data) => {
+const post = (url, data, headers = {}) => {
   let requestUrl = url;
   const body = isObject(data) ? JSON.stringify(data) : data;
 
@@ -42,7 +41,9 @@ const postJson = (url, data) => {
       fail(new Error('Request failed'));
     };
     xhr.open('POST', requestUrl, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
+    Object.keys(headers).forEach((header) => {
+      xhr.setRequestHeader(header, headers[header]);
+    });
     xhr.send(body);
   });
 };
@@ -51,6 +52,40 @@ const STAC_FILTER_LANG = {
   STAC_QUERY: 'stac-query', // campo "query"
   CQL_JSON: 'cql-json', // filter-lang
   CQL2_JSON: 'cql2-json', // filter-lang
+};
+
+const get = (url, data, headers = {}) => {
+  let requestUrl = url;
+
+  if (useproxy) {
+    requestUrl = addParameters(IDEE.config.PROXY_POST_URL, { url });
+  }
+  if (data) {
+    requestUrl = addParameters(requestUrl, data);
+  }
+  return new Promise((success, fail) => {
+    let xhr;
+    if (window.XMLHttpRequest) {
+      xhr = new XMLHttpRequest();
+    } else if (window.ActiveXObject) {
+      xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        const response = new Response();
+        response.parseXmlHttp(xhr);
+        success(response);
+      }
+    };
+    xhr.onerror = () => {
+      fail(new Error('Request failed'));
+    };
+    xhr.open('GET', requestUrl, true);
+    Object.keys(headers).forEach((header) => {
+      xhr.setRequestHeader(header, headers[header]);
+    });
+    xhr.send();
+  });
 };
 
 /**
@@ -65,6 +100,9 @@ class Catalog extends Base {
   constructor(userParameters) {
     super(null);
     this.url = userParameters.url;
+    this.public = userParameters.public === true;
+    this.authUrl = userParameters.authUrl;
+    this.token = null;
   }
 
   getUrl() {
@@ -75,18 +113,41 @@ class Catalog extends Base {
     this.url = newUrl;
   }
 
-  getToken(user, password) {
-    return remotePost(`${this.url}/token`, {
-      user,
-      password,
+  authenticate(username, password) {
+    const this2 = this;
+    return new Promise((success, fail) => {
+      post(`${this.authUrl}/token`, {
+        username,
+        password,
+      }, { 'Content-Type': 'application/json' }).then((response) => {
+        const data = JSON.parse(response.text);
+        if (data.access_token) {
+          this2.token = data.access_token;
+          success(true);
+        } else {
+          fail(new Error('No se ha obtenido el token'));
+        }
+      }).catch((error) => {
+        fail(new Error(`Error al obtener el token: ${error.message}`));
+      });
     });
   }
 
-  getCollections(limit = 10) {
+  getCollections() {
+    if (this.public) {
+      return new Promise((success, fail) => {
+        get(`${this.url}/collections`).then((response) => {
+          const data = JSON.parse(response.text);
+          success(data.collections);
+        }).catch((error) => {
+          fail(error);
+        });
+      });
+    }
     return new Promise((success, fail) => {
-      remoteGet(`${this.url}/collections?limit=${limit}`).then((response) => {
+      post(`${this.authUrl}/roles`, { accessToken: this.token }, { 'Content-Type': 'application/json' }).then((response) => {
         const data = JSON.parse(response.text);
-        success(data.collections || data.results || []);
+        success(data.collections);
       }).catch((error) => {
         fail(error);
       });
@@ -94,8 +155,9 @@ class Catalog extends Base {
   }
 
   getQueryableFields(collectionId) {
+    const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      remoteGet(`${this.url}/collections/${collectionId}/queryables`).then((response) => {
+      get(`${this.url}/collections/${collectionId}/queryables`, null, headers).then((response) => {
         const data = JSON.parse(response.text);
         success(data.properties || []);
       }).catch((error) => {
@@ -105,8 +167,9 @@ class Catalog extends Base {
   }
 
   getItems(collectionId, limit = 10) {
+    const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      remoteGet(`${this.url}/collections/${collectionId}/items?limit=${limit}`).then((response) => {
+      get(`${this.url}/collections/${collectionId}/items?limit=${limit}`, null, headers).then((response) => {
         const data = JSON.parse(response.text);
         success(data);
       }).catch((error) => {
@@ -116,8 +179,9 @@ class Catalog extends Base {
   }
 
   getItem(collectionId, itemId) {
+    const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      remoteGet(`${this.url}/collections/${collectionId}/items/${itemId}`).then((response) => {
+      get(`${this.url}/collections/${collectionId}/items/${itemId}`, null, headers).then((response) => {
         const data = JSON.parse(response.text);
         success(data);
       }).catch((error) => {
@@ -127,8 +191,9 @@ class Catalog extends Base {
   }
 
   getFilteredItems(collectionId, filters) {
+    const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      remoteGet(`${this.url}/collections/${collectionId}/items`, filters).then((response) => {
+      get(`${this.url}/collections/${collectionId}/items`, filters, headers).then((response) => {
         const data = JSON.parse(response.text);
         success(data);
       }).catch((error) => {
@@ -139,8 +204,14 @@ class Catalog extends Base {
 
   getFilteredItemsAdvanced(collectionId, filter) {
     const data = this.getFilterData(collectionId, filter);
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (!this.public && this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
     return new Promise((success, fail) => {
-      postJson(`${this.url}/search`, data).then((response) => {
+      post(`${this.url}/search`, data, headers).then((response) => {
         const responseData = JSON.parse(response.text);
         success(responseData);
       }).catch((error) => {
