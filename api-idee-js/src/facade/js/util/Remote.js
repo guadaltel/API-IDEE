@@ -210,11 +210,6 @@ const ajax = (urlVar, dataVar, methodType, useProxy, headers) => {
     } else if (window.ActiveXObject) {
       xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
-    if (!isNullOrEmpty(headers)) {
-      Object.keys(headers).forEach((header) => {
-        xhr.setRequestHeader(header, headers[header]);
-      });
-    }
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         const response = new Response();
@@ -292,6 +287,11 @@ const ajax = (urlVar, dataVar, methodType, useProxy, headers) => {
       }
     };
     xhr.open(methodType, url, true);
+    if (!isNullOrEmpty(headers)) {
+      Object.keys(headers).forEach((header) => {
+        xhr.setRequestHeader(header, headers[header]);
+      });
+    }
     xhr.send(data);
   });
 };
