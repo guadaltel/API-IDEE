@@ -3,11 +3,10 @@ import Catalog from 'IDEE/stac/Catalog';
 import GeoJSON from 'IDEE/layer/GeoJSON';
 import GeoTIFF from 'IDEE/layer/GeoTIFF';
 
-const STAC_FILTER_LANG = {
-	STAC_QUERY: 'stac-query',
-	CQL_JSON: 'cql-json',
-	CQL2_JSON: 'cql2-json',
-};
+window.catalog = null;
+let layerCounter = 0;
+let stacLayers = [];
+let stacTiffs = [];
 
 const resultsEl = document.getElementById('results');
 const catalogUrlInput = document.getElementById('catalog-url');
@@ -22,10 +21,22 @@ const queryLimitInput = document.getElementById('query-limit');
 const filterFormatSelect = document.getElementById('filter-format');
 const filterBodyInput = document.getElementById('filter-body');
 
-let catalog = null;
-let layerCounter = 0;
-let stacLayers = [];
-let stacTiffs = [];
+const runHandler = (label, handler, addsToMap = false) => async () => {
+	resetResults();
+	try {
+		log(`>>> ${label}`);
+		const result = await handler();
+		log(`<<< ${label}`, result);
+		if (addsToMap) {
+			const layer = addItemsToMap(label, result);
+			if (layer) {
+				log('Capa GeoJSON añadida al mapa', { name: layer.name, features: layer.source?.features?.length });
+			}
+		}
+	} catch (err) {
+		logError(`<<< ${label} ERROR`, err);
+	}
+};
 
 const log = (message, data) => {
 	const timestamp = new Date().toLocaleTimeString();
@@ -41,6 +52,63 @@ const log = (message, data) => {
 const logError = (message, err) => {
 	console.error(err);
 	log(message, { message: err.message });
+};
+
+const getQueryLimit = () => {
+	const value = parseInt(queryLimitInput.value, 10);
+	if (Number.isNaN(value) || value < 1) {
+		throw new Error('limit debe ser un número mayor que 0');
+	}
+	return value;
+};
+
+const parseJsonInput = (value, fieldName) => {
+	if (!value || !value.trim()) {
+		return {};
+	}
+	try {
+		return JSON.parse(value);
+	} catch (err) {
+		throw new Error(`${fieldName} no es un JSON válido`);
+	}
+};
+
+const getCollectionId = () => {
+	const collectionId = collectionIdInput.value.trim();
+	if (!collectionId) {
+		throw new Error('collectionId es obligatorio para esta función');
+	}
+	return collectionId;
+};
+
+const getFilterConfig = () => ({
+	format: filterFormatSelect.value,
+	filter: parseJsonInput(filterBodyInput.value, 'filtro POST'),
+	limit: getQueryLimit(),
+});
+
+const removeStacLayers = () => {
+	if (stacLayers.length === 0) {
+		return;
+	}
+	mapa.removeLayers(stacLayers);
+	mapa.removeLayers(stacTiffs);
+	stacLayers = [];
+	stacTiffs = [];
+	layerCounter = 0;
+};
+
+const clearResults = () => {
+	resultsEl.textContent = 'Pulsa un botón para ejecutar una función de Catalog.';
+	removeStacLayers();
+};
+
+const getItemId = () => {
+	const itemId = itemIdInput.value.trim();
+	if (!itemId) {
+		throw new Error('itemId es obligatorio para esta función');
+	}
+	return itemId;
 };
 
 const resetResults = () => {
@@ -110,97 +178,55 @@ const addGeotiffToMap = (geojson) => {
 	mapa.addLayers(tiffs);
 }
 
-const removeStacLayers = () => {
-	if (stacLayers.length === 0) {
-		return;
-	}
-	mapa.removeLayers(stacLayers);
-	mapa.removeLayers(stacTiffs);
-	stacLayers = [];
-	stacTiffs = [];
-	layerCounter = 0;
-};
 
-const clearResults = () => {
-	resultsEl.textContent = 'Pulsa un botón para ejecutar una función de Catalog.';
-	removeStacLayers();
-};
-
-const getCatalog = () => {
+document.getElementById('btn-constructor').addEventListener('click', runHandler('constructor(url, authUrl, public)', () => {
 	const url = catalogUrlInput.value.trim();
 	const authUrl = authUrlInput.value.trim();
 	const publicCatalog = publicInput.checked;
-	if (!url) {
-		throw new Error('La URL del catálogo es obligatoria');
-	}
-	if (!catalog) {
-		catalog = new Catalog({ url, authUrl, public: publicCatalog });
-		window.catalog = catalog;
-	} else if (catalog.getUrl() !== url) {		
-		catalog.setUrl(url);
-	} else if (catalog.public !== publicCatalog) {
-		catalog.public = publicCatalog;
-	}
-	return catalog;
-};
 
-const getCollectionId = () => {
-	const collectionId = collectionIdInput.value.trim();
-	if (!collectionId) {
-		throw new Error('collectionId es obligatorio para esta función');
-	}
-	return collectionId;
-};
+	catalog = new Catalog({ url, authUrl, public: publicCatalog });
+	window.catalog = catalog;
+	return { url, authUrl, public: publicCatalog };
+}));
 
-const getItemId = () => {
-	const itemId = itemIdInput.value.trim();
-	if (!itemId) {
-		throw new Error('itemId es obligatorio para esta función');
-	}
-	return itemId;
-};
+document.getElementById('btn-authenticate').addEventListener('click', runHandler('authenticate(user, password)', () => {
+	const user = tokenUserInput.value.trim();
+	const password = tokenPasswordInput.value.trim();
+	catalog.authenticate(user, password);
+	return { user, password };
+}));
 
-const getQueryLimit = () => {
-	const value = parseInt(queryLimitInput.value, 10);
-	if (Number.isNaN(value) || value < 1) {
-		throw new Error('limit debe ser un número mayor que 0');
-	}
-	return value;
-};
+document.getElementById('btn-getCollections').addEventListener('click', runHandler('getCollections()', () => {
+	return catalog.getCollections(getQueryLimit());
+}));
 
-const parseJsonInput = (value, fieldName) => {
-	if (!value || !value.trim()) {
-		return {};
-	}
-	try {
-		return JSON.parse(value);
-	} catch (err) {
-		throw new Error(`${fieldName} no es un JSON válido`);
-	}
-};
+document.getElementById('btn-getQueryableFields').addEventListener('click', runHandler('getQueryableFields(collectionId)', () => {
+	return catalog.getQueryableFields(getCollectionId());
+}));
 
-const getFilterConfig = () => ({
-	format: filterFormatSelect.value,
-	filter: parseJsonInput(filterBodyInput.value, 'filtro POST'),
-	limit: getQueryLimit(),
-});
+document.getElementById('btn-getItems').addEventListener('click', runHandler('getItems(collectionId)', () => {
+	return catalog.getItems(getCollectionId(), getQueryLimit());
+}, true));
 
-const runHandler = (label, handler, addsToMap = false) => async () => {
-	resetResults();
-	try {
-		log(`>>> ${label}`);
-		const result = await handler();
-		log(`<<< ${label}`, result);
-		if (addsToMap) {
-			const layer = addItemsToMap(label, result);
-			if (layer) {
-				log('Capa GeoJSON añadida al mapa', { name: layer.name, features: layer.source?.features?.length });
-			}
-		}
-	} catch (err) {
-		logError(`<<< ${label} ERROR`, err);
-	}
-};
+document.getElementById('btn-getItem').addEventListener('click', runHandler('getItem(collectionId, itemId)', () => {
+	return catalog.getItem(getCollectionId(), getItemId());
+}, true));
+
+document.getElementById('btn-getFilteredItems').addEventListener('click', runHandler('getFilteredItems(collectionId, filters)', () => {
+	const filters = {
+		...parseJsonInput(queryFiltersInput.value, 'filtros GET'),
+		limit: getQueryLimit(),
+	};
+	return catalog.getFilteredItems(getCollectionId(), filters);
+}, true));
+
+document.getElementById('btn-getFilteredItemsAdvanced').addEventListener('click', runHandler('getFilteredItemsAdvanced(collectionId, filter)', () => {
+	const filter = getFilterConfig();
+	return catalog.getFilteredItemsAdvanced(getCollectionId(), filter);
+}, true));
+
+document.getElementById('btn-clear').addEventListener('click', clearResults);
+
 
 const mapa = Mmap({
 	container: 'map',
@@ -210,46 +236,3 @@ const mapa = Mmap({
 });
 
 window.map = mapa;
-window.STAC_FILTER_LANG = STAC_FILTER_LANG;
-window.stacLayers = stacLayers;
-window.clearStacResults = clearResults;
-
-document.getElementById('btn-authenticate').addEventListener('click', runHandler('authenticate(user, password)', () => {
-	const user = tokenUserInput.value.trim();
-	const password = tokenPasswordInput.value;
-	if (!user || !password) {
-		throw new Error('usuario y password son obligatorios para authenticate()');
-	}
-	getCatalog().authenticate(user, password);
-}));
-
-document.getElementById('btn-getCollections').addEventListener('click', runHandler('getCollections()', () => {
-	return getCatalog().getCollections(getQueryLimit());
-}));
-
-document.getElementById('btn-getItems').addEventListener('click', runHandler('getItems(collectionId)', () => {
-	return getCatalog().getItems(getCollectionId(), getQueryLimit());
-}, true));
-
-document.getElementById('btn-getItem').addEventListener('click', runHandler('getItem(collectionId, itemId)', () => {
-	return getCatalog().getItem(getCollectionId(), getItemId());
-}, true));
-
-document.getElementById('btn-getFilteredItems').addEventListener('click', runHandler('getFilteredItems(collectionId, filters)', () => {
-	const filters = {
-		...parseJsonInput(queryFiltersInput.value, 'filtros GET'),
-		limit: getQueryLimit(),
-	};
-	return getCatalog().getFilteredItems(getCollectionId(), filters);
-}, true));
-
-document.getElementById('btn-getQueryableFields').addEventListener('click', runHandler('getQueryableFields(collectionId)', () => {
-	return getCatalog().getQueryableFields(getCollectionId());
-}));
-
-document.getElementById('btn-getFilteredItemsAdvanced').addEventListener('click', runHandler('getFilteredItemsAdvanced(collectionId, filter)', () => {
-	const filter = getFilterConfig();
-	return getCatalog().getFilteredItemsAdvanced(getCollectionId(), filter);
-}, true));
-
-document.getElementById('btn-clear').addEventListener('click', clearResults);

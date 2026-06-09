@@ -157,13 +157,14 @@
       <fieldset>
         <legend>Funciones Catalog</legend>
         <div class="buttons">
-          <button type="button" id="btn-authenticate">authenticate()</button>
+          <button type="button" id="btn-constructor">constructor(userParameters)</button>
+          <button type="button" id="btn-authenticate">authenticate(username, password)</button>
           <button type="button" id="btn-getCollections">getCollections()</button>
-          <button type="button" id="btn-getQueryableFields">getQueryableFields()</button>
-          <button type="button" id="btn-getItems">getItems()</button>
-          <button type="button" id="btn-getItem">getItem()</button>
-          <button type="button" id="btn-getFilteredItems">getFilteredItems()</button>
-          <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced()</button>
+          <button type="button" id="btn-getQueryableFields">getQueryableFields(collectionId)</button>
+          <button type="button" id="btn-getItems">getItems(collectionId, limit = 10)</button>
+          <button type="button" id="btn-getItem">getItem(collectionId, itemId)</button>
+          <button type="button" id="btn-getFilteredItems">getFilteredItems(collectionId, filters) </button>
+          <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced(collectionId, filter)</button>
           <button type="button" id="btn-clear">Limpiar resultados</button>
         </div>
       </fieldset>

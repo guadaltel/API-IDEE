@@ -4,6 +4,7 @@
 import { post, get } from '../util/Remote';
 import Base from '../Base';
 import { getValue } from '../i18n/language';
+import { error as showError } from '../dialog';
 
 const STAC_FILTER_LANG = {
   STAC_QUERY: 'stac-query', // campo "query"
@@ -33,14 +34,27 @@ class Catalog extends Base {
    * @constructor
    * @param {Object} userParameters Parámetros proporcionados por el usuario.
    * - url: URL del catálogo STAC.
-   * - authUrl: URL del servicio de autenticación (requerida si el catálogo no es público).
+   * - authUrl: URL del servicio de autenticación (requerida si el catálogo es privado).
    * - public: Verdadero si el catálogo es público y no requiere autenticación.
    * @api
    */
   constructor(userParameters) {
     super(null);
-    this.url = userParameters.url;
-    this.public = userParameters.public === true;
+
+    const url = userParameters.url;
+    const publicValue = userParameters.public === true;
+    if (!url) {
+      const noCatalogMsg = getValue('exception').no_catalog_url;
+      showError(noCatalogMsg);
+      throw new Error(noCatalogMsg);
+    }
+    if (!publicValue && !userParameters.authUrl) {
+      const noAuthUrlMsg = getValue('exception').no_catalog_auth_url;
+      showError(noAuthUrlMsg);
+      throw new Error(noAuthUrlMsg);
+    }
+    this.url = url;
+    this.public = publicValue === true;
     this.authUrl = userParameters.authUrl;
     this.token = null;
   }
@@ -79,7 +93,11 @@ class Catalog extends Base {
    * @api
    */
   authenticate(username, password) {
-    const this2 = this;
+    if (!username || !password) {
+      const noUsernamePasswordMsg = getValue('exception').no_catalog_username_password;
+      showError(noUsernamePasswordMsg);
+      return;
+    }
     return new Promise((success, fail) => {
       post(`${this.authUrl}/token`, {
         username,
@@ -87,10 +105,10 @@ class Catalog extends Base {
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
         const data = JSON.parse(response.text);
         if (data.access_token) {
-          this2.token = data.access_token;
+          this.token = data.access_token;
           success(true);
         } else {
-          fail(new Error(getValue('exception').no_catalog_token));
+          showError(getValue('exception').invalid_user_password);
         }
       }).catch((error) => {
         fail(new Error(`${getValue('exception').catalog_token_error}: ${error.message}`));
@@ -113,19 +131,23 @@ class Catalog extends Base {
     if (this.public) {
       return new Promise((success, fail) => {
         get(`${this.url}/collections`).then((response) => {
+          if (response.code !== 200) {
+            fail(new Error(getValue('exception').catalog_collections_error));
+            return;
+          }
           const data = JSON.parse(response.text);
           success(data.collections);
-        }).catch((error) => {
-          fail(error);
         });
       });
     }
     return new Promise((success, fail) => {
       post(`${this.authUrl}/roles`, { accessToken: this.token }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_collections_error));
+          return;
+        }
         const data = JSON.parse(response.text);
         success(data.collections);
-      }).catch((error) => {
-        fail(error);
       });
     });
   }
@@ -142,14 +164,18 @@ class Catalog extends Base {
    * @api
    */
   getQueryableFields(collectionId) {
+    if (!collectionId) {
+      showError(getValue('exception').no_collection_id);
+      return;
+    }
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
-    return new Promise((success, fail) => {
-      get(`${this.url}/collections/${collectionId}/queryables`, null, { headers }).then((response) => {
-        const data = JSON.parse(response.text);
-        success(data.properties || []);
-      }).catch((error) => {
-        fail(error);
-      });
+    return get(`${this.url}/collections/${collectionId}/queryables`, null, { headers }).then((response, fail) => {
+      if (response.code !== 200) {
+        fail(new Error(getValue('exception').catalog_queryable_fields_error));
+        return;
+      }
+      const data = JSON.parse(response.text);
+      return data.properties || [];
     });
   }
 
@@ -169,10 +195,12 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items?limit=${limit}`, null, { headers }).then((response) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_items_error));
+          return;
+        }
         const data = JSON.parse(response.text);
         success(data);
-      }).catch((error) => {
-        fail(error);
       });
     });
   }
@@ -190,10 +218,12 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items/${itemId}`, null, { headers }).then((response) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_item_error));
+          return;
+        }
         const data = JSON.parse(response.text);
         success(data);
-      }).catch((error) => {
-        fail(error);
       });
     });
   }
@@ -214,10 +244,12 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items`, filters, { headers }).then((response) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_filtered_items_error));
+          return;
+        }
         const data = JSON.parse(response.text);
         success(data);
-      }).catch((error) => {
-        fail(error);
       });
     });
   }
@@ -244,12 +276,14 @@ class Catalog extends Base {
     if (!this.public && this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-    return new Promise((success, fail) => {
-      post(`${this.url}/search`, data, { headers }).then((response) => {
+    return new Promise((success) => {
+      post(`${this.url}/search`, data, { headers }).then((response, fail) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_filtered_items_advanced_error));
+          return;
+        }
         const responseData = JSON.parse(response.text);
         success(responseData);
-      }).catch((error) => {
-        fail(error);
       });
     });
   }

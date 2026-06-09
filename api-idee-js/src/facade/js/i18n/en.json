@@ -335,7 +335,17 @@
     "animated_method": "The used implementation will not be able to disable or modify the animation.",
     "deactivatechangeresolution_method": "The used implementation does not have the deactivateChangeResolutionEvent method.",
     "enableDrag_deprecated": "The enableDrag method of the Map class has been deprecated, it is recommended to use enablePan instead.",
-    "no_catalog_token": "No catalog authentication token was obtained.",
-    "catalog_token_error": "Error obtaining the authentication token for the catalog."
+    "invalid_user_password": "The username or password is invalid.",
+    "catalog_token_error": "Error obtaining the authentication token for the catalog.",
+    "no_catalog_url": "The catalog URL is required.",
+    "no_catalog_auth_url": "The authentication URL is required for private catalogs.",
+    "no_catalog_username_password": "The username and password are required to authenticate the catalog.",
+    "no_collection_id": "The collection ID is required.",
+    "catalog_collections_error": "Error obtaining the collections from the catalog.",
+    "catalog_queryable_fields_error": "Error obtaining the queryable fields from the catalog.",
+    "catalog_items_error": "Error obtaining the items from the catalog.",
+    "catalog_item_error": "Error obtaining the item from the catalog.",
+    "catalog_filtered_items_error": "Error obtaining the filtered items from the catalog.",
+    "catalog_filtered_items_advanced_error": "Error obtaining the filtered items advanced from the catalog."
   }
 }
