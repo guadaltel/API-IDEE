@@ -334,6 +334,8 @@
     "wkt_toCQL_method": "The used implementation can not create WKT formatter so it will not include CQL filters.",
     "animated_method": "The used implementation will not be able to disable or modify the animation.",
     "deactivatechangeresolution_method": "The used implementation does not have the deactivateChangeResolutionEvent method.",
-    "enableDrag_deprecated": "The enableDrag method of the Map class has been deprecated, it is recommended to use enablePan instead."
+    "enableDrag_deprecated": "The enableDrag method of the Map class has been deprecated, it is recommended to use enablePan instead.",
+    "no_catalog_token": "No catalog authentication token was obtained.",
+    "catalog_token_error": "Error obtaining the authentication token for the catalog."
   }
 }
