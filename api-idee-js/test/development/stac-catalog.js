@@ -190,7 +190,7 @@ document.getElementById('btn-authenticate').addEventListener('click', runHandler
 }));
 
 document.getElementById('btn-getCollections').addEventListener('click', runHandler('getCollections()', () => {
-	return catalog.getCollections(getQueryLimit());
+	return catalog.getCollections();
 }));
 
 document.getElementById('btn-getQueryableFields').addEventListener('click', runHandler('getQueryableFields(collectionId)', () => {

@@ -103,6 +103,7 @@ class Catalog extends Base {
         username,
         password,
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
+        // PTE. ANTONIO - tiene que devolver 401
         if (response.code === 401) {
           showError(getValue('exception').invalid_user_password);
         } else if (response.code === 200) {
@@ -133,6 +134,8 @@ class Catalog extends Base {
    * @api
    */
   getCollections() {
+    // PTE. ANTONIO - creará un endpoint para obtener las colecciones de un catálogo
+    // STAC mediante /collections con el formato estándar.
     if (this.public) {
       return new Promise((success, fail) => {
         get(`${this.url}/collections`).then((response) => {
