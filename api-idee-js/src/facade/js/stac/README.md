@@ -159,6 +159,35 @@ const result = await catalog.getFilteredItems('sentinel-2-pre-c1-l2a', {
 | `collectionId` | `string` | Identificador de la colección. |
 | `filters` | `Object` | Parámetros de consulta (p. ej. `limit`, `bbox`, `datetime`). |
 
+El filtro `bbox` debe estar en EPSG:4326 (longitud, latitud).
+
+#### Formato del parámetro `datetime`
+
+Sigue [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) (ISO 8601 con zona horaria). El servidor devuelve ítems cuyo intervalo temporal **intersecta** el valor indicado (normalmente `properties.start_datetime` y `properties.end_datetime`, no solo `properties.datetime`).
+
+| Formato | Ejemplo | Descripción |
+|---------|---------|-------------|
+| Instantánea | `2024-09-24T13:34:06Z` | Un solo momento en UTC (`Z`) u offset (`+02:00`) |
+| Intervalo cerrado | `2024-01-01T00:00:00Z/2024-12-31T23:59:59Z` | Desde / hasta, separados por `/` |
+| Intervalo abierto (desde) | `2024-01-01T00:00:00Z/..` | Desde esa fecha, sin límite superior |
+| Intervalo abierto (hasta) | `../2024-12-31T23:59:59Z` | Hasta esa fecha, sin límite inferior |
+
+Solo un extremo del intervalo puede estar abierto.
+
+```javascript
+// Rango cerrado
+await catalog.getFilteredItems('ccm-optical', {
+  datetime: '2024-09-01T00:00:00Z/2024-09-30T23:59:59Z',
+  limit: 10,
+});
+
+// Desde una fecha en adelante
+await catalog.getFilteredItems('ccm-optical', {
+  datetime: '2024-09-24T00:00:00Z/..',
+  limit: 10,
+});
+```
+
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
 
 **Endpoint:** `GET {url}/collections/{collectionId}/items` con los filtros como query params.

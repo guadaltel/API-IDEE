@@ -60,28 +60,6 @@ class Catalog extends Base {
   }
 
   /**
-   * Devuelve la URL del catálogo STAC.
-   *
-   * @function
-   * @returns {string} URL del catálogo.
-   * @api
-   */
-  getUrl() {
-    return this.url;
-  }
-
-  /**
-   * Establece la URL del catálogo STAC.
-   *
-   * @function
-   * @param {string} newUrl Nueva URL del catálogo.
-   * @api
-   */
-  setUrl(newUrl) {
-    this.url = newUrl;
-  }
-
-  /**
    * Autentica al usuario contra el servicio de autenticación y almacena
    * el token de acceso para las peticiones posteriores.
    *
@@ -270,9 +248,11 @@ class Catalog extends Base {
       showError(getValue('exception').no_collection_id);
       return;
     }
+    const newFilters = filters;
+    newFilters.collections = Array.isArray(collectionId) ? collectionId : [collectionId];
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      get(`${this.url}/collections/${collectionId}/items`, filters, { headers }).then((response) => {
+      get(`${this.url}/search`, newFilters, { headers }).then((response) => {
         if (response.code !== 200) {
           fail(new Error(getValue('exception').catalog_filtered_items_error));
           return;
