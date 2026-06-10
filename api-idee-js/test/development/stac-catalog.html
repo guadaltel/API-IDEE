@@ -69,6 +69,11 @@
         padding: 0.25rem 0.5rem;
       }
 
+      .form-row input[type="checkbox"] {
+        width: auto;
+        max-width: 100px;
+      }
+
       .form-row textarea {
         min-height: 48px;
         font-family: monospace;
@@ -114,7 +119,7 @@
         <legend>Configuración</legend>
         <div class="form-row">
           <label for="catalog-url">URL catálogo</label>
-          <input id="catalog-url" type="text" value="https://earth-search.aws.element84.com/v1">
+          <input id="catalog-url" type="text" value="https://stac.dataspace.copernicus.eu/v1">
         </div>
         <div class="form-row">
           <label for="public">público</label>
@@ -124,7 +129,7 @@
         </div>
         <div class="form-row">
           <label for="collection-id">collectionId</label>
-          <input id="collection-id" type="text" placeholder="sentinel-2-pre-c1-l2a">
+          <input id="collection-id" type="text" placeholder="ccm-optical">
           <label for="item-id">itemId</label>
           <input id="item-id" type="text" placeholder="ID del item">
           <label for="query-limit">limit</label>
@@ -151,6 +156,10 @@
         <div class="form-row">
           <label for="filter-body">filtro Avanzado</label>
           <textarea id="filter-body">{"eo:cloud_cover": {"lt": 20}}</textarea>
+        </div>
+        <div class="form-row">          
+          <label for="spatial-filter">Filtrar por vista</label>
+          <input id="spatial-filter" type="checkbox" value="false">
         </div>
       </fieldset>
 

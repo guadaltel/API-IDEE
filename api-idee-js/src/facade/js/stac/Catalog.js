@@ -103,12 +103,17 @@ class Catalog extends Base {
         username,
         password,
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
-        const data = JSON.parse(response.text);
-        if (data.access_token) {
-          this.token = data.access_token;
-          success(true);
-        } else {
+        if (response.code === 401) {
           showError(getValue('exception').invalid_user_password);
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          if (data.access_token) {
+            this.token = data.access_token;
+            success(true);
+          }
+        } else {
+          const data = JSON.parse(response.text || '{}');
+          throw new Error(data.error);
         }
       }).catch((error) => {
         fail(new Error(`${getValue('exception').catalog_token_error}: ${error.message}`));
@@ -192,6 +197,14 @@ class Catalog extends Base {
    * @api
    */
   getItems(collectionId, limit = 10) {
+    if (!collectionId) {
+      showError(getValue('exception').no_collection_id);
+      return;
+    }
+    if (limit < 1) {
+      showError(getValue('exception').invalid_limit);
+      return;
+    }
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items?limit=${limit}`, null, { headers }).then((response) => {
@@ -215,6 +228,14 @@ class Catalog extends Base {
    * @api
    */
   getItem(collectionId, itemId) {
+    if (!collectionId) {
+      showError(getValue('exception').no_collection_id);
+      return;
+    }
+    if (!itemId) {
+      showError(getValue('exception').no_item_id);
+      return;
+    }
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items/${itemId}`, null, { headers }).then((response) => {
@@ -237,10 +258,15 @@ class Catalog extends Base {
    * @function
    * @param {string} collectionId Identificador de la colección.
    * @param {Object} filters Parámetros de filtrado para la petición GET.
+   *  -Filtros espaciales en EPSG:4326.
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
    */
   getFilteredItems(collectionId, filters) {
+    if (!collectionId) {
+      showError(getValue('exception').no_collection_id);
+      return;
+    }
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items`, filters, { headers }).then((response) => {
@@ -268,16 +294,20 @@ class Catalog extends Base {
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
    */
-  getFilteredItemsAdvanced(collectionId, filter) {
-    const data = this.getFilterData(collectionId, filter);
+  getFilteredItemsAdvanced(collectionId, filter, bbox = null) {
+    if (!collectionId) {
+      showError(getValue('exception').no_collection_id);
+      return;
+    }
+    const data = this.getFilterData(collectionId, filter, bbox);
     const headers = {
       'Content-Type': 'application/json',
     };
     if (!this.public && this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-    return new Promise((success) => {
-      post(`${this.url}/search`, data, { headers }).then((response, fail) => {
+    return new Promise((success, fail) => {
+      post(`${this.url}/search`, data, { headers }).then((response) => {
         if (response.code !== 200) {
           fail(new Error(getValue('exception').catalog_filtered_items_advanced_error));
           return;
@@ -303,11 +333,16 @@ class Catalog extends Base {
    * formato de filtro no es válido.
    * @api
    */
-  getFilterData(collectionId, filter) {
+  getFilterData(collectionId, filter, bbox) {
     const data = {
-      collections: collectionId ? [collectionId] : undefined,
       limit: filter.limit || 10,
     };
+    if (collectionId) {
+      data.collections = Array.isArray(collectionId) ? collectionId : [collectionId];
+    }
+    if (bbox) {
+      data.bbox = bbox;
+    }
     switch (filter.format) {
       case STAC_FILTER_LANG.STAC_QUERY:
         data.query = filter.filter;

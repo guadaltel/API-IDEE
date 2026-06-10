@@ -2,6 +2,7 @@ import { map as Mmap } from 'IDEE/api-idee';
 import Catalog from 'IDEE/stac/Catalog';
 import GeoJSON from 'IDEE/layer/GeoJSON';
 import GeoTIFF from 'IDEE/layer/GeoTIFF';
+import { transformExtent } from 'ol/proj';
 
 window.catalog = null;
 let layerCounter = 0;
@@ -20,6 +21,7 @@ const queryFiltersInput = document.getElementById('query-filters');
 const queryLimitInput = document.getElementById('query-limit');
 const filterFormatSelect = document.getElementById('filter-format');
 const filterBodyInput = document.getElementById('filter-body');
+const spatialFilterInput = document.getElementById('spatial-filter');
 
 const runHandler = (label, handler, addsToMap = false) => async () => {
 	resetResults();
@@ -56,9 +58,6 @@ const logError = (message, err) => {
 
 const getQueryLimit = () => {
 	const value = parseInt(queryLimitInput.value, 10);
-	if (Number.isNaN(value) || value < 1) {
-		throw new Error('limit debe ser un número mayor que 0');
-	}
 	return value;
 };
 
@@ -75,9 +74,6 @@ const parseJsonInput = (value, fieldName) => {
 
 const getCollectionId = () => {
 	const collectionId = collectionIdInput.value.trim();
-	if (!collectionId) {
-		throw new Error('collectionId es obligatorio para esta función');
-	}
 	return collectionId;
 };
 
@@ -105,9 +101,6 @@ const clearResults = () => {
 
 const getItemId = () => {
 	const itemId = itemIdInput.value.trim();
-	if (!itemId) {
-		throw new Error('itemId es obligatorio para esta función');
-	}
 	return itemId;
 };
 
@@ -222,7 +215,16 @@ document.getElementById('btn-getFilteredItems').addEventListener('click', runHan
 
 document.getElementById('btn-getFilteredItemsAdvanced').addEventListener('click', runHandler('getFilteredItemsAdvanced(collectionId, filter)', () => {
 	const filter = getFilterConfig();
-	return catalog.getFilteredItemsAdvanced(getCollectionId(), filter);
+	let bbox = null;
+	if (spatialFilterInput.checked) {
+		bbox = mapa.getBbox();
+		bbox = transformExtent(
+			[bbox.x.min, bbox.y.min, bbox.x.max, bbox.y.max],
+			mapa.getProjection().code,
+			'EPSG:4326',
+		);
+	}
+	return catalog.getFilteredItemsAdvanced(getCollectionId(), filter, bbox);
 }, true));
 
 document.getElementById('btn-clear').addEventListener('click', clearResults);
