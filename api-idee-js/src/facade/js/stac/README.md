@@ -171,7 +171,7 @@ El filtro `bbox` debe estar en EPSG:4326 (longitud, latitud).
 
 #### Formato del parámetro `datetime`
 
-Sigue [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) (ISO 8601 con zona horaria). El servidor devuelve ítems cuyo intervalo temporal **intersecta** el valor indicado (normalmente `properties.start_datetime` y `properties.end_datetime`, no solo `properties.datetime`).
+Sigue [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) (ISO 8601 con zona horaria). El servidor devuelve ítems cuyo intervalo temporal **intersecta** el valor indicado (normalmente `properties.start_datetime` y `properties.end_datetime`).
 
 | Formato | Ejemplo | Descripción |
 |---------|---------|-------------|

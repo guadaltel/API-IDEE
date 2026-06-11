@@ -237,7 +237,7 @@ document.getElementById('btn-clear').addEventListener('click', clearResults);
 const mapa = Mmap({
 	container: 'map',
 	getfeatureinfo: 'plain',
-	projection: 'EPSG:3857',
+	projection: 'EPSG:4326',
 	layers: ['OSM'],
 });
 
