@@ -127,7 +127,7 @@ class Catalog extends Base {
       });
     }
     return new Promise((success, fail) => {
-      post(`${this.authUrl}/roles`, { accessToken: this.token }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
+      post(`${this.authUrl}/collections`, { accessToken: this.token }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
         if (response.code !== 200) {
           fail(new Error(getValue('exception').catalog_collections_error));
           return;

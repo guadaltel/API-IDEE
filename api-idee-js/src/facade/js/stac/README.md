@@ -12,7 +12,7 @@ Clase de la fachada JavaScript de API IDEE para consultar catálogos [STAC](http
 
 ```javascript
 const catalog = new IDEE.stac.Catalog({
-  url: 'https://earth-search.aws.element84.com/v1',
+  url: 'https://stac.dataspace.copernicus.eu/v1',
   authUrl: 'https://mi-servidor-auth.example.com/o/custom-auth',
   public: true,
 });
@@ -91,7 +91,7 @@ const collections = await catalog.getCollections();
 Obtiene los campos consultables de una colección para construir filtros.
 
 ```javascript
-const fields = await catalog.getQueryableFields('sentinel-2-pre-c1-l2a');
+const fields = await catalog.getQueryableFields('ccm-optical');
 ```
 
 | Parámetro | Tipo | Descripción |
@@ -109,7 +109,7 @@ const fields = await catalog.getQueryableFields('sentinel-2-pre-c1-l2a');
 Obtiene ítems de una colección con un límite de resultados.
 
 ```javascript
-const items = await catalog.getItems('sentinel-2-pre-c1-l2a', 10);
+const items = await catalog.getItems('ccm-optical', 10);
 ```
 
 | Parámetro | Tipo | Por defecto | Descripción |
@@ -128,7 +128,7 @@ const items = await catalog.getItems('sentinel-2-pre-c1-l2a', 10);
 Obtiene un ítem concreto.
 
 ```javascript
-const item = await catalog.getItem('sentinel-2-pre-c1-l2a', 'S2A_MSIL2A_20240101T101031');
+const item = await catalog.getItem('ccm-optical', 'PH1B_PHR_MS___3_20241115T141727_20241115T141750_TOU_000324_e7a7_COG');
 ```
 
 | Parámetro | Tipo | Descripción |
@@ -147,17 +147,25 @@ const item = await catalog.getItem('sentinel-2-pre-c1-l2a', 'S2A_MSIL2A_20240101
 Filtra ítems mediante parámetros GET en la URL.
 
 ```javascript
-const result = await catalog.getFilteredItems('sentinel-2-pre-c1-l2a', {
+const result = await catalog.getFilteredItems('ccm-optical', {
   limit: 5,
-  bbox: [-5, 36, -4, 37],
-  datetime: '2024-01-01T00:00:00Z/2024-12-31T23:59:59Z',
+  bbox: [-34.674591705357614, 47.382657634959315, 36.03763092946285, 57.276663809738096],
+  datetime: '2022-04-29T10:58:10.00Z',
+  ids: ['PH1B_PHR_MS___3_20220429T105809_20220429T105811_TOU_1234_8a08_COG', 'PH1B_PHR_MS__2A_20220429T105809_20220429T105811_TOU_1234_8a08']
 });
+
+const result = await catalog.getFilteredItems(['ccm-optical', 'clms_lie_europe_250m_daily_v2_cog'], {
+  limit: 5,
+  bbox: [-34.674591705357614, 47.382657634959315, 36.03763092946285, 57.276663809738096],
+  datetime: '2022-04-29T10:58:10.00Z',
+});
+
 ```
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
-| `collectionId` | `string` | Identificador de la colección. |
-| `filters` | `Object` | Parámetros de consulta (p. ej. `limit`, `bbox`, `datetime`). |
+| `collectionId` | `string`/`String Array` | Identificador o array de identificadores de la/s coleccion/es |
+| `filters` | `Object` | Parámetros de consulta (`limit`, `bbox`, `datetime`, `ids`). |
 
 El filtro `bbox` debe estar en EPSG:4326 (longitud, latitud).
 
@@ -167,23 +175,23 @@ Sigue [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339) (ISO 8601 con zo
 
 | Formato | Ejemplo | Descripción |
 |---------|---------|-------------|
-| Instantánea | `2024-09-24T13:34:06Z` | Un solo momento en UTC (`Z`) u offset (`+02:00`) |
-| Intervalo cerrado | `2024-01-01T00:00:00Z/2024-12-31T23:59:59Z` | Desde / hasta, separados por `/` |
-| Intervalo abierto (desde) | `2024-01-01T00:00:00Z/..` | Desde esa fecha, sin límite superior |
-| Intervalo abierto (hasta) | `../2024-12-31T23:59:59Z` | Hasta esa fecha, sin límite inferior |
+| Instantánea | `2022-04-29T10:58:10.00Z` | Un solo momento en UTC (`Z`) u offset (`+02:00`) |
+| Intervalo cerrado | `2022-04-29T00:00:00Z/2022-04-29T23:59:59Z` | Desde / hasta, separados por `/` |
+| Intervalo abierto (desde) | `2022-04-29T00:00:00Z/..` | Desde esa fecha, sin límite superior |
+| Intervalo abierto (hasta) | `../2022-04-29T23:59:59Z` | Hasta esa fecha, sin límite inferior |
 
 Solo un extremo del intervalo puede estar abierto.
 
 ```javascript
 // Rango cerrado
 await catalog.getFilteredItems('ccm-optical', {
-  datetime: '2024-09-01T00:00:00Z/2024-09-30T23:59:59Z',
+  datetime: '2022-04-29T00:00:00Z/2022-04-29T23:59:59Z',
   limit: 10,
 });
 
 // Desde una fecha en adelante
 await catalog.getFilteredItems('ccm-optical', {
-  datetime: '2024-09-24T00:00:00Z/..',
+  datetime: '2022-04-29T00:00:00Z/..',
   limit: 10,
 });
 ```
@@ -200,8 +208,9 @@ Filtra ítems mediante el endpoint `/search` con filtros avanzados.
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
-| `collectionId` | `string` | Identificador de la colección. |
+| `collectionId` | `string`/`String Array` | Identificador o array de identificadores de la/s coleccion/es |
 | `filter` | `Object` | Configuración del filtro (ver tabla siguiente). |
+| `bbox` | `Number array` | Extensión de la zona de búsqueda. EPSG:4326
 
 **Propiedades de `filter`:**
 
@@ -220,26 +229,33 @@ Filtra ítems mediante el endpoint `/search` con filtros avanzados.
 **STAC Query (`stac-query`):**
 
 ```javascript
-const result = await catalog.getFilteredItemsAdvanced('sentinel-2-pre-c1-l2a', {
+const result = await catalog.getFilteredItemsAdvanced('ccm-optical', {
   format: 'stac-query',
   filter: {
-    'eo:cloud_cover': { lt: 20 },
-    datetime: { gte: '2024-01-01T00:00:00Z' },
+    datetime: { lte: '2024-01-01T00:00:00Z' },
   },
   limit: 10,
-});
+}, [-34.674591705357614, 47.382657634959315, 36.03763092946285, 57.276663809738096]);
+
+const result = await catalog.getFilteredItemsAdvanced(['ccm-optical', 'clms_lie_europe_250m_daily_v2_cog'], {
+  format: 'stac-query',
+  filter: {
+    datetime: { lte: '2024-01-01T00:00:00Z' },
+  },
+  limit: 10,
+}, [-34.674591705357614, 47.382657634959315, 36.03763092946285, 57.276663809738096]);
 ```
 
 **CQL JSON (`cql-json`):**
 
 ```javascript
-const result = await catalog.getFilteredItemsAdvanced('sentinel-2-pre-c1-l2a', {
+const result = await catalog.getFilteredItemsAdvanced('ccm-optical', {
   format: 'cql-json',
   filter: {
     op: 'and',
     args: [
-      { op: 'lt', args: [{ property: 'eo:cloud_cover' }, 20] },
       { op: 'gte', args: [{ property: 'datetime' }, '2024-01-01T00:00:00Z'] },
+      { op: 'lte', args: [{ property: 'datetime' }, '2025-01-01T00:00:00Z'] }
     ],
   },
   limit: 10,
@@ -249,13 +265,13 @@ const result = await catalog.getFilteredItemsAdvanced('sentinel-2-pre-c1-l2a', {
 **CQL2 JSON (`cql2-json`):**
 
 ```javascript
-const result = await catalog.getFilteredItemsAdvanced('sentinel-2-pre-c1-l2a', {
+const result = await catalog.getFilteredItemsAdvanced('ccm-optical', {
   format: 'cql2-json',
   filter: {
     op: 'and',
     args: [
-      { op: '<', args: [{ property: 'eo:cloud_cover' }, 20] },
       { op: '>=', args: [{ property: 'datetime' }, '2024-01-01T00:00:00Z'] },
+      { op: '<=', args: [{ property: 'datetime' }, '2025-01-01T00:00:00Z'] }
     ],
   },
   limit: 10,
@@ -277,11 +293,11 @@ const mapa = new IDEE.map({
 });
 
 const catalog = new IDEE.stac.Catalog({
-  url: 'https://earth-search.aws.element84.com/v1',
+  url: 'https://stac.dataspace.copernicus.eu/v1',
   public: true,
 });
 
-const result = await catalog.getItems('sentinel-2-pre-c1-l2a', 5);
+const result = await catalog.getItems('ccm-optical', 5);
 
 const layer = new IDEE.layer.GeoJSON({
   name: 'STAC items',

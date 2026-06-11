@@ -74,6 +74,9 @@ const parseJsonInput = (value, fieldName) => {
 
 const getCollectionId = () => {
 	const collectionId = collectionIdInput.value.trim();
+	if (collectionId && collectionId.includes(',')) {
+		return collectionId.split(',');
+	}
 	return collectionId;
 };
 
@@ -158,9 +161,10 @@ const addGeotiffToMap = (geojson) => {
 		const assets = feature.assets;
 		const tiffsKeys = Object.keys(assets);
 		for (let key of tiffsKeys) {
-			if (assets[key].href.endsWith('.tif')) {
+			const href = assets[key].href;
+			if (href.startsWith('http') && href.includes('.tif')) {
 				const geotiff = new GeoTIFF({
-					url: assets[key].href,
+					url: href,
 				});
 				tiffs.push(geotiff);
 				stacTiffs.push(geotiff);
