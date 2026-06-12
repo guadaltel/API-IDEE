@@ -56,6 +56,7 @@ class Catalog extends Base {
     this.url = url;
     this.public = publicValue === true;
     this.authUrl = userParameters.authUrl;
+    this.title = userParameters.title;
     this.token = null;
   }
 
@@ -237,7 +238,8 @@ class Catalog extends Base {
    * `/collections/{collectionId}/items` (por ejemplo, `limit`, `bbox`, `datetime`).
    *
    * @function
-   * @param {string} collectionId Identificador de la colección.
+   * @param {string | array} collectionId Identificador o array de identificadores
+   * de la/s coleccion/es
    * @param {Object} filters Parámetros de filtrado para la petición GET.
    *  -Filtros espaciales en EPSG:4326.
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
@@ -269,7 +271,8 @@ class Catalog extends Base {
    * Soporta los formatos de filtrado `stac-query`, `cql-json` y `cql2-json`.
    *
    * @function
-   * @param {string} collectionId Identificador de la colección.
+   * @param {string | array} collectionId Identificador o array de identificadores
+   * de la/s coleccion/es.
    * @param {Object} filter Configuración del filtro avanzado.
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
