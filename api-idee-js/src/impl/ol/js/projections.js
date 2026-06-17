@@ -465,6 +465,26 @@ const proj3395 = {
 };
 
 /**
+ * EPSG:3035 ETRS89 UTM huso 32N es una proyección cartográfica que divide la Tierra en 60 husos de
+ * 6 grados de longitud. El huso 32 se extiende desde los 0 grados de longitud hasta los 6 grados
+ * al este.
+ * Esta proyección se basa en el elipsoide ETRS89 y se utiliza comúnmente en Europa y otras partes
+ * del mundo.
+ * @type {Object}
+ * @public
+ * @api
+ */
+const proj3035 = {
+  def: '+proj=utm +zone=32 +ellps=GRS80 +datum=GRS80 +units=m +no_defs',
+  extent: [166021.4431, 0.0000, 833978.5569, 9329005.1825],
+  codes: ['EPSG:3035', 'urn:ogc:def:crs:EPSG::3035', 'http://www.opengis.net/gml/srs/epsg.xml#3035'],
+  units: 'm',
+  datum: 'GRS80 (ETRS89)',
+  proj: 'UTM 32 N',
+  coordRefSys: 'http://www.opengis.net/def/crs/EPSG/0/3035',
+};
+
+/**
  * EPSG:4328 WGS84 geocéntricas
  * Sistema de coordenadas cartesiano, geocéntrico con ejes X,Y,Z.
  * Su orientación sería el plano XY como plano ecuatorial, el eje X
@@ -556,6 +576,7 @@ const projections = [
   proj4082,
   proj4083,
   proj3395,
+  proj3035,
   proj4328,
   proj4346,
   proj4979,

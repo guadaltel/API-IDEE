@@ -161,10 +161,10 @@ const addGeotiffToMap = (geojson) => {
 		const assets = feature.assets;
 		const tiffsKeys = Object.keys(assets);
 		for (let key of tiffsKeys) {
-			const href = assets[key].href;
-			if (href.startsWith('http') && href.includes('.tif')) {
+			const type = assets[key].type;
+			if (type.includes('image/tif')) {
 				const geotiff = new GeoTIFF({
-					url: href,
+					url: assets[key].href,
 				});
 				tiffs.push(geotiff);
 				stacTiffs.push(geotiff);
