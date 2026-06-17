@@ -475,12 +475,12 @@ const proj3395 = {
  * @api
  */
 const proj3035 = {
-  def: '+proj=utm +zone=32 +ellps=GRS80 +datum=GRS80 +units=m +no_defs',
-  extent: [166021.4431, 0.0000, 833978.5569, 9329005.1825],
+  def: '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs',
+  extent: [1908523.29, 1137678.21, 6901611.5, 6872461.46],
   codes: ['EPSG:3035', 'urn:ogc:def:crs:EPSG::3035', 'http://www.opengis.net/gml/srs/epsg.xml#3035'],
   units: 'm',
-  datum: 'GRS80 (ETRS89)',
-  proj: 'UTM 32 N',
+  datum: 'ETRS89-extended',
+  proj: 'LAEA Europe',
   coordRefSys: 'http://www.opengis.net/def/crs/EPSG/0/3035',
 };
 
