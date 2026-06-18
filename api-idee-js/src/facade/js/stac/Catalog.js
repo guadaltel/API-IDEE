@@ -56,6 +56,7 @@ class Catalog extends Base {
     this.url = url;
     this.public = publicValue === true;
     this.authUrl = userParameters.authUrl;
+    this.collectionsUrl = userParameters.collectionsUrl;
     this.title = userParameters.title;
     this.token = null;
   }
@@ -78,7 +79,7 @@ class Catalog extends Base {
       return;
     }
     return new Promise((success, fail) => {
-      post(`${this.authUrl}/token`, {
+      post(`${this.authUrl}`, {
         username,
         password,
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
@@ -113,9 +114,7 @@ class Catalog extends Base {
    * @api
    */
   getCollections() {
-    // PTE. ANTONIO - creará un endpoint para obtener las colecciones de un catálogo
-    // STAC mediante /collections con el formato estándar.
-    if (this.public) {
+    if (this.public && !this.collectionsUrl) {
       return new Promise((success, fail) => {
         get(`${this.url}/collections`).then((response) => {
           if (response.code !== 200) {
@@ -128,7 +127,8 @@ class Catalog extends Base {
       });
     }
     return new Promise((success, fail) => {
-      post(`${this.authUrl}/collections`, { accessToken: this.token }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
+      const body = this.token ? { accessToken: this.token } : null;
+      post(`${this.collectionsUrl}`, body, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
         if (response.code !== 200) {
           fail(new Error(getValue('exception').catalog_collections_error));
           return;
@@ -187,11 +187,55 @@ class Catalog extends Base {
       showError(getValue('exception').invalid_limit);
       return;
     }
+    const url = `${this.url}/collections/${collectionId}/items?limit=${limit}`;
+    return this.getItemsByUrl(url, null, getValue('exception').catalog_items_error);
+  }
+
+  /**
+   * Obtiene ítems a partir de los enlaces de paginación de una respuesta STAC.
+   *
+   * Busca en el array de enlaces el href correspondiente a la relación indicada
+   * (`next` o `prev`) y delega la petición en {@link getItemsByUrl}.
+   *
+   * @function
+   * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
+   * @param {string} rel Relación del enlace a seguir (`next` o `prev`).
+   * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC
+   * (FeatureCollection) o indefinido si los parámetros no son válidos.
+   * @api
+   */
+  getItemsByLinks(links, rel) {
+    if (!rel || !['next', 'prev'].includes(rel)) {
+      showError(getValue('exception').invalid_rel);
+      return;
+    }
+    const url = links.find((link) => link.rel === rel)?.href;
+    if (!url) {
+      showError(getValue('exception').no_item_url);
+      return;
+    }
+    return this.getItemsByUrl(url, null, getValue('exception').catalog_items_error);
+  }
+
+  /**
+   * Realiza una petición GET para obtener ítems desde una URL concreta.
+   *
+   * Añade la cabecera `Authorization` con el token Bearer cuando el catálogo
+   * es privado y existe un token de acceso.
+   *
+   * @function
+   * @param {string} url URL del endpoint STAC.
+   * @param {Object|null} params Parámetros de consulta de la petición GET.
+   * @param {string} errorMessage Mensaje de error a utilizar si la petición falla.
+   * @returns {Promise<Object>} Promesa con la respuesta STAC (FeatureCollection).
+   * @api
+   */
+  getItemsByUrl(url, params, errorMessage) {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
-      get(`${this.url}/collections/${collectionId}/items?limit=${limit}`, null, { headers }).then((response) => {
+      get(url, params, { headers }).then((response) => {
         if (response.code !== 200) {
-          fail(new Error(getValue('exception').catalog_items_error));
+          fail(new Error(errorMessage));
           return;
         }
         const data = JSON.parse(response.text);
@@ -252,17 +296,8 @@ class Catalog extends Base {
     }
     const newFilters = filters;
     newFilters.collections = Array.isArray(collectionId) ? collectionId : [collectionId];
-    const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
-    return new Promise((success, fail) => {
-      get(`${this.url}/search`, newFilters, { headers }).then((response) => {
-        if (response.code !== 200) {
-          fail(new Error(getValue('exception').catalog_filtered_items_error));
-          return;
-        }
-        const data = JSON.parse(response.text);
-        success(data);
-      });
-    });
+    const url = `${this.url}/search`;
+    return this.getItemsByUrl(url, newFilters, getValue('exception').catalog_filtered_items_error);
   }
 
   /**
@@ -286,6 +321,53 @@ class Catalog extends Base {
       return;
     }
     const data = this.getFilterData(collectionId, filter, bbox);
+    const url = `${this.url}/search`;
+    return this.getFilteredItemsAdvancedByUrl(url, data, getValue('exception').catalog_filtered_items_advanced_error);
+  }
+
+  /**
+   * Obtiene ítems filtrados avanzados a partir de los enlaces de paginación.
+   *
+   * Resuelve la URL del enlace indicado (`next` o `prev`), construye el cuerpo
+   * de la petición con {@link getFilterData} y delega en
+   * {@link getFilteredItemsAdvancedByUrl}.
+   *
+   * @function
+   * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
+   * @param {string} rel Relación del enlace a seguir (`next` o `prev`).
+   * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC filtrada
+   * (FeatureCollection) o indefinido si los parámetros no son válidos.
+   * @api
+   */
+  getFilteredItemsAdvancedByLinks(links, rel) {
+    if (!rel || !['next', 'prev'].includes(rel)) {
+      showError(getValue('exception').invalid_rel);
+      return;
+    }
+    const linkRel = links.find((link) => link.rel === rel);
+    if (!linkRel) {
+      showError(getValue('exception').no_item_url);
+      return;
+    }
+    const data = linkRel.body;
+    const url = linkRel.href;
+    return this.getFilteredItemsAdvancedByUrl(url, data, getValue('exception').catalog_filtered_items_advanced_error);
+  }
+
+  /**
+   * Realiza una petición POST al endpoint `/search` con un cuerpo de filtro.
+   *
+   * Envía el filtro como JSON y añade la cabecera `Authorization` con el token
+   * Bearer cuando el catálogo es privado y existe un token de acceso.
+   *
+   * @function
+   * @param {string} url URL del endpoint STAC `/search`.
+   * @param {Object} body Cuerpo de la petición con la configuración del filtro.
+   * @param {string} errorMessage Mensaje de error a utilizar si la petición falla.
+   * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
+   * @api
+   */
+  getFilteredItemsAdvancedByUrl(url, body, errorMessage) {
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -293,9 +375,9 @@ class Catalog extends Base {
       headers.Authorization = `Bearer ${this.token}`;
     }
     return new Promise((success, fail) => {
-      post(`${this.url}/search`, data, { headers }).then((response) => {
+      post(url, body, { headers }).then((response) => {
         if (response.code !== 200) {
-          fail(new Error(getValue('exception').catalog_filtered_items_advanced_error));
+          fail(new Error(errorMessage));
           return;
         }
         const responseData = JSON.parse(response.text);

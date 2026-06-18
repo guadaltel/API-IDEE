@@ -8,10 +8,12 @@ window.catalog = null;
 let layerCounter = 0;
 let stacLayers = [];
 let stacTiffs = [];
+let links = [];
 
 const resultsEl = document.getElementById('results');
 const catalogUrlInput = document.getElementById('catalog-url');
 const authUrlInput = document.getElementById('auth-url');
+const collectionsUrlInput = document.getElementById('collections-url');
 const publicInput = document.getElementById('public');
 const collectionIdInput = document.getElementById('collection-id');
 const itemIdInput = document.getElementById('item-id');
@@ -131,6 +133,9 @@ const toFeatureCollection = (result) => {
 };
 
 const addItemsToMap = (label, result) => {
+	if (result.links) {
+		links = result.links;
+	}
 	const source = toFeatureCollection(result);
 	if (!source || source.features.length === 0) {
 		log('Sin geometrías para añadir al mapa');
@@ -179,11 +184,12 @@ const addGeotiffToMap = (geojson) => {
 document.getElementById('btn-constructor').addEventListener('click', runHandler('constructor(url, authUrl, public)', () => {
 	const url = catalogUrlInput.value.trim();
 	const authUrl = authUrlInput.value.trim();
+	const collectionsUrl = collectionsUrlInput.value.trim();
 	const publicCatalog = publicInput.checked;
 
-	catalog = new Catalog({ url, authUrl, public: publicCatalog });
+	catalog = new Catalog({ url, authUrl, collectionsUrl, public: publicCatalog });
 	window.catalog = catalog;
-	return { url, authUrl, public: publicCatalog };
+	return { url, authUrl, collectionsUrl, public: publicCatalog };
 }));
 
 document.getElementById('btn-authenticate').addEventListener('click', runHandler('authenticate(user, password)', () => {
@@ -229,6 +235,18 @@ document.getElementById('btn-getFilteredItemsAdvanced').addEventListener('click'
 		);
 	}
 	return catalog.getFilteredItemsAdvanced(getCollectionId(), filter, bbox);
+}, true));
+
+
+
+document.getElementById('btn-getFilteredItemsAdvancedByLinks').addEventListener('click', runHandler('getFilteredItemsAdvancedByLinks(links, rel, collectionId, filter, bbox)', () => {
+	const rel = 'next';
+	return catalog.getFilteredItemsAdvancedByLinks(links, rel);
+}, true));
+
+document.getElementById('btn-getItemsByLinks').addEventListener('click', runHandler('getItemsByLinks(links, rel)', () => {
+	const rel = 'next';
+	return catalog.getItemsByLinks(links, rel);
 }, true));
 
 document.getElementById('btn-clear').addEventListener('click', clearResults);

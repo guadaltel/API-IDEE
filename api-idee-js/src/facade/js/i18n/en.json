@@ -348,6 +348,8 @@
     "catalog_items_error": "Error obtaining the items from the catalog.",
     "catalog_item_error": "Error obtaining the item from the catalog.",
     "catalog_filtered_items_error": "Error obtaining the filtered items from the catalog.",
-    "catalog_filtered_items_advanced_error": "Error obtaining the filtered items advanced from the catalog."
+    "catalog_filtered_items_advanced_error": "Error obtaining the filtered items advanced from the catalog.",
+    "invalid_rel": "The relation indicated is not valid.",
+    "no_item_url": "No link has been found corresponding to the relation indicated."
   }
 }

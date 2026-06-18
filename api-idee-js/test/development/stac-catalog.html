@@ -125,7 +125,11 @@
           <label for="public">público</label>
           <input id="public" type="checkbox" value="true">
           <label for="auth-url">URL autenticación</label>
-          <input id="auth-url" type="text" value="https://gneis.desarrollo.guadaltel.es/o/custom-auth">
+          <input id="auth-url" type="text" value="https://gneis.desarrollo.guadaltel.es/o/custom-auth/token">
+        </div>
+        <div class="form-row">
+          <label for="collections-url">URL colecciones</label>
+          <input id="collections-url" type="text" value="https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections">
         </div>
         <div class="form-row">
           <label for="token-user">usuario</label>
@@ -173,7 +177,9 @@
           <button type="button" id="btn-getItems">getItems(collectionId, limit = 10)</button>
           <button type="button" id="btn-getItem">getItem(collectionId, itemId)</button>
           <button type="button" id="btn-getFilteredItems">getFilteredItems(collectionId, filters) </button>
+          <button type="button" id="btn-getItemsByLinks">getItemsByLinks(links, rel)</button>
           <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced(collectionId, filter)</button>
+          <button type="button" id="btn-getFilteredItemsAdvancedByLinks">getFilteredItemsAdvancedByLinks(links, rel)</button>
           <button type="button" id="btn-clear">Limpiar resultados</button>
         </div>
       </fieldset>
