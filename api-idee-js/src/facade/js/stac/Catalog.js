@@ -12,6 +12,8 @@ const STAC_FILTER_LANG = {
   CQL2_JSON: 'cql2-json', // filter-lang
 };
 
+const SUPPORTED_LINKS = ['self', 'next', 'previous'];
+
 /**
  * @classdesc
  * Clase para gestionar catálogos STAC.
@@ -195,17 +197,17 @@ class Catalog extends Base {
    * Obtiene ítems a partir de los enlaces de paginación de una respuesta STAC.
    *
    * Busca en el array de enlaces el href correspondiente a la relación indicada
-   * (`next` o `prev`) y delega la petición en {@link getItemsByUrl}.
+   * (`self`, `next` o `previous`) y delega la petición en {@link getItemsByUrl}.
    *
    * @function
    * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
-   * @param {string} rel Relación del enlace a seguir (`next` o `prev`).
+   * @param {string} rel Relación del enlace a seguir (`self`, `next` o `previous`).
    * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC
    * (FeatureCollection) o indefinido si los parámetros no son válidos.
    * @api
    */
   getItemsByLinks(links, rel) {
-    if (!rel || !['next', 'prev'].includes(rel)) {
+    if (!rel || !SUPPORTED_LINKS.includes(rel)) {
       showError(getValue('exception').invalid_rel);
       return;
     }
@@ -328,19 +330,19 @@ class Catalog extends Base {
   /**
    * Obtiene ítems filtrados avanzados a partir de los enlaces de paginación.
    *
-   * Resuelve la URL del enlace indicado (`next` o `prev`), construye el cuerpo
+   * Resuelve la URL del enlace indicado (`self`, `next` o `previous`), construye el cuerpo
    * de la petición con {@link getFilterData} y delega en
    * {@link getFilteredItemsAdvancedByUrl}.
    *
    * @function
    * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
-   * @param {string} rel Relación del enlace a seguir (`next` o `prev`).
+   * @param {string} rel Relación del enlace a seguir (`self`, `next` o `previous`).
    * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC filtrada
    * (FeatureCollection) o indefinido si los parámetros no son válidos.
    * @api
    */
   getFilteredItemsAdvancedByLinks(links, rel) {
-    if (!rel || !['next', 'prev'].includes(rel)) {
+    if (!rel || !SUPPORTED_LINKS.includes(rel)) {
       showError(getValue('exception').invalid_rel);
       return;
     }
