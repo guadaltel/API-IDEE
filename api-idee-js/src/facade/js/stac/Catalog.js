@@ -314,7 +314,7 @@ class Catalog extends Base {
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {number array} bbox Extensión de la zona de búsqueda. EPSG:4326
+   * @param {array} bbox Extensión de la zona de búsqueda. EPSG:4326
    * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
@@ -401,7 +401,7 @@ class Catalog extends Base {
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {number array} bbox Extensión de la zona de búsqueda. EPSG:4326
+   * @param {array} bbox Extensión de la zona de búsqueda. EPSG:4326
    * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
    * @returns {Object|null} Objeto con el cuerpo de la petición o nulo si el
    * formato de filtro no es válido.
