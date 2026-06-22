@@ -1,0 +1,32 @@
+<div>
+    <ul class="m-catalogmanager-ulitems">
+        {{#each items}}
+            <li tabindex="0" class="m-catalogmanager-sectionPanel">
+                <div class="m-catalogmanager-title-item"
+                    data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-id="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
+                    <div class="m-catalogmanager-visible-typeContent">
+                        <table style="width: 100%;">
+                            <tbody>
+                                <tr>
+                                    <td><span class="m-catalogmanager-title-box"  
+                                            title="{{id}}" tabindex="0">
+                                            {{id}}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: end;">
+                                        <button class="m-catalogmanager-info-button" title="{{../translations.info}}"><span class="icon-info m-catalogmanager-info-button"></span></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="m-catalogmanager-images item-{{id}} hidden empty"></div>
+            </li>
+        {{/each}}
+    </ul>
+    <div class="m-catalogmanager-items-buttons">
+        <button class="m-catalogmanager-prev-items-button" {{#if hasNotPrev}}disabled{{/if}}>Anterior</button>
+        <button class="m-catalogmanager-next-items-button" {{#if hasNotNext}}disabled{{/if}}>Siguiente</button>
+    </div>
+</div>

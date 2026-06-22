@@ -1,0 +1,90 @@
+{
+  "exception": {
+    "impl": "La implementación no puede crear controles de Catalogmanager."
+  },
+  "textHelp": {
+    "help1": "Texto de ejemplo 1.",
+    "help2": "Texto de ejemplo 2",
+    "help3": "Texto de ejemplo 3"
+  },
+  "filtersTypes": {
+    "spatial": {
+      "title": "Filtro espacial",
+      "view": "Por vista"
+    },
+    "temporal": {
+      "title": "Filtro temporal",
+      "start": "Inicio",
+      "end": "Fin",
+      "last30days": "Últimos 30 días",
+      "last3months": "Últimos 3 meses",
+      "lastyear": "Último año",
+      "range": "Rango indicado"
+    }
+  },
+  "imageActions": {
+    "info": "Información",
+    "preview": "Vista previa",
+    "download": "Descargar"
+  },
+  "itemMetadata": {
+    "title": "Metadatos del item STAC",
+    "general": "Información general",
+    "spatial": "Cobertura espacial",
+    "sensor": "Propiedades del sensor",
+    "id": "ID del item",
+    "collection": "Colección",
+    "datetime": "Fecha",
+    "provider": "Proveedor",
+    "extent": "Extensión",
+    "crs": "CRS",
+    "platform": "Plataforma",
+    "instruments": "Intrumentos",
+    "sunElevation": "Ángulo solar",
+    "cloudCover": "Cobertura de nubes",
+    "processingLevel": "Nivel de procesado"
+  },
+  "tooltip": "Gestor de catálogos",
+  "title": "Gestor de catálogos",
+  "addCatalog": "Añadir catálogo",
+  "update": "Actualizar",
+  "filters": "Filtros comunes",
+  "configuration": "Configuración",
+  "cat_title": "Título",
+  "cat_url": "URL catálogo",
+  "cat_public": "Público",
+  "cat_auth_url": "URL autenticación",
+  "cat_user": "Usuario",
+  "cat_password": "Contraseña",
+  "add": "Añadir",
+  "close": "Cerrar",
+  "private": "Restringido",
+  "catalogs": "Catálogos",
+  "footprint": "Ver huella",
+  "no_images": "No se encontraron imágenes",
+  "unknown": "Desconocido",
+  "advancedFilter": {
+    "title": "Filtro avanzado STAC",
+    "fields": "Campos",
+    "values": "Valores",
+    "operators": "Operadores",
+    "filter_exp": "Expresión de filtro",
+    "placeholder": "Ej: eo:cloud_cover < 20 and datetime >= '2024-01-01T00:00:00Z'",
+    "return": "Volver",
+    "apply": "Aplicar",
+    "clear": "Limpiar",
+    "of": "de",
+    "type": "Tipo",
+    "types": {
+      "string": "Cadena de texto",
+      "number": "Número",
+      "integer": "Número entero",
+      "boolean": "Booleano",
+      "date": "Fecha",
+      "unknown": "Desconocido"
+    },
+    "invalidQuery": "La expresión de filtro no es válida.",
+    "applyError": "No se pudo aplicar el filtro avanzado.",
+    "loadError": "No se pudieron cargar los campos consultables de la colección."
+  }
+}

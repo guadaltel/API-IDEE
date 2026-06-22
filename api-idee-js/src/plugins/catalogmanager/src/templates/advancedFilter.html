@@ -1,0 +1,36 @@
+<div id="div-contenedor"
+    data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
+
+    <div class="filtered-search-title">{{translations.title}}</div>
+
+    <div id="m-catalogmanager-options-container">
+        <div id="m-catalogmanager-initialview">
+            <div id="m-catalogmanager-lists-container">
+                <div id="m-catalogmanager-fields">
+                    <p class="m-catalogmanager-headers">{{translations.fields}}</p>
+                </div>
+                <div id="m-catalogmanager-type">
+                    <p class="m-catalogmanager-headers">{{translations.type}}</p>
+                </div>
+            </div>
+
+            <div id="m-catalogmanager-operators-container">
+                <p class="m-catalogmanager-headers">{{translations.operators}}</p>
+                {{#each operators}}
+                    <button class="m-catalogmanager-operator-button">{{this}}</button>
+                {{/each}}
+            </div>
+
+            <div id="m-catalogmanager-query-container">
+                <p class="m-catalogmanager-headers">{{translations.filter_exp}}</p>
+                <textarea id="m-catalogmanager-textArea" cols="90" rows="5" placeholder="{{translations.placeholder}}"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="m-catalogmanager-options-buttons">
+        <button id="volver-btn">{{translations.return}}</button>
+        <button id="aplicar-btn">{{translations.apply}}</button>
+        <button id="limpiar-filtro-btn">{{translations.clear}}</button>
+    </div>
+</div>

@@ -1,0 +1,90 @@
+{
+  "exception": {
+    "impl": "The implementation used cannot create Catalogmanager controls."
+  },
+  "textHelp": {
+    "help1": "Example text 1.",
+    "help2": "Example text 2",
+    "help3": "Example text 3"
+  },
+  "filtersTypes": {
+    "spatial": {
+      "title": "Spatial filter",
+      "view": "By view"
+    },
+    "temporal": {
+      "title": "Temporal filter",
+      "start": "Start",
+      "end": "End",
+      "last30days": "Last 30 days",
+      "last3months": "Last 3 months",
+      "lastyear": "Last year",
+      "range": "Range indicated"
+    }
+  },
+  "imageActions": {
+    "info": "Information",
+    "preview": "Preview",
+    "download": "Download"
+  },
+  "itemMetadata": {
+    "title": "STAC item metadata",
+    "general": "General information",
+    "spatial": "Spatial coverage",
+    "sensor": "Sensor properties",
+    "id": "Item ID",
+    "collection": "Collection",
+    "datetime": "Date",
+    "provider": "Provider",
+    "extent": "Extent",
+    "crs": "CRS",
+    "platform": "Platform",
+    "instruments": "Instruments",
+    "sunElevation": "Sun elevation",
+    "cloudCover": "Cloud cover",
+    "processingLevel": "Processing level"
+  },
+  "tooltip": "Catalog manager",
+  "title": "Catalog manager",
+  "addCatalog": "Add catalog",
+  "update": "Update",
+  "filters": "Common filters",
+  "configuration": "Configuration",
+  "cat_title": "Title",
+  "cat_url": "Catalog URL",
+  "cat_public": "Public",
+  "cat_auth_url": "Authentication URL",
+  "cat_user": "User",
+  "cat_password": "Password",
+  "add": "Add",
+  "close": "Close",
+  "private": "Restricted",
+  "catalogs": "Catalogs",
+  "footprint": "View footprint",
+  "no_images": "No images found",
+  "unknown": "Unknown",
+  "advancedFilter": {
+    "title": "STAC advanced filter",
+    "fields": "Fields",
+    "values": "Values",
+    "operators": "Operators",
+    "filter_exp": "Filter expression",
+    "placeholder": "E.g. eo:cloud_cover < 20 and datetime >= '2024-01-01T00:00:00Z'",
+    "return": "Back",
+    "apply": "Apply",
+    "clear": "Clear",
+    "of": "of",
+    "type": "Type",
+    "types": {
+      "string": "String",
+      "number": "Number",
+      "integer": "Integer",
+      "boolean": "Boolean",
+      "date": "Date",
+      "unknown": "Unknown"
+    },
+    "invalidQuery": "The filter expression is not valid.",
+    "applyError": "Could not apply the advanced filter.",
+    "loadError": "Could not load queryable fields for the collection."
+  }
+}

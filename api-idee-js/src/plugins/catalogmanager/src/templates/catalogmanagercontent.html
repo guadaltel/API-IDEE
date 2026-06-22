@@ -1,0 +1,41 @@
+{{#*inline "catalogmanagerCatalog"}}
+    {{#each catalogs}}
+        <li tabindex="0" class="m-catalogmanager-sectionPanel" aria-label="{{../translations.catalogs}}">
+            <div class="m-catalogmanager-title-catalog" data-catalog-name="{{title}}" data-catalog-id="{{id}}">
+                <div class="m-catalogmanager-visible-typeContent">
+                    <table style="width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td><span class="icon-rss m-catalogmanager-title-box"  
+                                        data-catalog-id="{{id}}" title="{{title}}" 
+                                        tabindex="0">
+                                        {{title}}
+                                    </span>
+                                </td>
+                                <td style="text-align: end;">
+                                    {{#if public}}
+                                        <span class="icon-lock-open">
+                                            {{../translations.public}}
+                                        </span>
+                                    {{else}}
+                                        <span class="icon-lock">
+                                            {{../translations.private}}
+                                        </span>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="m-catalogmanager-collections catalog-{{id}} hidden empty">
+                <div class="loading"></div>
+            </div>
+        </li>
+    {{/each}}
+{{/inline}}
+<div class="m-catalogmanager-containerCatalogs">
+    <ul class="m-catalogmanager-ulcatalogs">
+        {{> catalogmanagerCatalog catalogs=catalogs}}
+    </ul>
+</div>

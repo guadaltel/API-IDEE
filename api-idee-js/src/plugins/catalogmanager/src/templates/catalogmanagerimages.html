@@ -1,0 +1,25 @@
+<ul class="m-catalogmanager-ulimages">
+    {{#each images}}
+        <li tabindex="0" class="m-catalogmanager-sectionPanel">
+            <div class="m-catalogmanager-title-image" data-image-key="{{key}}" data-item-id="{{itemId}}" data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">
+                <div class="m-catalogmanager-visible-typeContent">
+                    <table style="width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td><span class="m-catalogmanager-title-box"  
+                                        title="{{title}}" tabindex="0">
+                                        {{title}}
+                                    </span>
+                                </td>
+                                <td style="text-align: end;">
+                                    <button class="m-catalogmanager-preview-button" title="{{../translations.preview}}"><span class="icon-eye m-catalogmanager-preview-button"></span></button>
+                                    <button class="m-catalogmanager-download-button" title="{{../translations.download}}"><span class="icon-download m-catalogmanager-download-button"></span></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </li>
+    {{/each}}
+</ul>

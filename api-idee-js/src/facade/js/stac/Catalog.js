@@ -314,15 +314,17 @@ class Catalog extends Base {
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
+   * @param {number array} bbox Extensión de la zona de búsqueda. EPSG:4326
+   * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
    */
-  getFilteredItemsAdvanced(collectionId, filter, bbox = null) {
+  getFilteredItemsAdvanced(collectionId, filter, bbox = null, datetime = null) {
     if (!collectionId) {
       showError(getValue('exception').no_collection_id);
       return;
     }
-    const data = this.getFilterData(collectionId, filter, bbox);
+    const data = this.getFilterData(collectionId, filter, bbox, datetime);
     const url = `${this.url}/search`;
     return this.getFilteredItemsAdvancedByUrl(url, data, getValue('exception').catalog_filtered_items_advanced_error);
   }
@@ -399,11 +401,13 @@ class Catalog extends Base {
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
+   * @param {number array} bbox Extensión de la zona de búsqueda. EPSG:4326
+   * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
    * @returns {Object|null} Objeto con el cuerpo de la petición o nulo si el
    * formato de filtro no es válido.
    * @api
    */
-  getFilterData(collectionId, filter, bbox) {
+  getFilterData(collectionId, filter, bbox, datetime) {
     const data = {
       limit: filter.limit || 10,
     };
@@ -412,6 +416,9 @@ class Catalog extends Base {
     }
     if (bbox) {
       data.bbox = bbox;
+    }
+    if (datetime) {
+      data.datetime = datetime;
     }
     switch (filter.format) {
       case STAC_FILTER_LANG.STAC_QUERY:
