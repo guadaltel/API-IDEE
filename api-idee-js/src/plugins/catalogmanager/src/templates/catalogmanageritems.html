@@ -2,8 +2,8 @@
     <ul class="m-catalogmanager-ulitems">
         {{#each items}}
             <li tabindex="0" class="m-catalogmanager-sectionPanel">
-                <div class="m-catalogmanager-title-item"
-                    data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-id="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
+                <div id="{{id}}" class="m-catalogmanager-title-item"
+                    data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
                     <div class="m-catalogmanager-visible-typeContent">
                         <table style="width: 100%;">
                             <tbody>
@@ -14,7 +14,7 @@
                                         </span>
                                     </td>
                                     <td style="text-align: end;">
-                                        <button class="m-catalogmanager-info-button" title="{{../translations.info}}"><span class="icon-info m-catalogmanager-info-button"></span></button>
+                                        <button class="m-catalogmanager-info-button action-btn" title="{{../translations.metadata}}"><span class="icon-info m-catalogmanager-info-button"></span></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -26,7 +26,7 @@
         {{/each}}
     </ul>
     <div class="m-catalogmanager-items-buttons">
-        <button class="m-catalogmanager-prev-items-button" {{#if hasNotPrev}}disabled{{/if}}>Anterior</button>
-        <button class="m-catalogmanager-next-items-button" {{#if hasNotNext}}disabled{{/if}}>Siguiente</button>
+        <button class="m-catalogmanager-prev-items-button" {{#if hasNotPrev}}disabled{{/if}}><span class="icon-left-big m-catalogmanager-prev-items-button"></span></button>
+        <button class="m-catalogmanager-next-items-button" {{#if hasNotNext}}disabled{{/if}}><span class="icon-right-big m-catalogmanager-next-items-button"></span></button>
     </div>
 </div>

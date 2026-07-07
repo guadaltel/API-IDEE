@@ -119,7 +119,7 @@
         <legend>Configuración</legend>
         <div class="form-row">
           <label for="catalog-url">URL catálogo</label>
-          <input id="catalog-url" type="text" value="https://stac.dataspace.copernicus.eu/v1">
+          <input id="catalog-url" type="text" value="http://localhost:8090">
         </div>
         <div class="form-row">
           <label for="public">público</label>
@@ -139,7 +139,7 @@
         </div>
         <div class="form-row">
           <label for="collection-id">collectionId</label>
-          <input id="collection-id" type="text" placeholder="ccm-optical">
+          <input id="collection-id" type="text" placeholder="vhr-image-2024">
           <label for="item-id">itemId</label>
           <input id="item-id" type="text" placeholder="ID del item">
           <label for="query-limit">limit</label>
@@ -147,7 +147,7 @@
         </div>
         <div class="form-row">
           <label for="query-filters">filtros Simples</label>
-          <textarea id="query-filters">{"bbox": [-34.674591705357614, 47.382657634959315, 36.03763092946285, 57.276663809738096 ], "datetime": "2022-04-29T10:58:10.00Z", "ids": ["PH1B_PHR_MS___3_20220429T105809_20220429T105811_TOU_1234_8a08_COG", "PH1B_PHR_MS__2A_20220429T105809_20220429T105811_TOU_1234_8a08"]}</textarea>
+          <textarea id="query-filters">{"bbox": [-7.6135011512544875, 36.17836200171388, -2.5775999112598895, 37.337668433004296 ], "datetime": "2024-03-01T00:00:00Z/2024-05-31T23:59:59Z"}</textarea>
         </div>
         <div class="form-row">
           <label for="filter-format">formato filtro</label>
@@ -159,7 +159,7 @@
         </div>
         <div class="form-row">
           <label for="filter-body">filtro Avanzado</label>
-          <textarea id="filter-body">{"datetime": {"lt": "2022-04-29T14:02:07.030000Z"}}</textarea>
+          <textarea id="filter-body">{"datetime": {"lt": "2024-03-15T00:00:00Z"}}</textarea>
         </div>
         <div class="form-row">          
           <label for="spatial-filter">Filtrar por vista</label>
@@ -178,7 +178,7 @@
           <button type="button" id="btn-getItem">getItem(collectionId, itemId)</button>
           <button type="button" id="btn-getFilteredItems">getFilteredItems(collectionId, filters) </button>
           <button type="button" id="btn-getItemsByLinks">getItemsByLinks(links, rel)</button>
-          <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced(collectionId, filter)</button>
+          <button type="button" id="btn-getFilteredItemsAdvanced">getFilteredItemsAdvanced(collectionId, filter, bbox, datetime)</button>
           <button type="button" id="btn-getFilteredItemsAdvancedByLinks">getFilteredItemsAdvancedByLinks(links, rel)</button>
           <button type="button" id="btn-clear">Limpiar resultados</button>
         </div>

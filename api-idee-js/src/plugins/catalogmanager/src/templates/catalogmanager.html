@@ -1,28 +1,29 @@
-<div class="m-control m-catalogmanager m-container">
+<div id="div-contenedor" class="m-control m-catalogmanager m-container">
     <header id="m-catalogmanager-title" class="m-catalogmanager-title">
         <h1 aria-label="Plugin catalogmanager" class="title" role="text">{{translations.title}}</h1>
     </header>
     <section aria-label="Plugin catalogmanager" id="m-catalogmanager-actions-content" class="m-catalogmanager-content">
         <div class="m-catalogmanager-actions">
-            <button id="m-catalogmanager-addcatalog" title="{{translations.addCatalog}}"><span class="icon-plus"></span> {{translations.addCatalog}}</button>
-            <button id="m-catalogmanager-updatecatalog" title="{{translations.update}}"><span class="icon-arrows-cw"></span> {{translations.update}}</button>
-            <button id="m-catalogmanager-filters" title="{{translations.filters}}"><span class="icon-filter"></span> {{translations.filters}}</button>
-            <button id="m-catalogmanager-config" title="{{translations.configuration}}"><span class="icon-cog"></span> {{translations.configuration}}</button>
+            <button id="m-catalogmanager-addcatalog" title="{{translations.addCatalog}}"><span class="icon-plus"></span></button>
+            <button id="m-catalogmanager-updatecatalog" title="{{translations.update}}"><span class="icon-arrows-cw"></span></button>
+            <button id="m-catalogmanager-filters" class="hidden" title="{{translations.filters}}"><span class="icon-filter"></span> {{translations.filters}}</button>
         </div>
     </section>
-    <section aria-label="Plugin catalogmanager" id="m-catalogmanager-filters-content" class="m-catalogmanager-content hidden">
+    <section aria-label="Plugin catalogmanager" id="m-catalogmanager-filters-content" class="m-catalogmanager-content">
         <div class="m-catalogmanager-filters-temporal">
             <h3>{{translations.filtersTypes.temporal.title}}</h3>
-            <div>
-                <label for="m-catalogmanager-filters-temporal-start">{{translations.filtersTypes.temporal.start}}</label>
-                <input type="date" id="m-catalogmanager-filters-temporal-start" value="{{startDate}}">
-                <input type="time" id="m-catalogmanager-filters-temporal-start-time" value="{{startTime}}">
-            </div>
-            <div>
-                <label for="m-catalogmanager-filters-temporal-end">{{translations.filtersTypes.temporal.end}}</label>
-                <input type="date" id="m-catalogmanager-filters-temporal-end" value="{{endDate}}">
-                <input type="time" id="m-catalogmanager-filters-temporal-end-time" value="{{endTime}}">
-            </div>
+            <table>
+                <tr>
+                    <td><label for="m-catalogmanager-filters-temporal-start">{{translations.filtersTypes.temporal.start}}</label></td>
+                    <td><input type="date" id="m-catalogmanager-filters-temporal-start" value="{{startDate}}"></td>
+                    <td><input type="time" id="m-catalogmanager-filters-temporal-start-time" value="{{startTime}}"></td>
+                </tr>
+                <tr>
+                    <td><label for="m-catalogmanager-filters-temporal-end">{{translations.filtersTypes.temporal.end}}</label></td>
+                    <td><input type="date" id="m-catalogmanager-filters-temporal-end" value="{{endDate}}"></td>
+                    <td><input type="time" id="m-catalogmanager-filters-temporal-end-time" value="{{endTime}}"></td>
+                </tr>
+            </table>
             <div class="m-catalogmanager-filters-temporal-predefined">
                 <button id="last30days" class="m-catalogmanager-filters-temporal-predefined-button">{{translations.filtersTypes.temporal.last30days}}</button>
                 <button id="last3months" class="m-catalogmanager-filters-temporal-predefined-button">{{translations.filtersTypes.temporal.last3months}}</button>
@@ -33,11 +34,23 @@
         <div class="m-catalogmanager-filters-spatial">
             <h3>{{translations.filtersTypes.spatial.title}}</h3>
             <div class="m-catalogmanager-filters-spatial-predefined">
-                <button id="view" class="m-catalogmanager-filters-spatial-predefined-button">{{translations.filtersTypes.spatial.view}}</button>
+                <button id="view" class="m-catalogmanager-filters-spatial-predefined-button" title="{{translations.filtersTypes.spatial.view}}"><span class="icon-videocam"></span></button>
+                <button id="extent" class="m-catalogmanager-filters-spatial-predefined-button" title="{{translations.filtersTypes.spatial.extent}}"><span class="icon-edit"></span></button>
+                <button id="referenced" class="m-catalogmanager-filters-spatial-predefined-button" title="{{translations.filtersTypes.spatial.referenced}}"><span class="icon-hand-pointer"></span></button>
+            </div>
+            <div class="m-catalogmanager-filters-spatial-help">
+                <p id="extent-help" class="spatial-help hidden">{{translations.filtersTypes.spatial.extentHelp}}</p>
+                <p id="referenced-help" class="spatial-help hidden">{{translations.filtersTypes.spatial.referencedHelp}}</p>
             </div>
         </div>
         <div class="m-catalogmanager-filters-spatial"></div>
     </section>
     <section aria-label="Plugin catalogmanager" id="m-catalogmanager-list-content" class="m-catalogmanager-content"></section>
+    <section aria-label="Plugin catalogmanager" id="m-catalogmanager-extra-actions-content" class="m-catalogmanager-content">
+        <div class="m-catalogmanager-actions">
+            <button id="m-catalogmanager-download" title="{{translations.masiveDownload}}"><span class="icon-download"></span></button>
+            <button id="m-catalogmanager-delete" title="{{translations.clearSelection}}"><span class="icon-trash"></span></button>
+        </div>
+    </section>
     <section aria-label="Plugin catalogmanager" id="m-catalogmanager-advanced-filters-content" class="m-catalogmanager-content hidden"></section>
 </div>

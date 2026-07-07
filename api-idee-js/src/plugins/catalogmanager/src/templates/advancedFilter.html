@@ -1,15 +1,19 @@
-<div id="div-contenedor"
+<div id="m-catalogmanager-advanced-filters-content"
     data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
 
     <div class="filtered-search-title">{{translations.title}}</div>
 
     <div id="m-catalogmanager-options-container">
-        <div id="m-catalogmanager-initialview">
-            <div id="m-catalogmanager-lists-container">
-                <div id="m-catalogmanager-fields">
+        <div id="m-catalogmanager-advanced-filters-tabs">
+            <div id="advanced-filter-tab-assistant" class="advanced-filter-tab active">{{translations.assistant}}</div>
+            <div id="advanced-filter-tab-query" class="advanced-filter-tab">{{translations.manualQuery}}</div>
+        </div>
+        <div id="advanced-filter-assistant-container" class="advanced-filter-container">
+            <div class="m-catalogmanager-lists-container">
+                <div class="m-catalogmanager-fields">
                     <p class="m-catalogmanager-headers">{{translations.fields}}</p>
                 </div>
-                <div id="m-catalogmanager-type">
+                <div class="m-catalogmanager-type">
                     <p class="m-catalogmanager-headers">{{translations.type}}</p>
                 </div>
             </div>
@@ -23,8 +27,21 @@
 
             <div id="m-catalogmanager-query-container">
                 <p class="m-catalogmanager-headers">{{translations.filter_exp}}</p>
-                <textarea id="m-catalogmanager-textArea" cols="90" rows="5" placeholder="{{translations.placeholder}}"></textarea>
+                <textarea id="m-catalogmanager-assistant-body" class="m-catalogmanager-textArea" cols="90" rows="5" placeholder="{{translations.placeholder}}"></textarea>
             </div>
+        </div>
+        <div id="advanced-filter-query-container" class="advanced-filter-container hidden">
+            <!--<div id="m-catalogmanager-fields">
+                <p class="m-catalogmanager-headers">{{translations.fields}}</p>
+            </div>-->
+            <label>{{translations.queryType}}</label>
+            <select id="m-catalogmanager-query-type">
+                <option value="stac-query">STAC Query</option>
+                <option value="cql-json">CQL JSON</option>
+                <option value="cql2-json">CQL2 JSON</option>
+            </select>
+            <label>{{translations.stacQuery}}</label>
+            <textarea id="m-catalogmanager-query-body" class="m-catalogmanager-textArea" cols="90" rows="5" placeholder="{{translations.manualPlaceholder}}"></textarea>
         </div>
     </div>
 

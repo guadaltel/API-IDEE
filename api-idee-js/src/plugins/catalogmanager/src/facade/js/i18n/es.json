@@ -1,6 +1,8 @@
 {
   "exception": {
-    "impl": "La implementación no puede crear controles de Catalogmanager."
+    "impl": "La implementación no puede crear controles de Catalogmanager.",
+    "no_results": "No se encontraron resultados.",
+    "no_selection": "No hay imágenes seleccionadas."
   },
   "textHelp": {
     "help1": "Texto de ejemplo 1.",
@@ -10,12 +12,17 @@
   "filtersTypes": {
     "spatial": {
       "title": "Filtro espacial",
-      "view": "Por vista"
+      "view": "Por vista",
+      "extent": "Por extensión dibujada",
+      "extentHelp": "Dibuje una extensión geográfica en el mapa",
+      "referenced": "Geometía de referencia",
+      "referencedHelp": "Seleccione una geometría dibujada previamente en el mapa para tomarla de referencia.",
+      "success": "Filtro espacial establecido correctamente."
     },
     "temporal": {
       "title": "Filtro temporal",
-      "start": "Inicio",
-      "end": "Fin",
+      "start": "Desde",
+      "end": "Hasta",
       "last30days": "Últimos 30 días",
       "last3months": "Últimos 3 meses",
       "lastyear": "Último año",
@@ -25,7 +32,20 @@
   "imageActions": {
     "info": "Información",
     "preview": "Vista previa",
-    "download": "Descargar"
+    "download": "Descargar",
+    "histogram": "Histograma"
+  },
+  "histogramDialog": {
+    "title": "Histograma",
+    "band": "Banda",
+    "pixelValue": "Valor de píxel",
+    "frequency": "Frecuencia",
+    "loadError": "No se pudo calcular el histograma de la imagen.",
+    "pixelCount": "Número de píxeles",
+    "min": "Mínimo",
+    "max": "Máximo",
+    "mean": "Media",
+    "stddev": "Desviación estándar"
   },
   "itemMetadata": {
     "title": "Metadatos del item STAC",
@@ -44,11 +64,26 @@
     "cloudCover": "Cobertura de nubes",
     "processingLevel": "Nivel de procesado"
   },
+  "collectionMetadata": {
+    "title": "Metadatos de la colección",
+    "general": "Información general",
+    "coverage": "Cobertura",
+    "extent": "Extensión espacial",
+    "temporal": "Rango temporal",
+    "license": "Licencia",
+    "stacVersion": "Versión STAC",
+    "description": "Descripción",
+    "summaries": "Resúmenes",
+    "platforms": "Plataformas",
+    "instruments": "Instrumentos"
+  },
   "tooltip": "Gestor de catálogos",
   "title": "Gestor de catálogos",
   "addCatalog": "Añadir catálogo",
   "update": "Actualizar",
   "filters": "Filtros comunes",
+  "advancedFilters": "Filtro avanzado",
+  "metadata": "Metadatos",
   "configuration": "Configuración",
   "cat_title": "Título",
   "cat_url": "URL catálogo",
@@ -63,9 +98,28 @@
   "footprint": "Ver huella",
   "no_images": "No se encontraron imágenes",
   "unknown": "Desconocido",
+  "masiveDownload": {
+    "title": "Descargar selección",
+    "pickFolder": "Seleccione la carpeta donde guardar las imágenes.",
+    "progress": "Descargando {{current}} de {{total}}: {{filename}}",
+    "zipProgress": "Empaquetando {{current}} de {{total}} en ZIP: {{filename}}",
+    "complete": "Descarga finalizada. Correctos: {{success}}. Fallidos: {{failed}}.",
+    "completeZip": "ZIP \"{{filename}}\" creado con {{success}} archivos.",
+    "error": "No se pudo completar la descarga.",
+    "unsupportedBrowser": "Su navegador no soporta la selección de carpeta (File System Access API). Los archivos se descargarán en la carpeta de descargas del navegador.",
+    "browserDownloads": "El ZIP se descargará en la carpeta de descargas del navegador.",
+    "cancelled": "Descarga cancelada."
+  },
+  "clearSelection": "Limpiar selección",
   "advancedFilter": {
     "title": "Filtro avanzado STAC",
-    "fields": "Campos",
+    "assistant": "Asistente",
+    "manualQuery": "Consulta manual",
+    "stacQuery": "Consulta STAC",
+    "queryType": "Tipo de consulta",
+    "manualPlaceholder": "Introduce la consulta STAC en formato JSON",
+    "noQueryableFields": "No hay campos consultables para este catálogo.",
+    "fields": "Campos consultables",
     "values": "Valores",
     "operators": "Operadores",
     "filter_exp": "Expresión de filtro",

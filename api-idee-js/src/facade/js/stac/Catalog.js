@@ -7,9 +7,9 @@ import { getValue } from '../i18n/language';
 import { error as showError } from '../dialog';
 
 const STAC_FILTER_LANG = {
-  STAC_QUERY: 'stac-query', // campo "query"
-  CQL_JSON: 'cql-json', // filter-lang
-  CQL2_JSON: 'cql2-json', // filter-lang
+  STAC_QUERY: 'stac-query',
+  CQL_JSON: 'cql-json',
+  CQL2_JSON: 'cql2-json',
 };
 
 const SUPPORTED_LINKS = ['self', 'next', 'previous'];
@@ -158,13 +158,15 @@ class Catalog extends Base {
       return;
     }
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
-    return get(`${this.url}/collections/${collectionId}/queryables`, null, { headers }).then((response, fail) => {
-      if (response.code !== 200) {
-        fail(new Error(getValue('exception').catalog_queryable_fields_error));
-        return;
-      }
-      const data = JSON.parse(response.text);
-      return data.properties || [];
+    return new Promise((success, fail) => {
+      get(`${this.url}/collections/${collectionId}/queryables`, null, { headers }).then((response) => {
+        if (response.code !== 200) {
+          fail(new Error(getValue('exception').catalog_queryable_fields_error));
+          return;
+        }
+        const data = JSON.parse(response.text);
+        success(data.properties || {});
+      });
     });
   }
 
@@ -236,6 +238,10 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(url, params, { headers }).then((response) => {
+        if (response.code === 401 || response.code === 403) {
+          fail(new Error(getValue('exception').unauthorized_collection));
+          return;
+        }
         if (response.code !== 200) {
           fail(new Error(errorMessage));
           return;

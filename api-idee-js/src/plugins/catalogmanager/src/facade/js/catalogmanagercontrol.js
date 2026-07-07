@@ -9,15 +9,35 @@ import contentTemplate from 'templates/catalogmanagercontent';
 import collectionsTemplate from 'templates/catalogmanagercollections';
 import itemsTemplate from 'templates/catalogmanageritems';
 import imagesTemplate from 'templates/catalogmanagerimages';
+import histogramTemplate from 'templates/catalogmanagerhistogram';
+import histogramStatsTemplate from 'templates/catalogmanagerhistogramstats';
 import itemMetadataTemplate from 'templates/itemMetadata';
+import collectionMetadataTemplate from 'templates/collectionMetadata';
 import advancedFilterTemplate from 'templates/advancedFilter';
 import fieldsTableTemplate from 'templates/fieldstable';
 import typeTableTemplate from 'templates/typetable';
+import Chart from 'chart.js/auto';
+import { downloadZip } from 'client-zip';
+import streamSaver from 'streamsaver';
 import { getValue } from './i18n/language';
 
 // - Modal
 /** @private @type {string} Selector CSS del botón de cierre del modal informativo */
 const BT_CLOSE_MODAL = 'div.m-dialog.info div.m-button > button';
+
+/** @private @type {Object<string, {border: string, background: string}>} Colores por banda */
+const HISTOGRAM_BAND_COLORS = {
+  1: { border: 'rgb(220, 53, 69)', background: 'rgba(220, 53, 69, 0.6)' },
+  2: { border: 'rgb(25, 135, 84)', background: 'rgba(25, 135, 84, 0.6)' },
+  3: { border: 'rgb(13, 110, 253)', background: 'rgba(13, 110, 253, 0.6)' },
+  4: { border: 'rgb(125, 125, 125)', background: 'rgba(125, 125, 125, 0.6)' },
+};
+
+/** @private @type {number} Pausa entre descargas nativas del navegador (ms) */
+const BROWSER_DOWNLOAD_DELAY_MS = 400;
+
+/** @private @type {string} Nombre base del ZIP de descarga masiva en Chrome/Edge */
+const MASIVE_DOWNLOAD_ZIP_BASENAME = 'catalogmanager.zip';
 
 export default class CatalogmanagerControl extends IDEE.Control {
   /**
@@ -121,6 +141,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
      * @type {Object|null}
      */
     this.advancedFilterState_ = null;
+
+    this.focusStyle_ = new IDEE.style.Generic({
+      polygon: {
+        stroke: {
+          width: 1,
+          color: 'red',
+        },
+        fill: {
+          color: 'red',
+          opacity: 0.2,
+        },
+      },
+    });
   }
 
   /**
@@ -134,6 +167,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   createView(map) {
     this.map_ = map;
+    this.getImpl().createAllInteractions(map, this);
     const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
     return new Promise((success, fail) => {
       const html = IDEE.template.compileSync(template, {
@@ -145,6 +179,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
             filters: getValue('filters'),
             configuration: getValue('configuration'),
             filtersTypes: getValue('filtersTypes'),
+            masiveDownload: getValue('masiveDownload.title'),
+            clearSelection: getValue('clearSelection'),
           },
           startDate: yesterday,
           startTime: '00:00:00',
@@ -192,8 +228,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.template_.querySelector('#m-catalogmanager-addcatalog').addEventListener('click', this.openAddCatalog.bind(this));
     this.template_.querySelector('#m-catalogmanager-filters').addEventListener('click', (evt) => this.toggleCommonFilters(evt));
     this.template_.querySelector('.m-catalogmanager-filters-temporal-predefined').addEventListener('click', (evt) => this.setTemporalFilter(evt));
-    this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.setSpatialFilter(evt));
-    this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.resetItems.bind(this));
+    this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.toggleSpatialFilter(evt));
+    this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.updateItems.bind(this));
+    this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-download').addEventListener('click', this.masiveDownload.bind(this));
+    this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-delete').addEventListener('click', this.clearSelection.bind(this));
   }
 
   /**
@@ -239,6 +277,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       btn.classList.remove('active');
       filtersContent.classList.add('hidden');
       listContent.classList.remove('hidden');
+      this.getImpl().deactivateAllInteractions();
     } else {
       btn.classList.add('active');
       filtersContent.classList.remove('hidden');
@@ -307,8 +346,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @param {Event} evt Evento de clic en el botón de filtro espacial
    */
-  setSpatialFilter(evt) {
-    const btn = evt.target;
+  toggleSpatialFilter(evt) {
+    const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
+
+    this.getImpl().deactivateAllInteractions();
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.bbox;
@@ -335,12 +376,37 @@ export default class CatalogmanagerControl extends IDEE.Control {
       case 'view':
         const bbox = this.map_.getBbox();
         const extent = [bbox.x.min, bbox.y.min, bbox.x.max, bbox.y.max];
-        this.commonFilters_.bbox = ol.proj.transformExtent(extent, this.map_.getProjection().code, 'EPSG:4326');
+        this.setSpatialFilterByExtent(this.getImpl().transformExtent(extent, this.map_.getProjection().code, 'EPSG:4326'));
+        break;
+      case 'extent':
+        this.getImpl().activateDrawExtent();
+        break;
+      case 'referenced':
+        this.getImpl().activateSelectGeometry();
         break;
       default:
         delete this.commonFilters_.bbox;
         break;
     }
+    this.toggleSpatialFilterHelp(filterType);
+  }
+
+  setSpatialFilterByExtent(extent) {
+    this.commonFilters_.bbox = extent;
+    IDEE.toast.success(getValue('filtersTypes.spatial.success'), null, 2500);
+  }
+
+  toggleSpatialFilterHelp(filterType) {
+    const helpContainer = this.template_.querySelector('.m-catalogmanager-filters-spatial-help');
+    const helps = helpContainer.querySelectorAll('.spatial-help');
+    helps.forEach((help) => {
+      if (!help.classList.contains('hidden')) {
+        help.classList.add('hidden');
+      }
+      if (help.id === `${filterType}-help`) {
+        help.classList.remove('hidden');
+      }
+    });
   }
 
   /**
@@ -363,22 +429,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
       IDEE.dialog.error(getValue('advancedFilter.loadError'));
       return;
     }
+    if (Object.keys(queryableFields).length === 0) {
+      IDEE.dialog.info(getValue('advancedFilter.noQueryableFields'));
+      return;
+    }
     const advancedFiltersHtml = IDEE.template.compileSync(advancedFilterTemplate, {
       vars: {
         catalogIndex,
         collectionIndex,
         operators: this.operators_,
-        translations: {
-          title: getValue('advancedFilter.title'),
-          fields: getValue('advancedFilter.fields'),
-          type: getValue('advancedFilter.type'),
-          operators: getValue('advancedFilter.operators'),
-          filter_exp: getValue('advancedFilter.filter_exp'),
-          placeholder: getValue('advancedFilter.placeholder'),
-          return: getValue('advancedFilter.return'),
-          apply: getValue('advancedFilter.apply'),
-          clear: getValue('advancedFilter.clear'),
-        },
+        translations: getValue('advancedFilter'),
       },
     });
     const container = this.template_.querySelector('#m-catalogmanager-advanced-filters-content');
@@ -387,7 +447,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.renderQueryableFields();
     this.addAdvancedFilterEvents(container);
     if (collection.advancedFilter?.sqlExpression) {
-      this.getAdvancedFilterTextarea().value = collection.advancedFilter.sqlExpression;
+      this.getAdvancedFilterAssistantTextarea().value = collection.advancedFilter.sqlExpression;
+    }
+    if (collection.advancedFilter?.queryExpression) {
+      this.getAdvancedFilterQueryTextarea().value = collection.advancedFilter.queryExpression;
     }
     this.toggleAdvancedFilters();
   }
@@ -423,7 +486,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {HTMLElement|null} Contenedor del filtro avanzado
    */
   getAdvancedFilterContainer() {
-    return this.template_.querySelector('#m-catalogmanager-advanced-filters-content #div-contenedor');
+    return this.template_.querySelector('#m-catalogmanager-advanced-filters-content #m-catalogmanager-advanced-filters-content');
   }
 
   /**
@@ -433,8 +496,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @returns {HTMLTextAreaElement|null} Textarea de la expresión de filtro
    */
-  getAdvancedFilterTextarea() {
-    return this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-textArea');
+  getAdvancedFilterAssistantTextarea() {
+    return this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-assistant-body');
+  }
+
+  /**
+   * Obtiene el textarea de expresión SQL del filtro avanzado
+   *
+   * @private
+   * @function
+   * @returns {HTMLTextAreaElement|null} Textarea de la expresión de filtro
+   */
+  getAdvancedFilterQueryTextarea() {
+    return this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-query-body');
   }
 
   /**
@@ -445,13 +519,44 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {HTMLElement} container Contenedor raíz del filtro avanzado
    */
   addAdvancedFilterEvents(container) {
-    const root = container.querySelector('#div-contenedor');
+    const root = container.querySelector('#m-catalogmanager-advanced-filters-content');
     root.querySelectorAll('#m-catalogmanager-operators-container>button').forEach((btn) => {
       btn.addEventListener('click', (evt) => this.advancedFilterOperatorClick(evt));
     });
+    root.querySelector('#m-catalogmanager-advanced-filters-tabs').addEventListener('click', (evt) => this.changeAdvancedFilterTab(evt));
     root.querySelector('#volver-btn').addEventListener('click', () => this.toggleAdvancedFilters());
     root.querySelector('#aplicar-btn').addEventListener('click', () => this.applyAdvancedFilter());
     root.querySelector('#limpiar-filtro-btn').addEventListener('click', () => this.clearAdvancedFilter());
+  }
+
+  changeAdvancedFilterTab(evt) {
+    const btn = evt.target;
+    if (btn.id === 'advanced-filter-tab-assistant') {
+      this.showAdvancedFilter('assistant');
+    } else if (btn.id === 'advanced-filter-tab-query') {
+      this.showAdvancedFilter('query');
+    }
+  }
+
+  showAdvancedFilter(tabName) {
+    const tabs = this.getAdvancedFilterContainer().querySelectorAll('#m-catalogmanager-advanced-filters-tabs>div');
+    const tabId = `advanced-filter-tab-${tabName}`;
+    tabs.forEach((tab) => {
+      if (tab.id === tabId) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+    const containerId = `advanced-filter-${tabName}-container`;
+    const containers = this.getAdvancedFilterContainer().querySelectorAll('.advanced-filter-container');
+    containers.forEach((container) => {
+      if (container.id === containerId) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    });
   }
 
   /**
@@ -469,7 +574,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
     const totalPages = state.fieldsPages.length || 1;
     state.fieldsTemplate.querySelector('#pageNumBtn').innerHTML = `${state.currentFieldsPage + 1} ${getValue('advancedFilter.of')} ${totalPages}`;
-    const fieldsContainer = this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-fields');
+    const fieldsContainer = this.getAdvancedFilterContainer().querySelector('.m-catalogmanager-fields');
     fieldsContainer.innerHTML = `<p class="m-catalogmanager-headers">${getValue('advancedFilter.fields')}</p>`;
     fieldsContainer.appendChild(state.fieldsTemplate);
     this.bindQueryableFieldCells();
@@ -488,7 +593,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       .addEventListener('click', (evt) => {
         const fieldName = evt.target.innerHTML;
         state.selectedField = fieldName;
-        this.getAdvancedFilterTextarea().value += fieldName;
+        this.getAdvancedFilterAssistantTextarea().value += fieldName;
         this.showQueryableFieldValues(fieldName);
         this.toggleCellFocus(evt.target);
       });
@@ -501,9 +606,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @param {string} fieldName Nombre del campo consultable
    */
-  showQueryableFieldValues(fieldName) {
-    const fieldType = this.getQueryableFieldType(fieldName);
-    const typeContainer = this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-type');
+  async showQueryableFieldValues(fieldName) {
+    const fieldType = await this.getQueryableFieldType(fieldName);
+    const typeContainer = this.getAdvancedFilterContainer().querySelector('.m-catalogmanager-type');
     const typeTemplate = IDEE.template.compileSync(typeTableTemplate, {
       jsonp: true,
       vars: { fieldType },
@@ -520,12 +625,26 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {string} fieldName Nombre del campo
    * @returns {string} Etiqueta del tipo de dato
    */
-  getQueryableFieldType(fieldName) {
+  async getQueryableFieldType(fieldName) {
     const schema = this.advancedFilterState_.queryableFields[fieldName];
     if (!schema) {
       return getValue('advancedFilter.types.unknown');
     }
-    const { type, format } = schema;
+    let { type, format } = schema;
+    const ref = schema.$ref;
+    if (ref) {
+      const refParts = ref.split('#');
+      const url = refParts[0];
+      const pathParts = refParts[1].substring(1).split('/');
+      const response = await IDEE.remote.get(url);
+      const refSchema = JSON.parse(response.text);
+      let root = refSchema;
+      pathParts.forEach((pathPart) => {
+        root = root[pathPart];
+      });
+      type = root.type;
+      format = root.format;
+    }
     if (type === 'string' && format === 'date-time') {
       return getValue('advancedFilter.types.date');
     }
@@ -553,7 +672,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   advancedFilterOperatorClick(evt) {
     const btn = evt.target;
-    const textarea = this.getAdvancedFilterTextarea();
+    const textarea = this.getAdvancedFilterAssistantTextarea();
     switch (btn.innerHTML) {
       case '&#61;':
       case '=':
@@ -795,10 +914,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   applyAdvancedFilter() {
+    const tab = this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-advanced-filters-tabs>div.active');
+    if (tab.id === 'advanced-filter-tab-assistant') {
+      this.applyAdvancedFilterAssistant();
+    } else if (tab.id === 'advanced-filter-tab-query') {
+      this.applyAdvancedFilterQuery();
+    }
+  }
+
+  applyAdvancedFilterAssistant() {
     const state = this.advancedFilterState_;
     const catalog = this.catalogs_[state.catalogIndex];
     const collection = catalog.collections[state.collectionIndex];
-    const sqlExpression = this.getAdvancedFilterTextarea().value.trim();
+    const sqlExpression = this.getAdvancedFilterAssistantTextarea().value.trim();
     let filterObj;
     try {
       filterObj = this.turnSqlIntoStacQuery(sqlExpression);
@@ -813,11 +941,46 @@ export default class CatalogmanagerControl extends IDEE.Control {
       sqlExpression,
       limit: 10,
     };
+    this.getFilteredItemsAdvanced();
+  }
+
+  applyAdvancedFilterQuery() {
+    const state = this.advancedFilterState_;
+    const catalog = this.catalogs_[state.catalogIndex];
+    const collection = catalog.collections[state.collectionIndex];
+    const queryExpression = this.getAdvancedFilterQueryTextarea().value.trim();
+    let jsonExpression;
+    try {
+      jsonExpression = JSON.parse(queryExpression);
+    } catch (err) {
+      console.error(err);
+      IDEE.dialog.error(getValue('advancedFilter.invalidQuery'));
+      return;
+    }
+    const format = this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-query-type').value;
+    collection.advancedFilter = {
+      format,
+      filter: jsonExpression,
+      queryExpression,
+      limit: 10,
+    };
+    this.getFilteredItemsAdvanced();
+  }
+
+  getFilteredItemsAdvanced() {
+    // this.updateBboxFilter();
+    const state = this.advancedFilterState_;
+    const catalog = this.catalogs_[state.catalogIndex];
+    const collection = catalog.collections[state.collectionIndex];
     const bbox = this.commonFilters_.bbox || null;
     const datetime = this.commonFilters_.datetime || null;
     catalog.obj.getFilteredItemsAdvanced(collection.id, collection.advancedFilter, bbox, datetime)
       .then((items) => {
         collection.links = items.links;
+        if (items.features.length === 0) {
+          IDEE.dialog.info(getValue('exception').no_results);
+          return;
+        }
         this.renderCollectionItems(state.catalogIndex, state.collectionIndex, items);
         this.toggleAdvancedFilters();
       }).catch((err) => {
@@ -837,11 +1000,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalog = this.catalogs_[state.catalogIndex];
     const collection = catalog.collections[state.collectionIndex];
     collection.advancedFilter = null;
-    this.getAdvancedFilterTextarea().value = '';
+    this.getAdvancedFilterAssistantTextarea().value = '';
+    this.getAdvancedFilterQueryTextarea().value = '';
     state.selectedField = null;
     const itemsElement = this.template_.querySelector(`.m-catalogmanager-items.collection-${collection.id}`);
     if (itemsElement && !itemsElement.classList.contains('empty')) {
-      this.getItems(state.catalogIndex, state.collectionIndex, itemsElement);
+      this.getItems(state.catalogIndex, state.collectionIndex);
     }
   }
 
@@ -865,6 +1029,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
         items: itemsJson,
         hasNotPrev: !this.linksHaveRel(items.links, 'previous'),
         hasNotNext: !this.linksHaveRel(items.links, 'next'),
+        translations: {
+          metadata: getValue('metadata'),
+        },
       },
     });
     container.innerHTML = html.outerHTML;
@@ -872,6 +1039,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     container.querySelector('.m-catalogmanager-ulitems').addEventListener('click', (evt) => this.itemsEvent(evt));
     container.querySelector('.m-catalogmanager-next-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'next'));
     container.querySelector('.m-catalogmanager-prev-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'previous'));
+    container.querySelectorAll('.m-catalogmanager-title-item').forEach((item) => {
+      item.addEventListener('mouseenter', (evt) => this.applyFocusStyle(evt));
+      item.addEventListener('mouseleave', (evt) => this.removeFocusStyle(evt));
+    });
+    const huella = this.getHuellaLayer(collection);
+    if (huella) {
+      huella.setSource(items);
+    }
   }
 
   /**
@@ -906,12 +1081,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   toggleAdvancedFilters() {
-    const actionSecction = this.template_.querySelector('#m-catalogmanager-actions-content');
-    const contentSecction = this.template_.querySelector('#m-catalogmanager-list-content');
-    const advancedFiltersSecction = this.template_.querySelector('#m-catalogmanager-advanced-filters-content');
-    this.toggleHidden(actionSecction);
-    this.toggleHidden(contentSecction);
-    this.toggleHidden(advancedFiltersSecction);
+    const sections = this.template_.querySelectorAll('section.m-catalogmanager-content');
+    sections.forEach((section) => {
+      this.toggleHidden(section);
+    });
   }
 
   /**
@@ -952,8 +1125,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         catalog.authenticate(user, password);
       }
       this.catalogs_.push(this.getJsonCatalog(catalog));
-      const buttonClose = document.querySelector('div.m-dialog.info div.m-button > button');
-      buttonClose.click();
+      this.closeDialog();
       this.renderCatalogs();
     } catch (error) {
       console.error(error.message);
@@ -969,31 +1141,45 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {number} collectionIndex Índice de la colección
    * @param {string} itemId Identificador del ítem
    */
-  openItemMetadata(catalogIndex, collectionIndex, itemId) {
+  openItemInfo(catalogIndex, collectionIndex, itemId) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
-    catalog.obj.getItem(collection.id, itemId).then((item) => {
-      const metadataTemplate = IDEE.template.compileSync(itemMetadataTemplate, {
-        jsonp: true,
-        parseToHtml: false,
-        vars: {
-          id: item.id,
-          collectionId: collection.id,
-          datetime: item.properties.datetime,
-          provider: item.properties.provider || getValue('unknown'),
-          extent: item.bbox.join(', '),
-          crs: 'EPSG:4326',
-          platform: item.properties.platform || getValue('unknown'),
-          instruments: item.properties.instruments.join(', '),
-          sunElevation: item.properties['view:sun_elevation'],
-          cloudCover: item.properties['eo:cloud_cover'],
-          processingLevel: item.properties.processing_level || getValue('unknown'),
-          translations: getValue('itemMetadata'),
-        },
-      });
-      IDEE.dialog.info(metadataTemplate, getValue('itemMetadata.title'), this.order);
-      this.changeCloseButtonModal();
+    const item = collection.items.find((it) => it.id === itemId);
+    const metadataTemplate = IDEE.template.compileSync(itemMetadataTemplate, {
+      jsonp: true,
+      parseToHtml: false,
+      vars: {
+        id: item.id,
+        collectionId: collection.id,
+        datetime: item.properties.datetime,
+        provider: item.properties.provider || getValue('unknown'),
+        extent: item.bbox.join(', '),
+        crs: 'EPSG:4326',
+        platform: item.properties.platform || getValue('unknown'),
+        instruments: item.properties.instruments.join(', '),
+        sunElevation: item.properties['view:sun_elevation'],
+        cloudCover: item.properties['eo:cloud_cover'],
+        processingLevel: item.properties.processing_level || getValue('unknown'),
+        translations: getValue('itemMetadata'),
+      },
     });
+    IDEE.dialog.info(metadataTemplate, getValue('itemMetadata.title'), this.order);
+    this.changeCloseButtonModal();
+  }
+
+  openCollectionInfo(catalogIndex, collectionIndex) {
+    const catalog = this.catalogs_[catalogIndex];
+    const collection = catalog.collections[collectionIndex];
+    const infoTemplate = IDEE.template.compileSync(collectionMetadataTemplate, {
+      jsonp: true,
+      parseToHtml: false,
+      vars: {
+        metadata: collection.metadata,
+        translations: getValue('collectionMetadata'),
+      },
+    });
+    IDEE.dialog.info(infoTemplate, getValue('collectionMetadata.title'), this.order);
+    this.changeCloseButtonModal();
   }
 
   /**
@@ -1045,7 +1231,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   getJsonCatalog(catalog) {
     const index = this.catalogs_.length;
     return {
-      id: index,
+      index,
       title: catalog.title,
       public: catalog.public,
       obj: catalog,
@@ -1063,7 +1249,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   catalogEvent(evt) {
     const target = this.findParentByClass(evt.target, 'm-catalogmanager-title-catalog');
-    const catalogIndex = target.dataset.catalogId;
+    const catalogIndex = target.dataset.catalogIndex;
     const collectionsElement = this.template_.querySelector(`.m-catalogmanager-collections.catalog-${catalogIndex}`);
     if (collectionsElement.classList.contains('empty')) {
       this.getCollections(catalogIndex, collectionsElement);
@@ -1105,6 +1291,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
           collections: collectionsJson,
           translations: {
             footprint: getValue('footprint'),
+            metadata: getValue('metadata'),
+            advancedFilters: getValue('advancedFilters'),
           },
         },
       });
@@ -1125,10 +1313,34 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   getJsonCollections(collections, catalogIndex) {
     return collections.map((collection, index) => {
+      const metadata = {
+        extent: collection.extent,
+        license: collection.license,
+        summaries: collection.summaries,
+        description: collection.description,
+        stacVersion: collection.stac_version,
+      };
+      if (metadata.extent?.spatial?.bbox) {
+        metadata.extent.spatial.bbox = metadata.extent.spatial.bbox.map((bbox) => bbox.join(', ')).join(' / ');
+      }
+      if (metadata.extent?.temporal?.interval) {
+        metadata.extent.temporal.interval = metadata.extent.temporal.interval.map((interval) => interval.join(' / ')).join(', ');
+      }
+      if (metadata.summaries?.platform) {
+        metadata.summaries.platform = metadata.summaries.platform.join(', ');
+      } else {
+        metadata.summaries.platform = getValue('unknown');
+      }
+      if (metadata.summaries?.instruments) {
+        metadata.summaries.instruments = metadata.summaries.instruments.join(', ');
+      } else {
+        metadata.summaries.instruments = getValue('unknown');
+      }
       return {
         index,
         id: collection.id,
         title: collection.title,
+        metadata,
         catalogIndex,
         layer: null,
         items: [],
@@ -1151,16 +1363,20 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const collectionIndex = target.dataset.collectionIndex;
     const collectionId = target.dataset.collectionId;
     if (evt.target.classList.contains('m-catalogmanager-footprint-button')) {
-      this.previewItem(catalogIndex, collectionIndex);
+      this.previewItems(catalogIndex, collectionIndex);
       return;
     }
     if (evt.target.classList.contains('m-catalogmanager-filter-button')) {
       this.openAdvancedFilters(catalogIndex, collectionIndex);
       return;
     }
+    if (evt.target.classList.contains('m-catalogmanager-info-button')) {
+      this.openCollectionInfo(catalogIndex, collectionIndex);
+      return;
+    }
     const itemsElement = this.template_.querySelector(`.m-catalogmanager-items.collection-${collectionId}`);
     if (itemsElement.classList.contains('empty')) {
-      this.getItems(catalogIndex, collectionIndex, itemsElement);
+      this.getItems(catalogIndex, collectionIndex);
     }
     this.toggleHidden(itemsElement);
   }
@@ -1172,9 +1388,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @param {number} catalogIndex Índice del catálogo
    * @param {number} collectionIndex Índice de la colección
-   * @param {HTMLElement} itemsElement Contenedor DOM de los ítems
    */
-  getItems(catalogIndex, collectionIndex, itemsElement) {
+  getItems(catalogIndex, collectionIndex) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     let promise = null;
@@ -1189,6 +1404,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
     promise.then((items) => {
       collection.links = items.links;
+      if (items.features.length === 0) {
+        IDEE.dialog.info(getValue('exception').no_results);
+        return;
+      }
       this.renderCollectionItems(catalogIndex, collectionIndex, items);
     });
   }
@@ -1216,6 +1435,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
     promise.then((items) => {
       collection.links = items.links;
+      if (items.features.length === 0) {
+        IDEE.dialog.info(getValue('exception').no_results);
+        return;
+      }
       this.renderCollectionItems(catalogIndex, collectionIndex, items);
     });
   }
@@ -1237,6 +1460,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
         id: item.id,
         collectionIndex,
         catalogIndex,
+        properties: item.properties,
+        bbox: item.bbox,
       };
     });
   }
@@ -1252,11 +1477,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
     evt.stopPropagation();
     const target = evt.target;
     const itemDiv = this.findParentByClass(evt.target, 'm-catalogmanager-title-item');
-    const catalogIndex = itemDiv.dataset.catalogId;
+    const catalogIndex = itemDiv.dataset.catalogIndex;
     const collectionIndex = itemDiv.dataset.collectionIndex;
     const itemId = itemDiv.dataset.itemId;
     if (target.classList.contains('m-catalogmanager-info-button')) {
-      this.openItemMetadata(catalogIndex, collectionIndex, itemId);
+      this.openItemInfo(catalogIndex, collectionIndex, itemId);
     } else {
       const imagesElement = this.template_.querySelector(`.m-catalogmanager-images.item-${itemId}`);
       if (imagesElement.classList.contains('empty')) {
@@ -1264,6 +1489,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
       }
       this.toggleHidden(imagesElement);
     }
+  }
+
+  onItemSelect(itemId) {
+    const itemElement = this.template_.querySelector(`#${itemId}`);
+    const catalogIndex = itemElement.dataset.catalogIndex;
+    const collectionIndex = itemElement.dataset.collectionIndex;
+
+    this.getItemImages(catalogIndex, collectionIndex, itemId, null, true);
   }
 
   /**
@@ -1276,16 +1509,17 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {string} itemId Identificador del ítem
    * @param {HTMLElement} imagesElement Contenedor DOM de las imágenes
    */
-  getItemImages(catalogIndex, collectionIndex, itemId, imagesElement) {
+  getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, openDialog = false) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     catalog.obj.getItem(collection.id, itemId).then((item) => {
       let assetsKeys = Object.keys(item.assets);
       assetsKeys = assetsKeys.filter((key) => item.assets[key].type.includes('image/tif'));
       const container = imagesElement;
+      let content = '';
+      let html = null;
       if (assetsKeys.length === 0) {
-        container.innerHTML = `<div class="m-catalogmanager-no-images">${getValue('no_images')}</div>`;
-        container.classList.remove('empty');
+        content = `<div class="m-catalogmanager-no-images">${getValue('no_images')}</div>`;
       } else {
         const images = assetsKeys.map((key) => {
           return {
@@ -1296,19 +1530,26 @@ export default class CatalogmanagerControl extends IDEE.Control {
             title: item.assets[key].title,
           };
         });
-        const html = IDEE.template.compileSync(imagesTemplate, {
+        html = IDEE.template.compileSync(imagesTemplate, {
           vars: {
             images,
-            translations: {
-              info: getValue('imageActions.info'),
-              preview: getValue('imageActions.preview'),
-              download: getValue('imageActions.download'),
-            },
+            downloadable: !catalog.obj.public,
+            translations: getValue('imageActions'),
           },
         });
-        container.innerHTML = html.outerHTML;
+      }
+      if (openDialog) {
+        IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
+        document.querySelector('div.m-dialog.info .m-catalogmanager-ulimages').addEventListener('click', (evt) => this.imagesEvent(evt));
+        this.changeCloseButtonModal();
+      } else {
+        if (html) {
+          html.addEventListener('click', (evt) => this.imagesEvent(evt));
+          container.appendChild(html);
+        } else {
+          container.innerHTML = content;
+        }
         container.classList.remove('empty');
-        container.querySelector('.m-catalogmanager-ulimages').addEventListener('click', (evt) => this.imagesEvent(evt));
       }
     });
   }
@@ -1331,16 +1572,104 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     if (target.classList.contains('m-catalogmanager-preview-button')) {
+      this.closeDialog();
       catalog.obj.getItem(collection.id, itemId).then((item) => {
         const asset = item.assets[imageKey];
         this.drawImageTiff(asset, catalog, collection);
+        const itemBbox = item.bbox;
+        this.map_.setBbox(this.getImpl().transformExtent(itemBbox, 'EPSG:4326', this.map_.getProjection().code));
       });
     } else if (target.classList.contains('m-catalogmanager-download-button')) {
+      this.closeDialog();
       catalog.obj.getItem(collection.id, itemId).then((item) => {
         const asset = item.assets[imageKey];
         window.open(asset.href, '_blank');
       });
+    } else if (target.classList.contains('m-catalogmanager-histogram-button')) {
+      this.closeDialog();
+      catalog.obj.getItem(collection.id, itemId).then((item) => {
+        const asset = item.assets[imageKey];
+        this.getHistogram(asset);
+      });
     }
+  }
+
+  /**
+   * Inicia una descarga nativa del navegador sin cargar el fichero en memoria
+   *
+   * @private
+   * @function
+   * @param {string} url URL del asset
+   * @param {string} filename Nombre sugerido del fichero
+   */
+  downloadViaBrowser(url, filename) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  /**
+   * Espera un intervalo de tiempo
+   *
+   * @private
+   * @function
+   * @param {number} ms Milisegundos de espera
+   * @returns {Promise<void>}
+   */
+  delay(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /**
+   * Descarga masivamente mediante el gestor de descargas del navegador (fallback)
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} tasks Tareas de descarga
+   * @returns {Promise<void>}
+   */
+  async masiveDownloadToBrowserDownloads(tasks) {
+    const usedNames = new Set();
+    let successCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    this.showMasiveDownloadProgress(0, tasks.length, '');
+
+    for (let taskIndex = 0; taskIndex < tasks.length; taskIndex += 1) {
+      const task = tasks[taskIndex];
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const asset = await this.resolveMasiveDownloadAsset(task);
+        const filename = this.ensureUniqueDownloadFilename(
+          this.sanitizeDownloadFilename(asset.title),
+          usedNames,
+        );
+        usedNames.add(filename);
+        this.showMasiveDownloadProgress(taskIndex + 1, tasks.length, filename);
+        this.downloadViaBrowser(asset.href, filename);
+        // eslint-disable-next-line no-await-in-loop
+        await this.delay(BROWSER_DOWNLOAD_DELAY_MS);
+        successCount += 1;
+      } catch (err) {
+        failedCount += 1;
+        errors.push({
+          filename: task.imageKey,
+          message: err.message || getValue('masiveDownload.error'),
+        });
+        console.error(err);
+      }
+    }
+
+    this.hideMasiveDownloadProgress();
+    this.clearSelection();
+    this.showMasiveDownloadCompleteMessage(successCount, failedCount, errors, true);
   }
 
   /**
@@ -1355,14 +1684,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
   drawImageTiff(image, cat, coll) {
     const catalog = cat;
     const collection = coll;
-    // const styleSpec = this.resolveStyleSpec(image);
-    // const style = this.buildWebGlStyle(styleSpec);
+    const styleSpec = this.resolveStyleSpec(image);
+    const style = this.buildWebGlStyle(styleSpec);
     const geotiff = new IDEE.layer.GeoTIFF({
       url: image.href,
       name: image.title,
       legend: image.title,
     }, {
-      style: null,
+      convertToRGB: false,
+      style,
     });
     if (catalog.layerGroup === null) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
@@ -1389,7 +1719,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {number} catalogIndex Índice del catálogo
    * @param {number} collectionIndex Índice de la colección
    */
-  previewItem(catalogIndex, collectionIndex) {
+  previewItems(catalogIndex, collectionIndex) {
     const catalog = this.catalogs_[catalogIndex];
     if (catalog.layerGroup === null) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
@@ -1402,18 +1732,23 @@ export default class CatalogmanagerControl extends IDEE.Control {
     let promise = null;
     if (collection.links && this.linksHaveRel(collection.links, 'self')) {
       promise = catalog.obj.getItemsByLinks(collection.links, 'self');
+    } else if (collection.advancedFilter) {
+      promise = catalog.obj.getFilteredItemsAdvanced(
+        collection.id,
+        collection.advancedFilter,
+        this.commonFilters_.bbox,
+        this.commonFilters_.datetime,
+      );
     } else if (!IDEE.utils.isNullOrEmpty(this.commonFilters_)) {
       promise = catalog.obj.getFilteredItems(collection.id, this.commonFilters_);
     } else {
       promise = catalog.obj.getItems(collection.id, 10);
     }
     promise.then((items) => {
-      const layer = new IDEE.layer.GeoJSON({
-        name: collection.id,
-        legend: 'Huella',
-        source: items,
-        extract: true,
-      });
+      if (items.features.length === 0) {
+        IDEE.dialog.info(getValue('exception').no_results);
+        return;
+      }
       if (!collection.layerGroup) {
         collection.layerGroup = new IDEE.layer.LayerGroup({
           name: collection.title,
@@ -1421,28 +1756,281 @@ export default class CatalogmanagerControl extends IDEE.Control {
         });
         catalog.layerGroup.addLayers(collection.layerGroup);
       }
-      collection.layerGroup.addLayers(layer);
+      const huella = this.getHuellaLayer(collection);
+      if (huella) {
+        huella.setSource(items);
+      } else {
+        const layer = new IDEE.layer.GeoJSON({
+          name: collection.id,
+          legend: 'Huella',
+          source: items,
+          extract: true,
+        });
+        collection.layerGroup.addLayers(layer);
+        this.getImpl().addLayerToSelectItem(layer.getImpl().getLayer());
+      }
     });
   }
 
+  getHistogram(asset) {
+    const bands = asset['eo:bands']?.map((band, index) => index + 1) ?? [];
+    const currentMouseCursorStyle = document.body.style.cursor ?? 'auto';
+    document.body.style.cursor = 'wait';
+    IDEE.gdalUtils.getHistogramGdalinfo(asset.href, bands)
+      .then((histogram) => {
+        this.showHistogramDialog(asset, histogram, bands);
+      })
+      .catch((err) => {
+        console.error(err);
+        IDEE.dialog.error(getValue('histogramDialog.loadError'));
+      })
+      .finally(() => {
+        document.body.style.cursor = currentMouseCursorStyle;
+      });
+  }
+
   /**
-   * Reinicia el listado de ítems ocultando y vaciando todos los contenedores
+   * Muestra el modal con el histograma de la imagen
+   *
+   * @private
+   * @function
+   * @param {Object} asset Asset STAC con href y title
+   * @param {Object} histogram Datos del histograma por banda
+   * @param {Array<number>} bandsIndex Bandas disponibles
+   */
+  showHistogramDialog(asset, histogram, bandsIndex) {
+    this.destroyHistogramChart();
+    this.histogramData_ = histogram;
+    const bands = asset['eo:bands']?.map((band, index) => ({ name: band.name, index: index + 1 })) ?? [];
+
+    const histogramHtml = IDEE.template.compileSync(histogramTemplate, {
+      parseToHtml: false,
+      vars: {
+        bands,
+        translations: getValue('histogramDialog'),
+      },
+    });
+    const title = `${getValue('histogramDialog.title')} - ${asset.title || asset.href}`;
+    IDEE.dialog.info(histogramHtml, title, this.order);
+    this.changeCloseButtonModal();
+
+    const dialogContent = document.querySelector('.m-dialog.info .m-content');
+    const canvas = dialogContent?.querySelector('.m-catalogmanager-histogram-canvas');
+    const statsContainer = dialogContent?.querySelector('.m-catalogmanager-histogram-stats-container');
+    const bandSelect = dialogContent?.querySelector('.m-catalogmanager-histogram-band-select');
+    const closeButton = document.querySelector(BT_CLOSE_MODAL);
+
+    if (!canvas || !bandSelect) {
+      return;
+    }
+
+    const defaultBand = bands[0].index;
+    bandSelect.value = String(defaultBand);
+    this.renderHistogramChart(canvas, Number(defaultBand));
+    this.renderHistogramStats(statsContainer, Number(defaultBand));
+
+    bandSelect.addEventListener('change', (evt) => {
+      this.renderHistogramChart(canvas, Number(evt.target.value));
+      this.renderHistogramStats(statsContainer, Number(evt.target.value));
+    });
+
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        this.destroyHistogramChart();
+        this.histogramData_ = null;
+      }, { once: true });
+    }
+  }
+
+  /**
+   * Construye las etiquetas del eje X a partir de los metadatos del histograma
+   *
+   * @private
+   * @function
+   * @param {Object} bandHistogram Datos de histograma de una banda
+   * @returns {Array<number|string>} Etiquetas del eje X
+   */
+  buildHistogramLabels(bandHistogram) {
+    const { buckets } = bandHistogram;
+    return buckets.map((_, index) => index);
+    /* if (min == null || max == null) {
+      return buckets.map((_, index) => index);
+    }
+    const step = (max - min) / buckets.length;
+    return buckets.map((_, index) => Math.round((min + (index + 0.5) * step) * 100) / 100); */
+  }
+
+  /**
+   * Renderiza el gráfico de histograma con Chart.js
+   *
+   * @private
+   * @function
+   * @param {HTMLCanvasElement} canvas Canvas donde dibujar el gráfico
+   * @param {number} band Número de banda
+   */
+  renderHistogramChart(canvas, band) {
+    const bandHistogram = this.histogramData_?.[band];
+    if (!bandHistogram) {
+      return;
+    }
+
+    this.destroyHistogramChart();
+    const colors = HISTOGRAM_BAND_COLORS[band.index] || {
+      border: 'rgb(20, 138, 235)',
+      background: 'rgba(20, 138, 235, 0.6)',
+    };
+    const translations = getValue('histogramDialog');
+
+    this.histogramChart_ = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: this.buildHistogramLabels(bandHistogram),
+        datasets: [{
+          label: `${translations.band} ${band}`,
+          data: bandHistogram.buckets,
+          borderColor: colors.border,
+          backgroundColor: colors.background,
+          borderWidth: 1,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: translations.pixelValue,
+            },
+            ticks: {
+              maxTicksLimit: 12,
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: translations.frequency,
+            },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  renderHistogramStats(statsContainer, band) {
+    const bandHistogram = this.histogramData_?.[band];
+    if (!bandHistogram) {
+      return;
+    }
+    const container = statsContainer;
+    const statsHtml = IDEE.template.compileSync(histogramStatsTemplate, {
+      parseToHtml: false,
+      vars: {
+        translations: getValue('histogramDialog'),
+        pixelCount: bandHistogram.pixelCount,
+        min: bandHistogram.min,
+        max: bandHistogram.max,
+        mean: bandHistogram.mean,
+        stddev: bandHistogram.stddev,
+      },
+    });
+    container.innerHTML = statsHtml;
+  }
+
+  /**
+   * Destruye la instancia activa del gráfico de histograma
    *
    * @private
    * @function
    */
-  resetItems() {
+  destroyHistogramChart() {
+    if (this.histogramChart_) {
+      this.histogramChart_.destroy();
+      this.histogramChart_ = null;
+    }
+  }
+
+  /**
+   * Actualiza el listado de ítems
+   *
+   * @private
+   * @function
+   */
+  updateItems() {
     const itemsElements = this.template_.querySelectorAll('.m-catalogmanager-items');
     itemsElements.forEach((itemsElement) => {
       const ie = itemsElement;
-      ie.innerHTML = '';
-      if (!ie.classList.contains('empty')) {
-        ie.classList.add('empty');
-      }
       if (!ie.classList.contains('hidden')) {
-        ie.classList.add('hidden');
+        const catalogIndex = ie.dataset.catalogIndex;
+        const collectionIndex = ie.dataset.collectionIndex;
+        this.updateBboxFilter();
+        this.getItems(catalogIndex, collectionIndex);
+      } else if (!ie.classList.contains('empty')) {
+        ie.classList.add('empty');
+        ie.innerHTML = '';
       }
     });
+  }
+
+  updateBboxFilter() {
+    const btnView = this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined #view');
+    if (btnView && btnView.classList.contains('active')) {
+      const bbox = this.map_.getBbox();
+      const extent = [bbox.x.min, bbox.y.min, bbox.x.max, bbox.y.max];
+      this.setSpatialFilterByExtent(this.getImpl().transformExtent(extent, this.map_.getProjection().code, 'EPSG:4326'));
+    }
+  }
+
+  getHuellaLayer(collection) {
+    const collectionLayerGroup = collection.layerGroup;
+    if (!collectionLayerGroup) {
+      return;
+    }
+    return collectionLayerGroup.getLayers().find((layer) => layer.legend === 'Huella');
+  }
+
+  applyFocusStyle(evt) {
+    evt.stopPropagation();
+    const target = evt.target;
+    const catalogIndex = target.dataset.catalogIndex;
+    const collectionIndex = target.dataset.collectionIndex;
+    const itemId = target.dataset.itemId;
+    const collection = this.catalogs_[catalogIndex].collections[collectionIndex];
+    const huella = this.getHuellaLayer(collection);
+    if (!huella) {
+      return;
+    }
+    this.clearFocusStyle(huella);
+    const itemFeature = huella.getFeatureById(itemId);
+    if (itemFeature) {
+      itemFeature.setStyle(this.focusStyle_);
+    }
+  }
+
+  removeFocusStyle(evt) {
+    evt.stopPropagation();
+    const target = evt.target;
+    const catalogIndex = target.dataset.catalogIndex;
+    const collectionIndex = target.dataset.collectionIndex;
+    const collection = this.catalogs_[catalogIndex].collections[collectionIndex];
+    const huella = this.getHuellaLayer(collection);
+    if (!huella) {
+      return;
+    }
+    this.clearFocusStyle(huella);
+  }
+
+  clearFocusStyle(huellaLayer) {
+    const focusFeature = huellaLayer.getFeatures().find((feature) => feature.getStyle() !== null);
+    if (focusFeature) {
+      focusFeature.setStyle(null);
+    }
   }
 
   /**
@@ -1476,67 +2064,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
-   * Detecta el tipo de producto a partir del identificador del ítem
-   *
-   * @private
-   * @function
-   * @param {string} itemId Identificador del ítem STAC
-   * @returns {string|null} Tipo de producto ('PAN', 'MS4', 'PSH') o null
-   */
-  detectProductType(itemId) {
-    const match = itemId?.match(/_(PAN|MS4|PSH)_/);
-    return match ? match[1] : null;
-  }
-
-  /**
-   * Genera una etiqueta descriptiva para una banda espectral
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} eoBands Bandas espectrales del asset STAC
-   * @param {number} bandIndex Índice de la banda (base 1)
-   * @returns {string} Etiqueta de la banda
-   */
-  bandLabel(eoBands, bandIndex) {
-    if (!Array.isArray(eoBands) || bandIndex < 1) {
-      return `banda ${bandIndex}`;
-    }
-    const band = eoBands[bandIndex - 1];
-    const name = band?.common_name || band?.name;
-    return name ? `banda ${bandIndex} (${name})` : `banda ${bandIndex}`;
-  }
-
-  /**
-   * Resuelve la configuración de canales para un asset de una sola banda
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} eoBands Bandas espectrales del asset
-   * @returns {{mode: string, label: string, bands: Object}} Especificación de visualización
-   */
-  resolveSingleBandChannels(eoBands) {
-    const commonName = eoBands[0].common_name?.toLowerCase();
-    const rgbChannels = {
-      red: { r: 1, g: 0, b: 0 },
-      green: { r: 0, g: 1, b: 0 },
-      blue: { r: 0, g: 0, b: 1 },
-    };
-    if (commonName && rgbChannels[commonName]) {
-      return {
-        mode: 'channel',
-        label: `Canal ${commonName}`,
-        bands: rgbChannels[commonName],
-      };
-    }
-    const name = eoBands[0].common_name || eoBands[0].name || '1';
-    return {
-      mode: 'grayscale',
-      label: `Escala de grises (${name})`,
-      bands: { r: 1, g: 1, b: 1 },
-    };
-  }
-
-  /**
    * Mapea bandas espectrales a índices RGB por common_name
    *
    * @private
@@ -1564,126 +2091,167 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const g = indices[greenName];
     const b = indices[blueName];
     if (r && g && b) {
-      return { r, g, b };
+      return [r, g, b];
     }
     return null;
   }
 
   /**
-   * Infiere el valor máximo de normalización según las bandas y el modo de visualización
+   * Combina los metadatos de bandas STAC (eo:bands, raster:bands, bands)
    *
    * @private
    * @function
-   * @param {Array<Object>} eoBands Bandas espectrales del asset
-   * @param {string} mode Modo de visualización ('rgb', 'grayscale', 'channel')
-   * @returns {number} Valor máximo para normalización
+   * @param {Object} asset Asset STAC
+   * @returns {Array<Object>} Bandas unificadas por índice
    */
-  inferMaxFromEoBands(eoBands, mode) {
-    if (eoBands[0].center_wavelength) {
-      return eoBands[0].center_wavelength;
+  getAssetBands(asset) {
+    const eoBands = asset['eo:bands'];
+    const rasterBands = asset['raster:bands'];
+    const bands = asset.bands;
+
+    if (Array.isArray(bands) && bands.length > 0) {
+      return bands;
     }
-    if (mode === 'rgb') {
-      const rgbBands = this.mapBandsByCommonName(eoBands, ['red', 'green', 'blue']);
-      if (rgbBands || eoBands.length >= 3) {
-        return 255;
+
+    if (Array.isArray(eoBands) && eoBands.length > 0) {
+      if (Array.isArray(rasterBands)) {
+        return eoBands.map((band, index) => ({
+          ...band,
+          ...(rasterBands[index] || {}),
+        }));
       }
+      return eoBands;
     }
-    return 10000;
+
+    if (Array.isArray(rasterBands) && rasterBands.length > 0) {
+      return rasterBands;
+    }
+
+    return [];
   }
 
   /**
-   * Determina la especificación de estilo WebGL según las bandas del asset
+   * Determina los índices de bandas RGB para el estilo WebGL según los metadatos del asset
    *
    * @private
    * @function
    * @param {Object} asset Asset STAC con metadatos eo:bands
-   * @returns {Object|null} Especificación de estilo o null si no hay bandas
+   * @returns {{bands: {r: number, g: number, b: number}}|null} Índices de banda o null
    */
   resolveStyleSpec(asset) {
-    const eoBands = asset['eo:bands'];
-    // const displayOrder = asset.band_display_order;
+    let spec = null;
+    const eoBands = this.getAssetBands(asset);
     if (!Array.isArray(eoBands) || eoBands.length === 0) {
       return null;
     }
 
+    // RGB Monobanda
     if (eoBands.length === 1) {
-      const singleBand = this.resolveSingleBandChannels(eoBands);
-      return {
-        ...singleBand,
-        detail: this.bandLabel(eoBands, 1),
-        max: this.inferMaxFromEoBands(eoBands, singleBand.mode === 'channel' ? 'channel' : 'grayscale'),
+      const commonName = eoBands[0].common_name?.toLowerCase();
+      const rgbChannels = {
+        red: [1, 0, 0],
+        green: [0, 1, 0],
+        blue: [0, 0, 1],
       };
+      if (commonName && rgbChannels[commonName]) {
+        spec = { bands: rgbChannels[commonName] };
+      } else {
+        spec = { bands: [1, 1, 1] };
+      }
+    } else {
+      // RGB multiBanda
+      const rgbBands = this.mapBandsByCommonName(eoBands, ['red', 'green', 'blue']);
+      if (rgbBands) {
+        spec = { bands: rgbBands };
+      } else if (eoBands.length >= 3) {
+        spec = { bands: [1, 2, 3] };
+      } else { // Escala de grises
+        spec = { bands: [1, 1, 1] };
+      }
     }
-
-    const rgbBands = this.mapBandsByCommonName(eoBands, ['red', 'green', 'blue']);
-    if (rgbBands) {
-      return {
-        mode: 'rgb',
-        label: 'Color verdadero',
-        detail: `R=${this.bandLabel(eoBands, rgbBands.r)}, G=${this.bandLabel(eoBands, rgbBands.g)}, B=${this.bandLabel(eoBands, rgbBands.b)}`,
-        bands: rgbBands,
-        max: this.inferMaxFromEoBands(eoBands, 'rgb'),
-      };
+    const bandDisplayOrder = asset.band_display_order;
+    if (bandDisplayOrder) {
+      spec.bands = this.reorderBands(eoBands, bandDisplayOrder);
     }
+    return spec;
+  }
 
-    if (eoBands.length >= 3) {
-      return {
-        mode: 'rgb',
-        label: 'RGB (bandas 1-3)',
-        detail: `${this.bandLabel(eoBands, 1)}, ${this.bandLabel(eoBands, 2)}, ${this.bandLabel(eoBands, 3)}`,
-        bands: { r: 1, g: 2, b: 3 },
-        max: this.inferMaxFromEoBands(eoBands, 'rgb'),
-      };
-    }
+  reorderBands(eoBands, bandDisplayOrder) {
+    const reorderedBands = [];
+    bandDisplayOrder.forEach((bandName, index) => {
+      let bandIndex = -1;
+      bandIndex = Number.parseInt(bandName, 10);
+      if (Number.isNaN(bandIndex)) {
+        bandIndex = eoBands.findIndex((b) => b.name?.toLowerCase() === bandName.toLowerCase());
+        if (bandIndex !== -1) {
+          bandIndex += 1;
+        }
+      }
+      if (bandIndex !== -1) {
+        reorderedBands.push(bandIndex);
+      } else {
+        reorderedBands.push(index + 1);
+      }
+    });
+    return reorderedBands;
+  }
 
-    const band = eoBands[0];
-    const name = band.common_name || band.name || '1';
-    return {
-      mode: 'grayscale',
-      label: `Escala de grises (${name})`,
-      detail: this.bandLabel(eoBands, 1),
-      bands: { r: 1, g: 1, b: 1 },
-      max: this.inferMaxFromEoBands(eoBands, 'grayscale'),
-    };
+  reorderBandsAlt(eoBands, bandDisplayOrder) {
+    const reorderedBands = [];
+    eoBands.forEach((band, index) => {
+      let bandIndex = -1;
+      bandIndex = bandDisplayOrder.findIndex((b) => b.toLowerCase() === band.name.toLowerCase());
+      if (bandIndex !== -1) {
+        bandIndex += 1;
+      }
+      if (bandIndex !== -1) {
+        reorderedBands.push(bandIndex);
+      } else {
+        reorderedBands.push(index + 1);
+      }
+    });
+    return reorderedBands;
   }
 
   /**
-   * Construye el estilo WebGL de OpenLayers a partir de una especificación de bandas
+   * Construye el estilo WebGL de OpenLayers a partir de una especificación de bandas.
+   * La normalización de valores la realiza la fuente GeoTIFF (normalize: true por defecto).
+   * Los píxeles con valor nodata (0) se renderizan transparentes.
    *
    * @private
    * @function
-   * @param {Object} spec Especificación de estilo devuelta por resolveStyleSpec
-   * @returns {Object|undefined} Estilo WebGL para IDEE.layer.GeoTIFF
+   * @param {{bands: Array<number>}} spec Índices de banda
+   * @returns {Object|null} Estilo WebGL para IDEE.layer.GeoTIFF
    */
   buildWebGlStyle(spec) {
     if (!spec) {
-      return undefined;
+      return null;
     }
-    const { r, g, b } = spec.bands;
-    const max = spec.max ?? 10000;
-    const normalizeBand = (bandIndex) => ['clamp', ['/', ['band', bandIndex], ['var', 'max']], 0, 1];
-    const channelValue = (bandIndex) => (bandIndex ? normalizeBand(bandIndex) : 0);
+    const bands = spec.bands;
+    const channelValue = (bandIndex) => (bandIndex ? ['band', bandIndex] : 0);
+    const styleBands = ['array'];
+    for (let i = 0; i < bands.length && i < 3; i += 1) {
+      styleBands.push(channelValue(bands[i]));
+    }
+    styleBands.push(1);
     return {
       variables: {
-        max,
         nodata: 0,
       },
       color: [
         'case',
-        ['any',
-          ['==', ['band', 1], ['var', 'nodata']],
-          ['==', ['band', 1], 0],
-        ],
+        ['==', ['band', 1], ['var', 'nodata']],
         [0, 0, 0, 0],
-        [
-          'array',
-          channelValue(r),
-          channelValue(g),
-          channelValue(b),
-          1,
-        ],
+        styleBands,
       ],
     };
+  }
+
+  closeDialog() {
+    const buttonClose = document.querySelector('div.m-dialog.info div.m-button > button');
+    if (buttonClose) {
+      buttonClose.click();
+    }
   }
 
   /**
@@ -1698,4 +2266,513 @@ export default class CatalogmanagerControl extends IDEE.Control {
   equals(control) {
     return control instanceof CatalogmanagerControl;
   }
+
+  // DESCARGA MASIVA
+  // ----------------------------------------------------------------------------------------------
+
+  clearSelection() {
+    const roots = [this.template_];
+    const dialog = document.querySelector('div.m-dialog.info');
+    if (dialog) {
+      roots.push(dialog);
+    }
+    roots.forEach((root) => {
+      const checkedInputs = root.querySelectorAll('.m-catalogmanager-checkbox-image:checked');
+      for (let i = 0; i < checkedInputs.length; i += 1) {
+        checkedInputs[i].checked = false;
+      }
+    });
+  }
+
+  /**
+   * Descarga masivamente las imágenes TIFF seleccionadas.
+   * Chrome/Edge: ZIP por streaming a carpeta elegida.
+   * Firefox: ZIP por streaming con StreamSaver. Fallback: descargas individuales.
+   *
+   * @function
+   */
+  async masiveDownload() {
+    const selections = this.collectSelectedImages();
+    if (selections.length === 0) {
+      IDEE.dialog.info(getValue('exception').no_selection);
+      return;
+    }
+
+    const groups = this.groupSelectionsByItem(selections);
+    const tasks = this.resolveMasiveDownloadTasks(groups);
+
+    if (tasks.length === 0) {
+      IDEE.dialog.info(getValue('exception').no_selection);
+      return;
+    }
+
+    if (this.isDirectoryPickerSupported()) {
+      let directoryHandle;
+      try {
+        directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          IDEE.dialog.info(getValue('masiveDownload.cancelled'));
+        } else {
+          console.error(err);
+          IDEE.dialog.info(getValue('masiveDownload.error'));
+        }
+        return;
+      }
+      await this.masiveDownloadToDirectory(directoryHandle, tasks);
+      return;
+    }
+
+    if (this.isStreamSaverSupported()) {
+      await this.masiveDownloadToStreamSaverZip(tasks);
+      return;
+    }
+
+    await this.masiveDownloadToBrowserDownloads(tasks);
+  }
+
+  /**
+   * Recoge las imágenes TIFF marcadas en el panel y en el modal de diálogo
+   *
+   * @private
+   * @function
+   * @returns {Array<Object>} Lista de selecciones con índices de catálogo/colección
+   */
+  collectSelectedImages() {
+    const roots = [this.template_];
+    const dialog = document.querySelector('div.m-dialog.info');
+    if (dialog) {
+      roots.push(dialog);
+    }
+    const seen = new Set();
+    const selections = [];
+    roots.forEach((root) => {
+      root.querySelectorAll('.m-catalogmanager-checkbox-image:checked').forEach((input) => {
+        let {
+          imageKey, itemId, collectionIndex, catalogIndex,
+        } = input.dataset;
+        if (!imageKey) {
+          const parent = input.closest('.m-catalogmanager-title-image');
+          if (parent) {
+            imageKey = parent.dataset.imageKey;
+            itemId = parent.dataset.itemId;
+            collectionIndex = parent.dataset.collectionIndex;
+            catalogIndex = parent.dataset.catalogIndex;
+          }
+        }
+        const key = `${catalogIndex}|${collectionIndex}|${itemId}|${imageKey}`;
+        if (!seen.has(key) && imageKey && itemId) {
+          seen.add(key);
+          selections.push({
+            catalogIndex,
+            collectionIndex,
+            itemId,
+            imageKey,
+          });
+        }
+      });
+    });
+    return selections;
+  }
+
+  /**
+   * Agrupa selecciones por ítem STAC para minimizar llamadas a getItem
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} selections Selecciones de imágenes
+   * @returns {Array<Object>} Grupos con imageKeys por ítem
+   */
+  groupSelectionsByItem(selections) {
+    const groups = new Map();
+    selections.forEach((selection) => {
+      const key = `${selection.catalogIndex}|${selection.collectionIndex}|${selection.itemId}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          catalogIndex: selection.catalogIndex,
+          collectionIndex: selection.collectionIndex,
+          itemId: selection.itemId,
+          imageKeys: [],
+        });
+      }
+      groups.get(key).imageKeys.push(selection.imageKey);
+    });
+    return Array.from(groups.values());
+  }
+
+  /**
+   * Construye las tareas de descarga a partir de los grupos de selección.
+   * La URL del asset se resuelve con getItem justo antes de cada fetch.
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} groups Grupos por ítem STAC
+   * @returns {Array<Object>}
+   */
+  resolveMasiveDownloadTasks(groups) {
+    const tasks = [];
+    for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+      const group = groups[groupIndex];
+      for (let keyIndex = 0; keyIndex < group.imageKeys.length; keyIndex += 1) {
+        tasks.push({
+          catalogIndex: group.catalogIndex,
+          collectionIndex: group.collectionIndex,
+          itemId: group.itemId,
+          imageKey: group.imageKeys[keyIndex],
+        });
+      }
+    }
+    return tasks;
+  }
+
+  /**
+   * Comprueba si el navegador soporta la API File System Access
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isDirectoryPickerSupported() {
+    return typeof window.showDirectoryPicker === 'function';
+  }
+
+  /**
+   * Comprueba si StreamSaver puede usarse para descargar por streaming
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isStreamSaverSupported() {
+    return 'serviceWorker' in window.navigator && typeof window.WritableStream !== 'undefined';
+  }
+
+  /**
+   * Descarga masivamente empaquetando en ZIP por streaming a una carpeta (Chrome/Edge)
+   *
+   * @private
+   * @function
+   * @param {FileSystemDirectoryHandle} directoryHandle Carpeta destino
+   * @param {Array<Object>} tasks Tareas de descarga
+   * @returns {Promise<void>}
+   */
+  async masiveDownloadToDirectory(directoryHandle, tasks) {
+    this.showMasiveDownloadProgress(0, tasks.length, '', 'zipProgress');
+
+    let zipFilename = MASIVE_DOWNLOAD_ZIP_BASENAME;
+    try {
+      const zipPackage = this.buildMasiveDownloadZipResponse(tasks, (current, total, filename) => {
+        this.showMasiveDownloadProgress(current, total, filename, 'zipProgress');
+      });
+      zipFilename = zipPackage.zipFilename;
+
+      await this.writeStreamToDirectory(directoryHandle, zipFilename, zipPackage.zipResponse.body);
+
+      this.hideMasiveDownloadProgress();
+      this.clearSelection();
+      this.showMasiveDownloadCompleteMessage(tasks.length, 0, [], false, zipFilename);
+    } catch (err) {
+      console.error(err);
+      this.hideMasiveDownloadProgress();
+      this.clearSelection();
+      this.showMasiveDownloadCompleteMessage(0, tasks.length, [{
+        filename: zipFilename,
+        message: err.message || getValue('masiveDownload.error'),
+      }], false);
+    }
+  }
+
+  /**
+   * Descarga masivamente un ZIP por streaming con StreamSaver (Firefox y similares)
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} tasks Tareas de descarga
+   * @returns {Promise<void>}
+   */
+  async masiveDownloadToStreamSaverZip(tasks) {
+    this.configureStreamSaverMitm();
+    this.showMasiveDownloadProgress(0, tasks.length, '', 'zipProgress');
+
+    let zipFilename = MASIVE_DOWNLOAD_ZIP_BASENAME;
+    try {
+      const zipPackage = this.buildMasiveDownloadZipResponse(tasks, (current, total, filename) => {
+        this.showMasiveDownloadProgress(current, total, filename, 'zipProgress');
+      });
+      zipFilename = zipPackage.zipFilename;
+
+      const fileStream = streamSaver.createWriteStream(zipFilename);
+      if (!zipPackage.zipResponse.body) {
+        throw new Error(getValue('masiveDownload.error'));
+      }
+      await zipPackage.zipResponse.body.pipeTo(fileStream);
+
+      this.hideMasiveDownloadProgress();
+      this.clearSelection();
+      this.showMasiveDownloadCompleteMessage(tasks.length, 0, [], true, zipFilename);
+    } catch (err) {
+      console.error(err);
+      this.hideMasiveDownloadProgress();
+      this.clearSelection();
+      this.showMasiveDownloadCompleteMessage(0, tasks.length, [{
+        filename: zipFilename,
+        message: err.message || getValue('masiveDownload.error'),
+      }], true);
+    }
+  }
+
+  /**
+   * Muestra el indicador de progreso de la descarga masiva
+   *
+   * @private
+   * @function
+   * @param {number} current Índice actual (1-based)
+   * @param {number} total Total de ficheros
+   * @param {string} filename Nombre del fichero en curso
+   * @param {string} progressKey Clave i18n de progreso
+   */
+  showMasiveDownloadProgress(current, total, filename, progressKey = 'progress') {
+    let progress = document.querySelector('.m-catalogmanager-download-progress');
+    if (!progress) {
+      progress = document.createElement('div');
+      progress.className = 'm-catalogmanager-download-progress';
+      progress.innerHTML = '<p class="m-catalogmanager-download-progress-text"></p>';
+      document.body.appendChild(progress);
+    }
+    const text = progress.querySelector('.m-catalogmanager-download-progress-text');
+    if (text) {
+      text.textContent = this.formatMasiveDownloadMessage(progressKey, {
+        current,
+        total,
+        filename,
+      });
+    }
+  }
+
+  /**
+   * Sustituye placeholders {{key}} en textos i18n de descarga masiva
+   *
+   * @private
+   * @function
+   * @param {string} key Clave relativa dentro de masiveDownload
+   * @param {Object} params Valores a interpolar
+   * @returns {string}
+   */
+  formatMasiveDownloadMessage(key, params = {}) {
+    let message = getValue(`masiveDownload.${key}`);
+    Object.keys(params).forEach((param) => {
+      message = message.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
+    });
+    return message;
+  }
+
+  /**
+   * Oculta el indicador de progreso de la descarga masiva
+   *
+   * @private
+   * @function
+   */
+  hideMasiveDownloadProgress() {
+    const progress = document.querySelector('.m-catalogmanager-download-progress');
+    if (progress) {
+      progress.remove();
+    }
+  }
+
+  /**
+   * Construye la respuesta ZIP de client-zip para la selección actual
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} tasks Tareas de descarga
+   * @param {Function} onProgress Callback de progreso (current, total, filename)
+   * @returns {{zipFilename: string, zipResponse: Response}}
+   */
+  buildMasiveDownloadZipResponse(tasks, onProgress) {
+    const usedNames = new Set();
+    const zipFilename = this.ensureUniqueDownloadFilename(
+      MASIVE_DOWNLOAD_ZIP_BASENAME,
+      new Set(),
+    );
+    const zipResponse = downloadZip(
+      this.createMasiveDownloadZipEntries(tasks, usedNames, onProgress),
+    );
+    return { zipFilename, zipResponse };
+  }
+
+  /**
+   * Evita colisiones de nombre dentro de una misma descarga masiva
+   *
+   * @private
+   * @function
+   * @param {string} filename Nombre base del fichero
+   * @param {Set<string>} usedNames Nombres ya reservados
+   * @returns {string}
+   */
+  ensureUniqueDownloadFilename(filename, usedNames) {
+    if (!usedNames.has(filename)) {
+      return filename;
+    }
+    const extensionIndex = filename.lastIndexOf('.');
+    const base = extensionIndex > 0 ? filename.slice(0, extensionIndex) : filename;
+    const extension = extensionIndex > 0 ? filename.slice(extensionIndex) : '';
+    let counter = 1;
+    let candidate = `${base} (${counter})${extension}`;
+    while (usedNames.has(candidate)) {
+      counter += 1;
+      candidate = `${base} (${counter})${extension}`;
+    }
+    return candidate;
+  }
+
+  /**
+   * Generador async de entradas para client-zip con URL actualizada por fichero
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} tasks Tareas de descarga
+   * @param {Set<string>} usedNames Nombres ya reservados dentro del ZIP
+   * @param {Function} onProgress Callback de progreso (current, total, filename)
+   * @yields {Object} Entrada compatible con client-zip
+   */
+  async* createMasiveDownloadZipEntries(tasks, usedNames, onProgress) {
+    for (let taskIndex = 0; taskIndex < tasks.length; taskIndex += 1) {
+      const task = tasks[taskIndex];
+      // eslint-disable-next-line no-await-in-loop
+      const asset = await this.resolveMasiveDownloadAsset(task);
+      const filename = this.ensureUniqueDownloadFilename(
+        this.sanitizeDownloadFilename(asset.title),
+        usedNames,
+      );
+      usedNames.add(filename);
+      if (onProgress) {
+        onProgress(taskIndex + 1, tasks.length, filename);
+      }
+      // eslint-disable-next-line no-await-in-loop
+      const response = await fetch(asset.href);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      yield { name: filename, input: response };
+    }
+  }
+
+  /**
+   * Obtiene el asset STAC de una tarea de descarga con URL actualizada
+   *
+   * @private
+   * @function
+   * @param {Object} task Tarea de descarga masiva
+   * @returns {Promise<Object>}
+   */
+  async resolveMasiveDownloadAsset(task) {
+    const catalog = this.catalogs_[task.catalogIndex];
+    const collection = catalog.collections[task.collectionIndex];
+    const item = await catalog.obj.getItem(collection.id, task.itemId);
+    const asset = item.assets[task.imageKey];
+    if (!asset) {
+      throw new Error(getValue('masiveDownload.error'));
+    }
+    return asset;
+  }
+
+  /**
+   * Normaliza el nombre de fichero eliminando caracteres no válidos
+   *
+   * @private
+   * @function
+   * @param {string} filename Nombre original del asset
+   * @returns {string}
+   */
+  sanitizeDownloadFilename(filename) {
+    const sanitized = (filename || 'download').replace(/[/\\?%*:|"<>]/g, '_').trim();
+    return sanitized || 'download.tif';
+  }
+
+  /**
+   * Escribe un stream en un fichero de la carpeta elegida
+   *
+   * @private
+   * @function
+   * @param {FileSystemDirectoryHandle} directoryHandle Carpeta destino
+   * @param {string} filename Nombre del fichero destino
+   * @param {ReadableStream} body Stream de datos
+   * @returns {Promise<void>}
+   */
+  async writeStreamToDirectory(directoryHandle, filename, body) {
+    const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    if (body) {
+      await body.pipeTo(writable);
+      return;
+    }
+    await writable.close();
+  }
+
+  /**
+   * Muestra el resumen final de la descarga masiva
+   *
+   * @private
+   * @function
+   * @param {number} successCount Descargas correctas o iniciadas
+   * @param {number} failedCount Descargas fallidas
+   * @param {Array<Object>} errors Detalle de errores
+   * @param {boolean} useBrowserNote Indica si se añade nota de carpeta de descargas
+   * @param {string|null} zipFilename Nombre del ZIP creado (Chrome/Edge)
+   */
+  showMasiveDownloadCompleteMessage(
+    successCount,
+    failedCount,
+    errors,
+    useBrowserNote = false,
+    zipFilename = null,
+  ) {
+    const summary = zipFilename
+      ? this.formatMasiveDownloadMessage('completeZip', {
+        filename: zipFilename,
+        success: successCount,
+      })
+      : this.formatMasiveDownloadMessage('complete', {
+        success: successCount,
+        failed: failedCount,
+      });
+    const parts = [`<p>${summary}</p>`];
+    if (useBrowserNote) {
+      parts.push(
+        `<p class="m-catalogmanager-download-browser-note">${getValue('masiveDownload.browserDownloads')}</p>`,
+      );
+    }
+    if (errors.length > 0) {
+      const errorsHtml = errors.map((error) => (
+        `<li>${error.filename}: ${error.message}</li>`
+      )).join('');
+      parts.push(`<ul class="m-catalogmanager-download-errors">${errorsHtml}</ul>`);
+    }
+    IDEE.dialog.info(parts.join(''), getValue('masiveDownload.title'), this.order);
+  }
+
+  /**
+   * Configura la URL del mitm de StreamSaver junto al script del plugin
+   *
+   * @private
+   * @function
+   */
+  configureStreamSaverMitm() {
+    if (streamSaver.mitm) {
+      return;
+    }
+    const scripts = document.getElementsByTagName('script');
+    let mitmBaseUrl = window.location.href;
+    for (let scriptIndex = 0; scriptIndex < scripts.length; scriptIndex += 1) {
+      const scriptSrc = scripts[scriptIndex].src;
+      if (scriptSrc && (scriptSrc.includes('catalogmanager') || scriptSrc.includes('main.js'))) {
+        mitmBaseUrl = scriptSrc;
+        break;
+      }
+    }
+    streamSaver.mitm = new URL('streamsaver/mitm.html', mitmBaseUrl).href;
+  }
+
+  // FIN DESCARGA MASIVA
+  // ----------------------------------------------------------------------------------------------
 }

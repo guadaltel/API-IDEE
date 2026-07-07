@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const CopywebpackPlugin = require('copy-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = {
@@ -65,6 +66,18 @@ module.exports = {
       // extensions: ['js', 'jsx'],
       files: 'src/**/*.js',
       exclude: ['**/node_modules/**', '/lib/', '/test/', '/dist/'],
+    }),
+    new CopywebpackPlugin({
+      patterns: [
+        {
+          from: 'node_modules/streamsaver/mitm.html',
+          to: 'streamsaver/mitm.html',
+        },
+        {
+          from: 'node_modules/streamsaver/sw.js',
+          to: 'streamsaver/sw.js',
+        },
+      ],
     }),
   ],
   devServer: {

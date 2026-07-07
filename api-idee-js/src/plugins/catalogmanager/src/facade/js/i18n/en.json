@@ -1,6 +1,8 @@
 {
   "exception": {
-    "impl": "The implementation used cannot create Catalogmanager controls."
+    "impl": "The implementation used cannot create Catalogmanager controls.",
+    "no_results": "No results found.",
+    "no_selection": "No images selected."
   },
   "textHelp": {
     "help1": "Example text 1.",
@@ -10,12 +12,17 @@
   "filtersTypes": {
     "spatial": {
       "title": "Spatial filter",
-      "view": "By view"
+      "view": "By view",
+      "extent": "By drawn extent",
+      "extentHelp": "Draw an extent on the map.",
+      "referenced": "Referenced geometry",
+      "referencedHelp": "Select a previously drawn geometry on the map to take it as reference.",
+      "success": "Spatial filter set successfully."
     },
     "temporal": {
       "title": "Temporal filter",
-      "start": "Start",
-      "end": "End",
+      "start": "From",
+      "end": "To",
       "last30days": "Last 30 days",
       "last3months": "Last 3 months",
       "lastyear": "Last year",
@@ -25,7 +32,20 @@
   "imageActions": {
     "info": "Information",
     "preview": "Preview",
-    "download": "Download"
+    "download": "Download",
+    "histogram": "Histogram"
+  },
+  "histogramDialog": {
+    "title": "Histogram",
+    "band": "Band",
+    "pixelValue": "Pixel value",
+    "frequency": "Frequency",
+    "loadError": "Could not compute the image histogram.",
+    "pixelCount": "Pixel count",
+    "min": "Minimum",
+    "max": "Maximum",
+    "mean": "Mean",
+    "stddev": "Standard deviation"
   },
   "itemMetadata": {
     "title": "STAC item metadata",
@@ -44,11 +64,26 @@
     "cloudCover": "Cloud cover",
     "processingLevel": "Processing level"
   },
+  "collectionMetadata": {
+    "title": "Collection metadata",
+    "general": "General information",
+    "coverage": "Coverage",
+    "extent": "Spatial extent",
+    "temporal": "Temporal range",
+    "license": "License",
+    "stacVersion": "STAC version",
+    "description": "Description",
+    "summaries": "Summaries",
+    "platforms": "Platforms",
+    "instruments": "Instruments"
+  },
   "tooltip": "Catalog manager",
   "title": "Catalog manager",
   "addCatalog": "Add catalog",
   "update": "Update",
   "filters": "Common filters",
+  "advancedFilters": "Advanced filter",
+  "metadata": "Metadata",
   "configuration": "Configuration",
   "cat_title": "Title",
   "cat_url": "Catalog URL",
@@ -63,9 +98,28 @@
   "footprint": "View footprint",
   "no_images": "No images found",
   "unknown": "Unknown",
+  "masiveDownload": {
+    "title": "Download selection",
+    "pickFolder": "Select the folder where images will be saved.",
+    "progress": "Downloading {{current}} of {{total}}: {{filename}}",
+    "zipProgress": "Packing {{current}} of {{total}} into ZIP: {{filename}}",
+    "complete": "Download finished. Successful: {{success}}. Failed: {{failed}}.",
+    "completeZip": "ZIP \"{{filename}}\" created with {{success}} files.",
+    "error": "Could not complete the download.",
+    "unsupportedBrowser": "Your browser does not support folder selection (File System Access API). Files will be downloaded to the browser downloads folder.",
+    "browserDownloads": "The ZIP file will be saved to the browser downloads folder.",
+    "cancelled": "Download cancelled."
+  },
+  "clearSelection": "Clear selection",
   "advancedFilter": {
     "title": "STAC advanced filter",
-    "fields": "Fields",
+    "assistant": "Assistant",
+    "manualQuery": "Manual query",
+    "stacQuery": "STAC query",
+    "queryType": "Query type",
+    "manualPlaceholder": "Enter the STAC query in JSON format",
+    "noQueryableFields": "No queryable fields found for this catalog.",
+    "fields": "Queryable fields",
     "values": "Values",
     "operators": "Operators",
     "filter_exp": "Filter expression",

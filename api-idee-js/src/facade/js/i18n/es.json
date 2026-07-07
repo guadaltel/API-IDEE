@@ -351,6 +351,7 @@
     "catalog_filtered_items_error": "Error al obtener los ítems filtrados del catálogo.",
     "catalog_filtered_items_advanced_error": "Error al obtener los ítems filtrados avanzados del catálogo.",
     "invalid_rel": "La relación indicada no es válida.",
-    "no_item_url": "No se ha encontrado el enlace correspondiente a la relación indicada."
+    "no_item_url": "No se ha encontrado el enlace correspondiente a la relación indicada.",
+    "unauthorized_collection": "No se tiene acceso a la colección."
   }
 }
