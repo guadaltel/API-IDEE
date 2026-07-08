@@ -11,12 +11,23 @@ Clase de la fachada JavaScript de API IDEE para consultar catálogos [STAC](http
 ### Constructor
 
 ```javascript
+// Catálogo público
 const catalog = new IDEE.stac.Catalog({
   url: 'https://stac.dataspace.copernicus.eu/v1',
-  authUrl: 'https://mi-servidor-auth.example.com/o/custom-auth',
   public: true,
 });
 ```
+
+```javascript
+// Catálogo privado
+const catalog = new IDEE.stac.Catalog({
+  url: 'https://stac.dataspace.copernicus.eu/v1',
+  authUrl: 'https://mi-servidor-auth.example.com/o/custom-auth',
+  public: false,
+});
+```
+
+
 Los parámetros del constructor son los siguientes:
 - **url** (`string`, obligatorio): URL base del catálogo STAC.
 - **authUrl** (`string`, opcional*): URL del servicio de autenticación y autorización. Requerida si `public` es `false`.
