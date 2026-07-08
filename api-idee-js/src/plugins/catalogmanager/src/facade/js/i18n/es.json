@@ -97,6 +97,10 @@
   "catalogs": "Catálogos",
   "footprint": "Ver huella",
   "no_images": "No se encontraron imágenes",
+  "images": "Imágenes",
+  "actions": "Acciones",
+  "previous": "Anterior",
+  "next": "Siguiente",
   "unknown": "Desconocido",
   "masiveDownload": {
     "title": "Descargar selección",

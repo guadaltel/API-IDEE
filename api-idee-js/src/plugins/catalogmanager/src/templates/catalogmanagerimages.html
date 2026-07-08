@@ -1,29 +1,28 @@
-<ul class="m-catalogmanager-ulimages">
+<table class="m-catalogmanager-tableimages" style="width: 100%;">
+    <thead>
+        <tr>
+            {{#if downloadable}}<th></th>{{/if}}
+            <th>{{translations.images}}</th>
+            <th style="text-align: center;">{{translations.actions}}</th>
+        </tr>
+    </thead>
+    <tbody>
     {{#each images}}
-        <li tabindex="0" class="m-catalogmanager-sectionPanel">
-            <div class="m-catalogmanager-title-image" data-image-key="{{key}}" data-item-id="{{itemId}}" data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">
-                <div class="m-catalogmanager-visible-typeContent">
-                    <table style="width: 100%;">
-                        <tbody>
-                            <tr>
-                                <td>{{#if ../downloadable}}<input type="checkbox" class="m-catalogmanager-checkbox-image"
-                                    data-image-key="{{key}}" data-item-id="{{itemId}}"
-                                    data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">{{/if}}</td>
-                                <td><span class="m-catalogmanager-title-box"  
-                                        title="{{title}}" tabindex="0">
-                                        {{title}}
-                                    </span>
-                                </td>
-                                <td style="text-align: end;">
-                                    <button class="m-catalogmanager-preview-button action-btn" title="{{../translations.preview}}"><span class="icon-eye m-catalogmanager-preview-button"></span></button>
-                                    {{#if ../downloadable}}<button class="m-catalogmanager-download-button action-btn" title="{{../translations.download}}"><span class="icon-download m-catalogmanager-download-button"></span></button>{{/if}}
-                                    <button class="m-catalogmanager-histogram-button action-btn" title="{{../translations.histogram}}"><span class="icon-chart m-catalogmanager-histogram-button"></span></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </li>
+        <tr class="m-catalogmanager-title-image" data-image-key="{{key}}" data-item-id="{{itemId}}" data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">
+            {{#if ../downloadable}}<td><input type="checkbox" class="m-catalogmanager-checkbox-image"
+                data-image-key="{{key}}" data-item-id="{{itemId}}"
+                data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}"></td>{{/if}}
+            <td><span class="m-catalogmanager-title-box"  
+                    title="{{title}}" tabindex="0">
+                    {{title}}
+                </span>
+            </td>
+            <td style="text-align: center;">
+                <button class="m-catalogmanager-preview-button action-btn" title="{{../translations.imageActions.preview}}"><span class="icon-eye m-catalogmanager-preview-button"></span></button>
+                {{#if ../downloadable}}<button class="m-catalogmanager-download-button action-btn" title="{{../translations.imageActions.download}}"><span class="icon-download m-catalogmanager-download-button"></span></button>{{/if}}
+                <button class="m-catalogmanager-histogram-button action-btn" title="{{../translations.imageActions.histogram}}"><span class="icon-chart m-catalogmanager-histogram-button"></span></button>
+            </td>
+        </tr>
     {{/each}}
-</ul>
+    </tbody>
+    </table>

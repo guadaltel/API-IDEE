@@ -11,29 +11,49 @@ Clase de la fachada JavaScript de API IDEE para consultar catálogos [STAC](http
 ### Constructor
 
 ```javascript
-// Catálogo público
+// Catalogo público
 const catalog = new IDEE.stac.Catalog({
   url: 'https://stac.dataspace.copernicus.eu/v1',
+  title: 'Copernicus Data Space',
   public: true,
 });
 ```
 
 ```javascript
-// Catálogo privado
+// Catalogo privado
 const catalog = new IDEE.stac.Catalog({
   url: 'https://stac.dataspace.copernicus.eu/v1',
-  authUrl: 'https://mi-servidor-auth.example.com/o/custom-auth',
+  authUrl: 'https://mi-servidor-auth.example.com/o/custom-auth/token',
+  collectionsUrl: 'https://mi-servidor-auth.example.com/o/collections',
+  title: 'Copernicus Data Space',
   public: false,
 });
 ```
 
-
 Los parámetros del constructor son los siguientes:
-- **url** (`string`, obligatorio): URL base del catálogo STAC.
-- **authUrl** (`string`, opcional*): URL del servicio de autenticación y autorización. Requerida si `public` es `false`.
-- **public** (`boolean`, opcional): Indica si el catálogo es público. Por defecto `false`. Si es `true`, no se requiere autenticación.
 
-\* `authUrl` es obligatorio para catálogos privados cuando se usen `authenticate()` o `getCollections()` en modo autenticado.
+| Parámetro | Tipo | Obligatorio | Descripción |
+|-----------|------|-------------|-------------|
+| `url` | `string` | Sí | URL base del catálogo STAC. |
+| `authUrl` | `string` | Sí\* | URL del servicio de autenticación. Requerida si `public` es `false`. |
+| `collectionsUrl` | `string` | Sí\* | URL del servicio de colecciones autorizadas. Requerida si `public` es `false`. Si se omite en catálogos públicos, se consulta `{url}/collections`. |
+| `title` | `string` | No | Título descriptivo del catálogo (usado por el plugin de gestión de catálogos). |
+| `public` | `boolean` | No | Indica si el catálogo es público. Por defecto `true` (debe indicarse `false` explícitamente para catálogos privados). |
+
+\* `authUrl` es obligatorio para catálogos privados cuando se use `authenticate()` para obtener el token que se usará en el resto de consultas.
+
+### Propiedades de instancia
+
+Tras la construcción, la instancia expone:
+
+| Propiedad | Tipo | Descripción |
+|-----------|------|-------------|
+| `url` | `string` | URL base del catálogo STAC. |
+| `public` | `boolean` | Indica si el catálogo es público. |
+| `authUrl` | `string` | URL del servicio de autenticación. |
+| `collectionsUrl` | `string` | URL del servicio de colecciones (si se indicó en el constructor). |
+| `title` | `string` | Título descriptivo del catálogo (si se indicó en el constructor). |
+| `token` | `string\|null` | Token de acceso obtenido tras `authenticate()`. Inicialmente `null`. |
 
 ---
 
@@ -44,7 +64,8 @@ Los parámetros del constructor son los siguientes:
 Cuando `public: true`:
 
 - Las peticiones a ítems y queryables no envían cabecera `Authorization`.
-- `getCollections()` consulta directamente `{url}/collections`.
+- Si no se indica `collectionsUrl`, `getCollections()` consulta `GET {url}/collections`.
+- Si se indica `collectionsUrl`, `getCollections()` consulta ese endpoint (con o sin token según el servicio).
 
 ### Catálogo privado
 
@@ -52,13 +73,13 @@ Cuando `public: false`:
 
 1. Llamar primero a `authenticate(username, password)` para obtener el token.
 2. Las peticiones posteriores incluyen `Authorization: Bearer {token}` cuando corresponda.
-3. `getCollections()` consulta `{authUrl}/roles` con el token, devolviendo las colecciones autorizadas para el usuario.
+3. `getCollections()` consulta `POST {collectionsUrl}` con `{ accessToken: token }`, devolviendo las colecciones autorizadas para el usuario.
 
 ---
 
 ## Métodos
 
-Todos los métodos devuelven `Promise` y deben usarse con `async/await` o `.then()/.catch()`.
+Todos los métodos asíncronos devuelven `Promise` y deben usarse con `async/await` o `.then()/.catch()`. La excepción es `getFilterData()`, que es síncrono.
 
 ### `authenticate(username, password)`
 
@@ -74,9 +95,9 @@ await catalog.authenticate('usuario', 'contraseña');
 | `username` | `string` | Nombre de usuario. |
 | `password` | `string` | Contraseña. |
 
-**Retorno:** `Promise<boolean>` — `true` si la autenticación fue correcta.
+**Retorno:** `Promise<boolean>` — `true` si la autenticación fue correcta. Devuelve `undefined` si faltan credenciales.
 
-**Endpoint:** `POST {authUrl}/token` con cuerpo `{ username, password }`.
+**Endpoint:** `POST {authUrl}` con cuerpo `{ username, password }`.
 
 ---
 
@@ -92,8 +113,8 @@ const collections = await catalog.getCollections();
 
 | Modo | Endpoint |
 |------|----------|
-| Público | `GET {url}/collections` |
-| Privado | `POST {authUrl}/roles` con `{ accessToken: token }` |
+| Público sin `collectionsUrl` | `GET {url}/collections` |
+| Público con `collectionsUrl` o privado | `POST {collectionsUrl}` con `{ accessToken: token }` (el token puede ser `null` si el servicio no lo exige) |
 
 ---
 
@@ -109,7 +130,7 @@ const fields = await catalog.getQueryableFields('ccm-optical');
 |-----------|------|-------------|
 | `collectionId` | `string` | Identificador de la colección. |
 
-**Retorno:** `Promise<Array<Object>>` — Propiedades consultables (`data.properties` del endpoint).
+**Retorno:** `Promise<Object>` — Esquema de propiedades consultables (`data.properties` del endpoint).
 
 **Endpoint:** `GET {url}/collections/{collectionId}/queryables`
 
@@ -130,7 +151,50 @@ const items = await catalog.getItems('ccm-optical', 10);
 
 **Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
 
-**Endpoint:** `GET {url}/collections/{collectionId}/items?limit={limit}`
+Genera la `url` de consulta y delega la petición en `getItemsByUrl()`.
+
+---
+
+### `getItemsByLinks(links, rel)`
+
+Obtiene ítems siguiendo un enlace de paginación de una respuesta STAC anterior.
+
+```javascript
+const nextPage = await catalog.getItemsByLinks(items.links, 'next');
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `links` | `Array<Object>` | Array de enlaces (`links`) de la respuesta STAC. |
+| `rel` | `string` | Relación del enlace: `self`, `next` o `previous`. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
+
+Delega la petición en `getItemsByUrl()`.
+
+---
+
+### `getItemsByUrl(url, params, errorMessage)`
+
+Realiza una petición GET genérica para obtener ítems desde una URL STAC.
+
+```javascript
+const items = await catalog.getItemsByUrl(
+  'https://stac.example.com/v1/collections/mi-coleccion/items',
+  { limit: 20 },
+  'Error al obtener ítems',
+);
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `url` | `string` | URL del endpoint STAC. |
+| `params` | `Object\|null` | Parámetros de consulta de la petición GET. |
+| `errorMessage` | `string` | Mensaje de error si la petición falla. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
+
+Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
 
 ---
 
@@ -155,7 +219,9 @@ const item = await catalog.getItem('ccm-optical', 'PH1B_PHR_MS___3_20241115T1417
 
 ### `getFilteredItems(collectionId, filters)`
 
-Filtra ítems mediante parámetros GET en la URL.
+Filtra ítems de una o varias colecciones mediante el endpoint `/search` con parámetros GET.
+
+El identificador de colección se añade automáticamente al parámetro `collections` del filtro.
 
 ```javascript
 const result = await catalog.getFilteredItems('ccm-optical', {
@@ -175,8 +241,8 @@ const result = await catalog.getFilteredItems(['ccm-optical', 'clms_lie_europe_2
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
-| `collectionId` | `string`/`String Array` | Identificador o array de identificadores de la/s coleccion/es |
-| `filters` | `Object` | Parámetros de consulta (`limit`, `bbox`, `datetime`, `ids`). |
+| `collectionId` | `string\|Array<string>` | Identificador o array de identificadores de la/s colección/es. |
+| `filters` | `Object` | Parámetros de consulta (`limit`, `bbox`, `datetime`, `ids`, etc.). |
 
 El filtro `bbox` debe estar en EPSG:4326 (longitud, latitud).
 
@@ -209,19 +275,20 @@ await catalog.getFilteredItems('ccm-optical', {
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
 
-**Endpoint:** `GET {url}/collections/{collectionId}/items` con los filtros como query params.
+Genera la `url` de consulta y delega en `getItemsByUrl()`.
 
 ---
 
-### `getFilteredItemsAdvanced(collectionId, filter)`
+### `getFilteredItemsAdvanced(collectionId, filter, bbox, datetime)`
 
-Filtra ítems mediante el endpoint `/search` con filtros avanzados.
+Filtra ítems mediante el endpoint `/search` con filtros avanzados (POST).
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `collectionId` | `string`/`String Array` | Identificador o array de identificadores de la/s coleccion/es |
-| `filter` | `Object` | Configuración del filtro (ver tabla siguiente). |
-| `bbox` | `Number array` | Extensión de la zona de búsqueda. EPSG:4326
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `collectionId` | `string\|Array<string>` | — | Identificador o array de identificadores de la/s colección/es. |
+| `filter` | `Object` | — | Configuración del filtro (ver tabla siguiente). |
+| `bbox` | `Array<number>` | `null` | Extensión de la zona de búsqueda en EPSG:4326. |
+| `datetime` | `string` | `null` | Intervalo temporal en RFC 3339. |
 
 **Propiedades de `filter`:**
 
@@ -233,7 +300,7 @@ Filtra ítems mediante el endpoint `/search` con filtros avanzados.
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
 
-**Endpoint:** `POST {url}/search`
+Genera la `url` y el `body` de consulta y delega en `getFilteredItemsAdvancedByUrl()`.
 
 #### Ejemplos por formato de filtro
 
@@ -288,6 +355,75 @@ const result = await catalog.getFilteredItemsAdvanced('ccm-optical', {
   limit: 10,
 });
 ```
+
+---
+
+### `getFilteredItemsAdvancedByLinks(links, rel)`
+
+Obtiene ítems filtrados avanzados siguiendo un enlace de paginación de una respuesta `/search` anterior.
+
+```javascript
+const nextPage = await catalog.getFilteredItemsAdvancedByLinks(result.links, 'next');
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `links` | `Array<Object>` | Array de enlaces (`links`) de la respuesta STAC. |
+| `rel` | `string` | Relación del enlace: `self`, `next` o `previous`. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
+
+Utiliza el `href` y el `body` del enlace y delega en `getFilteredItemsAdvancedByUrl()`.
+
+---
+
+### `getFilteredItemsAdvancedByUrl(url, body, errorMessage)`
+
+Realiza una petición POST genérica al endpoint `/search` con un cuerpo de filtro.
+
+```javascript
+const result = await catalog.getFilteredItemsAdvancedByUrl(
+  'https://stac.example.com/v1/search',
+  { collections: ['ccm-optical'], limit: 10, query: { datetime: { lte: '2024-01-01T00:00:00Z' } } },
+  'Error en búsqueda avanzada',
+);
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `url` | `string` | URL del endpoint STAC `/search`. |
+| `body` | `Object` | Cuerpo JSON de la petición con la configuración del filtro. |
+| `errorMessage` | `string` | Mensaje de error si la petición falla. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
+
+Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
+
+---
+
+### `getFilterData(collectionId, filter, bbox, datetime)`
+
+Construye el cuerpo de la petición POST para el endpoint `/search` a partir de la configuración de filtro. Útil para reutilizar o inspeccionar el payload antes de enviarlo.
+
+```javascript
+const body = catalog.getFilterData('ccm-optical', {
+  format: 'stac-query',
+  filter: { datetime: { lte: '2024-01-01T00:00:00Z' } },
+  limit: 10,
+}, [-5, 35, 5, 45], '2024-01-01T00:00:00Z/2024-12-31T23:59:59Z');
+// { collections: ['ccm-optical'], limit: 10, bbox: [...], datetime: '...', query: {...} }
+```
+
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|-------------|-------------|
+| `collectionId` | `string\|Array<string>\|null` | — | Identificador(es) de colección. Si es `null`, no se restringe por colección. |
+| `filter` | `Object` | — | Configuración del filtro (`format`, `filter`, `limit`). |
+| `bbox` | `Array<number>` | `null` | Extensión en EPSG:4326. |
+| `datetime` | `string` | `null` | Intervalo temporal en RFC 3339. |
+
+**Retorno:** `Object|null` — Cuerpo de la petición listo para POST, o `null` si el formato de filtro no es válido.
+
+**Formatos soportados en `filter.format`:** `stac-query`, `cql-json`, `cql2-json`.
 
 ---
 

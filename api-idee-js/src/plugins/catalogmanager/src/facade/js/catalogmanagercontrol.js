@@ -44,7 +44,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @classdesc
    * Control de gestión de catálogos STAC. Permite añadir catálogos, explorar
    * colecciones e ítems, aplicar filtros temporales, espaciales y avanzados,
-   * y visualizar metadatos e imágenes en el mapa.
+   * visualizar metadatos e imágenes en el mapa, consultar histogramas de assets
+   * y realizar descargas masivas de imágenes TIFF.
    *
    * @constructor
    * @extends {IDEE.Control}
@@ -270,18 +271,18 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el botón de filtros
    */
   toggleCommonFilters(evt) {
-    const btn = evt.target;
+    const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
     const filtersContent = this.template_.querySelector('#m-catalogmanager-filters-content');
-    const listContent = this.template_.querySelector('#m-catalogmanager-list-content');
+    const catalogContainer = this.template_.querySelector('ul.m-catalogmanager-ulcatalogs');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       filtersContent.classList.add('hidden');
-      listContent.classList.remove('hidden');
+      catalogContainer.classList.add('fullsize');
       this.getImpl().deactivateAllInteractions();
     } else {
       btn.classList.add('active');
       filtersContent.classList.remove('hidden');
-      listContent.classList.add('hidden');
+      catalogContainer.classList.remove('fullsize');
     }
   }
 
@@ -369,7 +370,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    *
    * @private
    * @function
-   * @param {string} filterType Tipo de filtro ('view')
+   * @param {string} filterType Tipo de filtro (`view`, `extent` o `referenced`).
    */
   setSpatialFilterByType(filterType) {
     switch (filterType) {
@@ -391,11 +392,25 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.toggleSpatialFilterHelp(filterType);
   }
 
+  /**
+   * Establece el filtro espacial a partir de una extensión en EPSG:4326
+   *
+   * @private
+   * @function
+   * @param {Array<number>} extent Extensión [minX, minY, maxX, maxY] en EPSG:4326
+   */
   setSpatialFilterByExtent(extent) {
     this.commonFilters_.bbox = extent;
     IDEE.toast.success(getValue('filtersTypes.spatial.success'), null, 2500);
   }
 
+  /**
+   * Muestra u oculta el texto de ayuda del filtro espacial activo
+   *
+   * @private
+   * @function
+   * @param {string} filterType Tipo de filtro espacial (`view`, `extent` o `referenced`)
+   */
   toggleSpatialFilterHelp(filterType) {
     const helpContainer = this.template_.querySelector('.m-catalogmanager-filters-spatial-help');
     const helps = helpContainer.querySelectorAll('.spatial-help');
@@ -501,11 +516,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
-   * Obtiene el textarea de expresión SQL del filtro avanzado
+   * Obtiene el textarea de expresión de consulta JSON del filtro avanzado
    *
    * @private
    * @function
-   * @returns {HTMLTextAreaElement|null} Textarea de la expresión de filtro
+   * @returns {HTMLTextAreaElement|null} Textarea de la expresión de consulta JSON
    */
   getAdvancedFilterQueryTextarea() {
     return this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-query-body');
@@ -529,6 +544,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     root.querySelector('#limpiar-filtro-btn').addEventListener('click', () => this.clearAdvancedFilter());
   }
 
+  /**
+   * Cambia la pestaña activa del filtro avanzado (asistente o consulta)
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en una pestaña del filtro avanzado
+   */
   changeAdvancedFilterTab(evt) {
     const btn = evt.target;
     if (btn.id === 'advanced-filter-tab-assistant') {
@@ -538,6 +560,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Muestra el panel del filtro avanzado correspondiente a la pestaña indicada
+   *
+   * @private
+   * @function
+   * @param {string} tabName Nombre de la pestaña (`assistant` o `query`)
+   */
   showAdvancedFilter(tabName) {
     const tabs = this.getAdvancedFilterContainer().querySelectorAll('#m-catalogmanager-advanced-filters-tabs>div');
     const tabId = `advanced-filter-tab-${tabName}`;
@@ -922,6 +951,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Aplica el filtro avanzado del asistente SQL convirtiéndolo a stac-query
+   *
+   * @private
+   * @function
+   */
   applyAdvancedFilterAssistant() {
     const state = this.advancedFilterState_;
     const catalog = this.catalogs_[state.catalogIndex];
@@ -944,6 +979,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.getFilteredItemsAdvanced();
   }
 
+  /**
+   * Aplica el filtro avanzado de la pestaña de consulta JSON (stac-query, cql-json o cql2-json)
+   *
+   * @private
+   * @function
+   */
   applyAdvancedFilterQuery() {
     const state = this.advancedFilterState_;
     const catalog = this.catalogs_[state.catalogIndex];
@@ -967,6 +1008,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.getFilteredItemsAdvanced();
   }
 
+  /**
+   * Ejecuta la búsqueda avanzada contra el catálogo STAC y renderiza los resultados
+   *
+   * @private
+   * @function
+   */
   getFilteredItemsAdvanced() {
     // this.updateBboxFilter();
     const state = this.advancedFilterState_;
@@ -1031,6 +1078,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
         hasNotNext: !this.linksHaveRel(items.links, 'next'),
         translations: {
           metadata: getValue('metadata'),
+          previous: getValue('previous'),
+          next: getValue('next'),
         },
       },
     });
@@ -1081,9 +1130,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   toggleAdvancedFilters() {
+    const commonFiltersBtn = this.template_.querySelector('#m-catalogmanager-filters');
     const sections = this.template_.querySelectorAll('section.m-catalogmanager-content');
     sections.forEach((section) => {
-      this.toggleHidden(section);
+      if (!(section.id === 'm-catalogmanager-filters-content' && !commonFiltersBtn.classList.contains('active'))) {
+        this.toggleHidden(section);
+      }
     });
   }
 
@@ -1326,12 +1378,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
       if (metadata.extent?.temporal?.interval) {
         metadata.extent.temporal.interval = metadata.extent.temporal.interval.map((interval) => interval.join(' / ')).join(', ');
       }
-      if (metadata.summaries?.platform) {
+      if (!metadata.summaries) {
+        metadata.summaries = {};
+      }
+      if (metadata.summaries.platform) {
         metadata.summaries.platform = metadata.summaries.platform.join(', ');
       } else {
         metadata.summaries.platform = getValue('unknown');
       }
-      if (metadata.summaries?.instruments) {
+      if (metadata.summaries.instruments) {
         metadata.summaries.instruments = metadata.summaries.instruments.join(', ');
       } else {
         metadata.summaries.instruments = getValue('unknown');
@@ -1491,6 +1546,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Gestiona la selección de un ítem en el mapa y abre su diálogo de imágenes
+   *
+   * @private
+   * @function
+   * @param {string} itemId Identificador del ítem STAC seleccionado
+   */
   onItemSelect(itemId) {
     const itemElement = this.template_.querySelector(`#${itemId}`);
     const catalogIndex = itemElement.dataset.catalogIndex;
@@ -1507,7 +1569,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {number} catalogIndex Índice del catálogo
    * @param {number} collectionIndex Índice de la colección
    * @param {string} itemId Identificador del ítem
-   * @param {HTMLElement} imagesElement Contenedor DOM de las imágenes
+   * @param {HTMLElement|null} imagesElement Contenedor DOM de las imágenes
+   * @param {boolean} [openDialog=false] Si es verdadero, abre un modal con las imágenes
    */
   getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, openDialog = false) {
     const catalog = this.catalogs_[catalogIndex];
@@ -1534,13 +1597,17 @@ export default class CatalogmanagerControl extends IDEE.Control {
           vars: {
             images,
             downloadable: !catalog.obj.public,
-            translations: getValue('imageActions'),
+            translations: {
+              imageActions: getValue('imageActions'),
+              images: getValue('images'),
+              actions: getValue('actions'),
+            },
           },
         });
       }
       if (openDialog) {
         IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
-        document.querySelector('div.m-dialog.info .m-catalogmanager-ulimages').addEventListener('click', (evt) => this.imagesEvent(evt));
+        document.querySelector('div.m-dialog.info .m-catalogmanager-tableimages').addEventListener('click', (evt) => this.imagesEvent(evt));
         this.changeCloseButtonModal();
       } else {
         if (html) {
@@ -1970,6 +2037,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         const catalogIndex = ie.dataset.catalogIndex;
         const collectionIndex = ie.dataset.collectionIndex;
         this.updateBboxFilter();
+        this.updateTemporalFilter();
         this.getItems(catalogIndex, collectionIndex);
       } else if (!ie.classList.contains('empty')) {
         ie.classList.add('empty');
@@ -1978,6 +2046,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Actualiza el filtro espacial si está activo el modo de extensión de vista
+   *
+   * @private
+   * @function
+   */
   updateBboxFilter() {
     const btnView = this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined #view');
     if (btnView && btnView.classList.contains('active')) {
@@ -1987,6 +2061,27 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Actualiza el filtro temporal si está activo el modo de rango personalizado
+   *
+   * @private
+   * @function
+   */
+  updateTemporalFilter() {
+    const btnRange = this.template_.querySelector('#m-catalogmanager-filters-temporal-predefined #range');
+    if (btnRange && btnRange.classList.contains('active')) {
+      this.setTemporalFilterByType('range');
+    }
+  }
+
+  /**
+   * Obtiene la capa de huella (footprint) de una colección
+   *
+   * @private
+   * @function
+   * @param {Object} collection Objeto de colección con layerGroup
+   * @returns {IDEE.layer.Vector|undefined} Capa de huella o indefinido si no existe
+   */
   getHuellaLayer(collection) {
     const collectionLayerGroup = collection.layerGroup;
     if (!collectionLayerGroup) {
@@ -1995,6 +2090,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return collectionLayerGroup.getLayers().find((layer) => layer.legend === 'Huella');
   }
 
+  /**
+   * Resalta en el mapa la huella del ítem bajo el cursor
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento mouseenter sobre el título del ítem
+   */
   applyFocusStyle(evt) {
     evt.stopPropagation();
     const target = evt.target;
@@ -2013,6 +2115,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Elimina el resaltado de huella al salir del ítem con el cursor
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento mouseleave sobre el título del ítem
+   */
   removeFocusStyle(evt) {
     evt.stopPropagation();
     const target = evt.target;
@@ -2026,6 +2135,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.clearFocusStyle(huella);
   }
 
+  /**
+   * Restablece el estilo por defecto de la feature con resaltado activo
+   *
+   * @private
+   * @function
+   * @param {IDEE.layer.Vector} huellaLayer Capa de huella de la colección
+   */
   clearFocusStyle(huellaLayer) {
     const focusFeature = huellaLayer.getFeatures().find((feature) => feature.getStyle() !== null);
     if (focusFeature) {
@@ -2176,6 +2292,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return spec;
   }
 
+  /**
+   * Reordena los índices de banda según band_display_order (nombre o índice numérico)
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} eoBands Bandas espectrales del asset
+   * @param {Array<string>} bandDisplayOrder Orden de visualización definido en el asset
+   * @returns {Array<number>} Índices de banda reordenados (base 1)
+   */
   reorderBands(eoBands, bandDisplayOrder) {
     const reorderedBands = [];
     bandDisplayOrder.forEach((bandName, index) => {
@@ -2196,6 +2321,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return reorderedBands;
   }
 
+  /**
+   * Reordena los índices de banda alternativamente según band_display_order
+   *
+   * @private
+   * @function
+   * @param {Array<Object>} eoBands Bandas espectrales del asset
+   * @param {Array<string>} bandDisplayOrder Orden de visualización definido en el asset
+   * @returns {Array<number>} Índices de banda reordenados (base 1)
+   */
   reorderBandsAlt(eoBands, bandDisplayOrder) {
     const reorderedBands = [];
     eoBands.forEach((band, index) => {
@@ -2247,6 +2381,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  /**
+   * Cierra el modal informativo activo simulando un clic en su botón de cierre
+   *
+   * @private
+   * @function
+   */
   closeDialog() {
     const buttonClose = document.querySelector('div.m-dialog.info div.m-button > button');
     if (buttonClose) {
@@ -2270,6 +2410,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
   // DESCARGA MASIVA
   // ----------------------------------------------------------------------------------------------
 
+  /**
+   * Desmarca todas las imágenes TIFF seleccionadas en el panel y en el modal activo
+   *
+   * @private
+   * @function
+   */
   clearSelection() {
     const roots = [this.template_];
     const dialog = document.querySelector('div.m-dialog.info');
@@ -2289,7 +2435,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * Chrome/Edge: ZIP por streaming a carpeta elegida.
    * Firefox: ZIP por streaming con StreamSaver. Fallback: descargas individuales.
    *
+   * @public
    * @function
+   * @returns {Promise<void>}
+   * @api stable
    */
   async masiveDownload() {
     const selections = this.collectSelectedImages();

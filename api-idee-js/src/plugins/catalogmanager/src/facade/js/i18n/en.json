@@ -97,6 +97,10 @@
   "catalogs": "Catalogs",
   "footprint": "View footprint",
   "no_images": "No images found",
+  "images": "Images",
+  "actions": "Actions",
+  "previous": "Previous",
+  "next": "Next",
   "unknown": "Unknown",
   "masiveDownload": {
     "title": "Download selection",

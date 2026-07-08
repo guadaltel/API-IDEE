@@ -25,6 +25,9 @@ const SUPPORTED_LINKS = ['self', 'next', 'previous'];
  * @property {string} url URL del catálogo STAC.
  * @property {boolean} public Indica si el catálogo es público (sin autenticación).
  * @property {string} authUrl URL del servicio de autenticación y autorización.
+ * @property {string} collectionsUrl URL del servicio de colecciones autorizadas
+ * (requerida para catálogos privados o cuando se requiera un endpoint distinto del STAC).
+ * @property {string} title Título descriptivo del catálogo.
  * @property {string|null} token Token de acceso obtenido tras autenticarse.
  * @api
  */
@@ -38,13 +41,16 @@ class Catalog extends Base {
    * - url: URL del catálogo STAC.
    * - authUrl: URL del servicio de autenticación (requerida si el catálogo es privado).
    * - public: Verdadero si el catálogo es público y no requiere autenticación.
+   * - collectionsUrl: URL del servicio de colecciones autorizadas (opcional; si se
+   *   omite en catálogos públicos, se consulta `{url}/collections`).
+   * - title: Título descriptivo del catálogo (opcional).
    * @api
    */
   constructor(userParameters) {
     super(null);
 
     const url = userParameters.url;
-    const publicValue = userParameters.public === true;
+    const publicValue = userParameters.public !== false;
     if (!url) {
       const noCatalogMsg = getValue('exception').no_catalog_url;
       showError(noCatalogMsg);
@@ -56,7 +62,7 @@ class Catalog extends Base {
       throw new Error(noAuthUrlMsg);
     }
     this.url = url;
-    this.public = publicValue === true;
+    this.public = publicValue;
     this.authUrl = userParameters.authUrl;
     this.collectionsUrl = userParameters.collectionsUrl;
     this.title = userParameters.title;
@@ -70,8 +76,8 @@ class Catalog extends Base {
    * @function
    * @param {string} username Nombre de usuario.
    * @param {string} password Contraseña del usuario.
-   * @returns {Promise<boolean>} Promesa que se resuelve con verdadero si la
-   * autenticación fue correcta.
+   * @returns {Promise<boolean>|undefined} Promesa que se resuelve con verdadero si la
+   * autenticación fue correcta, o indefinido si faltan credenciales.
    * @api
    */
   authenticate(username, password) {
@@ -85,7 +91,6 @@ class Catalog extends Base {
         username,
         password,
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
-        // PTE. ANTONIO - tiene que devolver 401
         if (response.code === 401) {
           showError(getValue('exception').invalid_user_password);
         } else if (response.code === 200) {
@@ -107,9 +112,9 @@ class Catalog extends Base {
   /**
    * Obtiene las colecciones disponibles en el catálogo STAC.
    *
-   * Si el catálogo es público, consulta directamente el endpoint `/collections`.
-   * En caso contrario, obtiene las colecciones autorizadas para el usuario
-   * autenticado a través del servicio de roles.
+   * Si el catálogo es público y no se indica `collectionsUrl`, consulta directamente
+   * el endpoint `{url}/collections`. En caso contrario, obtiene las colecciones
+   * autorizadas para el usuario autenticado a través del servicio de roles.
    *
    * @function
    * @returns {Promise<Array<Object>>} Promesa con el listado de colecciones.
@@ -149,7 +154,8 @@ class Catalog extends Base {
    *
    * @function
    * @param {string} collectionId Identificador de la colección.
-   * @returns {Promise<Array<Object>>} Promesa con el listado de campos consultables.
+   * @returns {Promise<Object>} Promesa con el esquema de propiedades consultables
+   * (`properties` del endpoint queryables).
    * @api
    */
   getQueryableFields(collectionId) {
@@ -284,16 +290,17 @@ class Catalog extends Base {
   }
 
   /**
-   * Obtiene ítems de una colección aplicando filtros mediante parámetros GET.
+   * Obtiene ítems de una o varias colecciones aplicando filtros mediante el endpoint `/search`.
    *
-   * Los filtros se envían como parámetros de consulta al endpoint
-   * `/collections/{collectionId}/items` (por ejemplo, `limit`, `bbox`, `datetime`).
+   * Los filtros se envían como parámetros de consulta (por ejemplo, `limit`, `bbox`,
+   * `datetime`). El identificador de colección se añade automáticamente al parámetro
+   * `collections`.
    *
    * @function
-   * @param {string | array} collectionId Identificador o array de identificadores
-   * de la/s coleccion/es
+   * @param {string|Array<string>} collectionId Identificador o array de identificadores
+   * de la/s colección/es.
    * @param {Object} filters Parámetros de filtrado para la petición GET.
-   *  -Filtros espaciales en EPSG:4326.
+   * Filtros espaciales en EPSG:4326.
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
    */
@@ -314,14 +321,14 @@ class Catalog extends Base {
    * Soporta los formatos de filtrado `stac-query`, `cql-json` y `cql2-json`.
    *
    * @function
-   * @param {string | array} collectionId Identificador o array de identificadores
-   * de la/s coleccion/es.
+   * @param {string|Array<string>} collectionId Identificador o array de identificadores
+   * de la/s colección/es.
    * @param {Object} filter Configuración del filtro avanzado.
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {array} bbox Extensión de la zona de búsqueda. EPSG:4326
-   * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
+   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326.
+   * @param {string|null} [datetime=null] Intervalo temporal de la búsqueda en RFC 3339.
    * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
    * @api
    */
@@ -401,14 +408,14 @@ class Catalog extends Base {
    * a partir de la configuración de filtro indicada.
    *
    * @function
-   * @param {string} collectionId Identificador de la colección. Si es nulo o vacío,
-   * la búsqueda no se restringe a una colección concreta.
+   * @param {string|Array<string>|null} collectionId Identificador o array de identificadores
+   * de la/s colección/es. Si es nulo o vacío, la búsqueda no se restringe a una colección concreta.
    * @param {Object} filter Configuración del filtro avanzado.
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {array} bbox Extensión de la zona de búsqueda. EPSG:4326
-   * @param {string} datetime Intervalo temporal de la búsqueda. RFC 3339
+   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326.
+   * @param {string|null} [datetime=null] Intervalo temporal de la búsqueda en RFC 3339.
    * @returns {Object|null} Objeto con el cuerpo de la petición o nulo si el
    * formato de filtro no es válido.
    * @api

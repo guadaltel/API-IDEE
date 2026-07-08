@@ -117,14 +117,24 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
     margin-bottom: 0.5rem;
 }
 
+.m-catalogmanager-filters-temporal-predefined {
+    margin-top: 0.5rem;
+}
+
 .m-catalogmanager-actions button,
 .m-catalogmanager-filters-temporal-predefined button,
-.m-catalogmanager-filters-spatial-predefined button {
+.m-catalogmanager-filters-spatial-predefined button,
+.m-catalogmanager-items-buttons button {
     background-color: white;
     color: #71a7d3;
     border: 1px solid #71a7d3;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
+}
+
+.m-catalogmanager-items-buttons button:disabled {
+    color: #ccc;
+    border-color: #ccc;
 }
 
 .m-catalogmanager-actions button:hover,
@@ -156,10 +166,14 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
 ul.m-catalogmanager-ulcatalogs {
     list-style: none;
     padding: 0px 10px 0px 10px;
-    max-height: 50vh !important;
+    max-height: 50vh;
     overflow-y: auto;
     min-width: 440px;
     max-width: 50vw;
+}
+
+ul.m-catalogmanager-ulcatalogs.fullsize {
+    max-height: 80vh;
 }
 
 ul.m-catalogmanager-ulcatalogs li>.m-catalogmanager-title-catalog {
@@ -204,7 +218,7 @@ ul.m-catalogmanager-ulcollections li>.m-catalogmanager-title-collection {
     padding: 0.5rem;
 }
 
-ul.m-catalogmanager-ulitems, ul.m-catalogmanager-ulimages {
+ul.m-catalogmanager-ulitems, ul.m-catalogmanager-tableimages {
     list-style: none;
     overflow-y: auto;
     min-width: 360px;
@@ -236,10 +250,23 @@ ul.m-catalogmanager-ulcatalogs span.icon-lock-open {
     border-radius: 1rem;
 }
 
-ul.m-catalogmanager-ulimages li>.m-catalogmanager-title-image {
-    background-color: #a6cded;
+table.m-catalogmanager-tableimages tr>.m-catalogmanager-title-image {
+    /*background-color: #a6cded;*/
     color: black;
     padding: 0.5rem;
+}
+
+table.m-catalogmanager-tableimages thead {
+    background-color: #e6e6e6;
+    font-weight: bold;
+}
+
+table.m-catalogmanager-tableimages tbody {
+    background-color: #f0f8ff;
+}
+
+table.m-catalogmanager-tableimages tbody tr {
+    border-bottom: 1px solid #e6e6e6;
 }
 
 .loading {
@@ -323,6 +350,17 @@ button.m-catalogmanager-download-button {
 #advanced-filter-query-container {
     display: flex;
     flex-direction: column;
+    /*margin-top: 10px;*/
+}
+
+#advanced-filter-query-container label {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#advanced-filter-query-container select {
+    background-color: #fff;
+    border: 1px solid gray;
 }
 
 .m-catalogmanager .m-catalogmanager {
@@ -388,7 +426,7 @@ button.m-catalogmanager-download-button {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    margin: 0.5rem 0;
+    margin: 1rem 0;
 }
 
 .m-catalogmanager #m-catalogmanager-operators-container>button,
@@ -430,6 +468,7 @@ button.m-catalogmanager-download-button {
 .advanced-filter-tab {
     padding: 0 10px;
     cursor: pointer;
+    font-weight: bold;
 }
 
 .advanced-filter-tab.active {
