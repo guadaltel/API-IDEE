@@ -65,7 +65,7 @@ class Catalog extends Base {
     this.public = publicValue;
     this.authUrl = userParameters.authUrl;
     this.collectionsUrl = userParameters.collectionsUrl;
-    this.title = userParameters.title;
+    this.title = userParameters.title || new URL(url).hostname;
     this.token = null;
   }
 

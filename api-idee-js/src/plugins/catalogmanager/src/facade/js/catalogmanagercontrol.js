@@ -2907,9 +2907,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   configureStreamSaverMitm() {
-    if (streamSaver.mitm) {
+    // Descomentar para test en local
+    /* if (streamSaver.mitm) {
       return;
-    }
+    } */
     const scripts = document.getElementsByTagName('script');
     let mitmBaseUrl = window.location.href;
     for (let scriptIndex = 0; scriptIndex < scripts.length; scriptIndex += 1) {
