@@ -155,49 +155,6 @@ Genera la `url` de consulta y delega la petición en `getItemsByUrl()`.
 
 ---
 
-### `getItemsByLinks(links, rel)`
-
-Obtiene ítems siguiendo un enlace de paginación de una respuesta STAC anterior.
-
-```javascript
-const nextPage = await catalog.getItemsByLinks(items.links, 'next');
-```
-
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `links` | `Array<Object>` | Array de enlaces (`links`) de la respuesta STAC. |
-| `rel` | `string` | Relación del enlace: `self`, `next` o `previous`. |
-
-**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
-
-Delega la petición en `getItemsByUrl()`.
-
----
-
-### `getItemsByUrl(url, params, errorMessage)`
-
-Realiza una petición GET genérica para obtener ítems desde una URL STAC.
-
-```javascript
-const items = await catalog.getItemsByUrl(
-  'https://stac.example.com/v1/collections/mi-coleccion/items',
-  { limit: 20 },
-  'Error al obtener ítems',
-);
-```
-
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `url` | `string` | URL del endpoint STAC. |
-| `params` | `Object\|null` | Parámetros de consulta de la petición GET. |
-| `errorMessage` | `string` | Mensaje de error si la petición falla. |
-
-**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
-
-Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
-
----
-
 ### `getItem(collectionId, itemId)`
 
 Obtiene un ítem concreto.
@@ -469,3 +426,46 @@ result.features.forEach((feature) => {
 ```
 
 ---
+
+### `getItemsByUrl(url, params, errorMessage)`
+
+Realiza una petición GET genérica para obtener ítems desde una URL STAC.
+
+```javascript
+const items = await catalog.getItemsByUrl(
+  'https://stac.example.com/v1/collections/mi-coleccion/items',
+  { limit: 20 },
+  'Error al obtener ítems',
+);
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `url` | `string` | URL del endpoint STAC. |
+| `params` | `Object\|null` | Parámetros de consulta de la petición GET. |
+| `errorMessage` | `string` | Mensaje de error si la petición falla. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
+
+Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
+
+---
+
+---
+
+### `getItemsByLinks(links, rel)`
+
+Obtiene ítems siguiendo un enlace de paginación de una respuesta STAC anterior.
+
+```javascript
+const nextPage = await catalog.getItemsByLinks(items.links, 'next');
+```
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `links` | `Array<Object>` | Array de enlaces (`links`) de la respuesta STAC. |
+| `rel` | `string` | Relación del enlace: `self`, `next` o `previous`. |
+
+**Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
+
+Delega la petición en `getItemsByUrl()`.
