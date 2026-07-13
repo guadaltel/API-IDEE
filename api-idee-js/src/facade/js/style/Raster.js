@@ -61,10 +61,22 @@ class Raster extends Style {
       ? Raster.DEFAULT_OPTIONS.max
       : parseFloat(options.max);
     options.gamma = Raster.normalizeGamma(options.gamma);
-    options.saturation = Raster.normalizeSignedUnitRange(options.saturation, Raster.DEFAULT_OPTIONS.saturation);
-    options.exposure = Raster.normalizeSignedUnitRange(options.exposure, Raster.DEFAULT_OPTIONS.exposure);
-    options.contrast = Raster.normalizeSignedUnitRange(options.contrast, Raster.DEFAULT_OPTIONS.contrast);
-    options.brightness = Raster.normalizeSignedUnitRange(options.brightness, Raster.DEFAULT_OPTIONS.brightness);
+    options.saturation = Raster.normalizeSignedUnitRange(
+      options.saturation,
+      Raster.DEFAULT_OPTIONS.saturation,
+    );
+    options.exposure = Raster.normalizeSignedUnitRange(
+      options.exposure,
+      Raster.DEFAULT_OPTIONS.exposure,
+    );
+    options.contrast = Raster.normalizeSignedUnitRange(
+      options.contrast,
+      Raster.DEFAULT_OPTIONS.contrast,
+    );
+    options.brightness = Raster.normalizeSignedUnitRange(
+      options.brightness,
+      Raster.DEFAULT_OPTIONS.brightness,
+    );
     options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
       ? Raster.DEFAULT_OPTIONS.interpolationBase
@@ -329,7 +341,10 @@ class Raster extends Style {
    * @api
    */
   setSaturation(saturation) {
-    this.options_.saturation = Raster.normalizeSignedUnitRange(saturation, Raster.DEFAULT_OPTIONS.saturation);
+    this.options_.saturation = Raster.normalizeSignedUnitRange(
+      saturation,
+      Raster.DEFAULT_OPTIONS.saturation,
+    );
     this.update_();
   }
 
@@ -354,7 +369,10 @@ class Raster extends Style {
    * @api
    */
   setExposure(exposure) {
-    this.options_.exposure = Raster.normalizeSignedUnitRange(exposure, Raster.DEFAULT_OPTIONS.exposure);
+    this.options_.exposure = Raster.normalizeSignedUnitRange(
+      exposure,
+      Raster.DEFAULT_OPTIONS.exposure,
+    );
     this.update_();
   }
 
@@ -379,7 +397,10 @@ class Raster extends Style {
    * @api
    */
   setContrast(contrast) {
-    this.options_.contrast = Raster.normalizeSignedUnitRange(contrast, Raster.DEFAULT_OPTIONS.contrast);
+    this.options_.contrast = Raster.normalizeSignedUnitRange(
+      contrast,
+      Raster.DEFAULT_OPTIONS.contrast,
+    );
     this.update_();
   }
 
@@ -404,7 +425,10 @@ class Raster extends Style {
    * @api
    */
   setBrightness(brightness) {
-    this.options_.brightness = Raster.normalizeSignedUnitRange(brightness, Raster.DEFAULT_OPTIONS.brightness);
+    this.options_.brightness = Raster.normalizeSignedUnitRange(
+      brightness,
+      Raster.DEFAULT_OPTIONS.brightness,
+    );
     this.update_();
   }
 
