@@ -19,6 +19,7 @@ const DEFAULT_FORM = {
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
+  saturation: 0,
   nodata: '',
 };
 
@@ -145,6 +146,7 @@ const readForm = () => {
     max: parseFloat($('max').value),
     ramp: getRampFromForm(),
     gamma: parseFloat($('gamma').value),
+    saturation: parseFloat($('saturation').value),
     interpolation: $('interpolation').value,
     interpolationBase: parseFloat($('interpolationBase').value),
   };
@@ -165,6 +167,8 @@ const setFormValues = (values) => {
   $('interpolation').value = values.interpolation;
   $('interpolationBase').value = values.interpolationBase;
   $('gamma').value = values.gamma;
+  $('saturation').value = values.saturation;
+  $('saturation-value').textContent = String(values.saturation);
   let nodataValue = '';
   if (values.nodata !== '' && values.nodata !== undefined && values.nodata !== null) {
     nodataValue = values.nodata;
@@ -260,6 +264,7 @@ const applyRasterStyle = () => {
     rasterStyle.setMax(options.max);
     rasterStyle.setRamp(options.ramp);
     rasterStyle.setGamma(options.gamma);
+    rasterStyle.setSaturation(options.saturation);
     rasterStyle.setInterpolation(options.interpolation, options.interpolationBase);
     if (options.nodata !== undefined) {
       rasterStyle.setNodata(options.nodata);
@@ -304,6 +309,15 @@ $('interpolation').addEventListener('change', () => {
 $('bands-input').addEventListener('change', applyRasterStyle);
 $('interpolationBase').addEventListener('change', applyRasterStyle);
 $('nodata').addEventListener('change', applyRasterStyle);
+
+const updateSaturationLabel = () => {
+  $('saturation-value').textContent = $('saturation').value;
+};
+
+$('saturation').addEventListener('input', () => {
+  updateSaturationLabel();
+  applyRasterStyle();
+});
 
 document.querySelectorAll('.ramp-preset-btn').forEach((button) => {
   button.addEventListener('click', () => {

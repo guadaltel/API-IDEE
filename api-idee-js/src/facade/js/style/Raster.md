@@ -109,7 +109,7 @@ ramp: ['#000080', '#0080ff', '#00ff80', '#ffff00', '#ff0000']
 |---|---|
 | **Tipo** | `number` |
 | **Por defecto** | `1` |
-| **Rango** | `0` a infinito (OpenLayers WebGL) |
+| **Rango** | `0` a infinito |
 | **Descripción** | Corrección gamma aplicada en el estilo WebGL. |
 
 | Valor | Efecto |
@@ -119,6 +119,26 @@ ramp: ['#000080', '#0080ff', '#00ff80', '#ffff00', '#ff0000']
 | `> 1` | Oscurece la imagen |
 
 Valores negativos lanzan error. Si el valor no es numérico, se usa `1`.
+
+---
+
+### `saturation`
+
+| | |
+|---|---|
+| **Tipo** | `number` |
+| **Por defecto** | `0` |
+| **Rango** | `-1` a `1` |
+| **Descripción** | Ajuste de saturación aplicado sobre el color resultante (incluida la rampa). |
+
+| Valor | Efecto |
+|-------|--------|
+| `0` | Sin cambio (por defecto) |
+| `-1` | Escala de grises |
+| `> 0` | Más saturación |
+| `< 0` | Menos saturación |
+
+Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 
 ---
 

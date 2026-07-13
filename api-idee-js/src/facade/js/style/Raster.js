@@ -28,6 +28,7 @@ class Raster extends Style {
    * - max: Valor máximo de la rampa (por defecto 1).
    * - ramp: Rampa de colores.
    * - gamma: Gamma de la capa (por defecto 1, rango OpenLayers: 0 a infinito).
+   * - saturation: Saturación del color (OpenLayers: -1 a 1, por defecto 0).
    * - nodata: Valor nodata para transparencia.
    * - interpolation: Tipo de interpolación ('linear' o 'exponential').
    * - interpolationBase: Base para interpolación exponencial (por defecto 2).
@@ -57,6 +58,7 @@ class Raster extends Style {
       ? Raster.DEFAULT_OPTIONS.max
       : parseFloat(options.max);
     options.gamma = Raster.normalizeGamma(options.gamma);
+    options.saturation = Raster.normalizeSaturation(options.saturation);
     options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
       ? Raster.DEFAULT_OPTIONS.interpolationBase
@@ -170,6 +172,28 @@ class Raster extends Style {
   }
 
   /**
+   * Normaliza el parámetro saturation según el rango (-1 a 1).
+   *
+   * @function
+   * @private
+   * @param {number|string} saturation Saturación.
+   * @return {number} Saturación normalizada.
+   */
+  static normalizeSaturation(saturation) {
+    const value = parseFloat(saturation);
+    if (Number.isNaN(value)) {
+      return Raster.DEFAULT_OPTIONS.saturation;
+    }
+    if (value < -1) {
+      return -1;
+    }
+    if (value > 1) {
+      return 1;
+    }
+    return value;
+  }
+
+  /**
    * Este método devuelve el valor mínimo de la rampa.
    *
    * @function
@@ -274,6 +298,31 @@ class Raster extends Style {
    */
   setGamma(gamma) {
     this.options_.gamma = Raster.normalizeGamma(gamma);
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la saturación del estilo ráster.
+   *
+   * @function
+   * @public
+   * @return {number} Saturación.
+   * @api
+   */
+  getSaturation() {
+    return this.options_.saturation;
+  }
+
+  /**
+   * Este método establece la saturación del estilo ráster.
+   *
+   * @function
+   * @public
+   * @param {number} saturation Saturación (-1 a 1).
+   * @api
+   */
+  setSaturation(saturation) {
+    this.options_.saturation = Raster.normalizeSaturation(saturation);
     this.update_();
   }
 
@@ -426,6 +475,7 @@ class Raster extends Style {
       max: options.max,
       ramp: [...options.ramp],
       gamma: options.gamma,
+      saturation: options.saturation,
       nodata: options.nodata,
       interpolation: options.interpolation,
       interpolationBase: options.interpolationBase,
@@ -467,6 +517,7 @@ Raster.DEFAULT_OPTIONS = {
   max: 1,
   ramp: ['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000'],
   gamma: 1,
+  saturation: 0,
   interpolation: 'linear',
   interpolationBase: 2,
 };
