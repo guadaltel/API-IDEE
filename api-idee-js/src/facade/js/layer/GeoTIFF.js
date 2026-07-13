@@ -11,6 +11,9 @@ import LayerBase from './Layer';
 import * as parameter from '../parameter/parameter';
 import * as LayerType from './Type';
 import { getValue } from '../i18n/language';
+import * as EventType from '../event/eventtype';
+import Style from '../style/Style';
+import Raster from '../style/Raster';
 
 /**
  * @classdesc
@@ -101,7 +104,7 @@ class GeoTIFF extends LayerBase {
       displayInLayerSwitcher: parameters.displayInLayerSwitcher,
       projection: parameters.projection,
       maxExtent: userParameters.maxExtent,
-      normalize: parameters.normalize,
+      normalize: isUndefined(parameters.normalize) ? options.normalize : parameters.normalize,
     };
     const impl = new GeoTIFFImpl(optionsVar, vendorOptions);
     // calls the super constructor
@@ -132,6 +135,114 @@ class GeoTIFF extends LayerBase {
      * GeoTIFF options: Opciones GeoTIFF.
      */
     this.options = optionsVar;
+
+    /**
+     * @private
+     * @type {IDEE.style.Raster|null}
+     */
+    this.style_ = null;
+
+    if (!isNullOrEmpty(options.style)) {
+      this.setStyle(options.style);
+    }
+  }
+
+  /**
+   * Este método establece el estilo en la capa.
+   *
+   * @function
+   * @public
+   * @param {IDEE.style.Raster|Object|String|null} styleParam Estilo ráster o sus opciones.
+   * @api
+   */
+  setStyle(styleParam) {
+    if (isNullOrEmpty(styleParam)) {
+      this.clearStyle();
+      return;
+    }
+    if (this.getImpl().isLoaded()) {
+      this.applyStyle_(styleParam);
+    } else {
+      this.once(EventType.LOAD, () => {
+        this.applyStyle_(styleParam);
+      });
+    }
+  }
+
+  /**
+   * Aplica el estilo a la capa.
+   *
+   * @function
+   * @public
+   * @param {IDEE.style.Raster|Object|String} styleParam Estilo que se aplicará a la capa.
+   * @api
+   */
+  applyStyle_(styleParam) {
+    let style = styleParam;
+    if (isString(style)) {
+      style = Style.deserialize(style);
+    } else if (!(style instanceof Style)) {
+      style = new Raster(style);
+    }
+    if (style instanceof Style) {
+      if (this.style_ === style) {
+        style.apply(this);
+        this.fire(EventType.CHANGE_STYLE, [style, this]);
+        return;
+      }
+      if (this.style_ instanceof Style) {
+        this.style_.unapply(this);
+      }
+      style.apply(this);
+      this.style_ = style;
+      this.fire(EventType.CHANGE_STYLE, [style, this]);
+    }
+  }
+
+  /**
+   * Este método devuelve el estilo de la capa.
+   *
+   * @function
+   * @public
+   * @returns {IDEE.style.Raster|null} Estilo de la capa.
+   * @api
+   */
+  getStyle() {
+    return this.style_;
+  }
+
+  /**
+   * Elimina el estilo de la capa.
+   *
+   * @function
+   * @public
+   * @api
+   */
+  clearStyle() {
+    if (this.style_ instanceof Style) {
+      this.style_.unapply(this);
+      this.style_ = null;
+      this.fire(EventType.CHANGE_STYLE, [null, this]);
+    }
+  }
+
+  /**
+   * Devuelve el legendURL.
+   * Si la leyenda no fue definida por el usuario y la capa tiene un estilo Raster,
+   * devuelve la imagen del canvas de la rampa.
+   *
+   * @function
+   * @returns {string} URL de la leyenda o imagen base64 del canvas del estilo.
+   * @api
+   */
+  getLegendURL() {
+    let legendUrl = this.getImpl().getLegendURL();
+    if (legendUrl.indexOf(LayerBase.LEGEND_DEFAULT) !== -1
+      && legendUrl.indexOf(LayerBase.LEGEND_ERROR) === -1
+      && this.style_ instanceof Raster) {
+      legendUrl = this.style_.toImage();
+    }
+    return legendUrl;
   }
 
   /**

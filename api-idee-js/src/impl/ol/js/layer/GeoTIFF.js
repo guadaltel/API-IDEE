@@ -170,6 +170,11 @@ class GeoTIFF extends LayerBase {
     this.maxZoom = options.maxZoom || Number.POSITIVE_INFINITY;
 
     this.blob = options.blob;
+
+    /**
+     * GeoTIFF loaded_. Indica si la capa está cargada.
+     */
+    this.loaded_ = false;
   }
 
   /**
@@ -275,6 +280,9 @@ class GeoTIFF extends LayerBase {
     // activates animation for base layers or animated parameters
     this.olLayer.setMaxZoom(this.maxZoom);
     this.olLayer.setMinZoom(this.minZoom);
+
+    this.loaded_ = true;
+    this.facadeLayer_.fire(EventType.LOAD);
   }
 
   /**
@@ -452,6 +460,17 @@ class GeoTIFF extends LayerBase {
     if (!isNullOrEmpty(ol3Layer)) {
       ol3Layer.getSource().refresh();
     }
+  }
+
+  /**
+   * Devuelve si la capa está cargada o no.
+   *
+   * @function
+   * @returns {Boolean} Verdadero cargada, falso si no.
+   * @api stable
+   */
+  isLoaded() {
+    return this.loaded_;
   }
 
   /**
