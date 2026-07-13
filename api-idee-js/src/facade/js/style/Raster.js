@@ -61,10 +61,10 @@ class Raster extends Style {
       ? Raster.DEFAULT_OPTIONS.max
       : parseFloat(options.max);
     options.gamma = Raster.normalizeGamma(options.gamma);
-    options.saturation = Raster.normalizeSaturation(options.saturation);
-    options.exposure = Raster.normalizeExposure(options.exposure);
-    options.contrast = Raster.normalizeContrast(options.contrast);
-    options.brightness = Raster.normalizeBrightness(options.brightness);
+    options.saturation = Raster.normalizeSignedUnitRange(options.saturation, Raster.DEFAULT_OPTIONS.saturation);
+    options.exposure = Raster.normalizeSignedUnitRange(options.exposure, Raster.DEFAULT_OPTIONS.exposure);
+    options.contrast = Raster.normalizeSignedUnitRange(options.contrast, Raster.DEFAULT_OPTIONS.contrast);
+    options.brightness = Raster.normalizeSignedUnitRange(options.brightness, Raster.DEFAULT_OPTIONS.brightness);
     options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
       ? Raster.DEFAULT_OPTIONS.interpolationBase
@@ -201,54 +201,6 @@ class Raster extends Style {
   }
 
   /**
-   * Normaliza el parámetro saturation según el rango (-1 a 1).
-   *
-   * @function
-   * @private
-   * @param {number|string} saturation Saturación.
-   * @return {number} Saturación normalizada.
-   */
-  static normalizeSaturation(saturation) {
-    return Raster.normalizeSignedUnitRange(saturation, Raster.DEFAULT_OPTIONS.saturation);
-  }
-
-  /**
-   * Normaliza el parámetro exposure según el rango (-1 a 1).
-   *
-   * @function
-   * @private
-   * @param {number|string} exposure Exposición.
-   * @return {number} Exposición normalizada.
-   */
-  static normalizeExposure(exposure) {
-    return Raster.normalizeSignedUnitRange(exposure, Raster.DEFAULT_OPTIONS.exposure);
-  }
-
-  /**
-   * Normaliza el parámetro contrast según el rango (-1 a 1).
-   *
-   * @function
-   * @private
-   * @param {number|string} contrast Contraste.
-   * @return {number} Contraste normalizado.
-   */
-  static normalizeContrast(contrast) {
-    return Raster.normalizeSignedUnitRange(contrast, Raster.DEFAULT_OPTIONS.contrast);
-  }
-
-  /**
-   * Normaliza el parámetro brightness según el rango (-1 a 1).
-   *
-   * @function
-   * @private
-   * @param {number|string} brightness Brillo.
-   * @return {number} Brillo normalizado.
-   */
-  static normalizeBrightness(brightness) {
-    return Raster.normalizeSignedUnitRange(brightness, Raster.DEFAULT_OPTIONS.brightness);
-  }
-
-  /**
    * Este método devuelve el valor mínimo de la rampa.
    *
    * @function
@@ -377,7 +329,7 @@ class Raster extends Style {
    * @api
    */
   setSaturation(saturation) {
-    this.options_.saturation = Raster.normalizeSaturation(saturation);
+    this.options_.saturation = Raster.normalizeSignedUnitRange(saturation, Raster.DEFAULT_OPTIONS.saturation);
     this.update_();
   }
 
@@ -402,7 +354,7 @@ class Raster extends Style {
    * @api
    */
   setExposure(exposure) {
-    this.options_.exposure = Raster.normalizeExposure(exposure);
+    this.options_.exposure = Raster.normalizeSignedUnitRange(exposure, Raster.DEFAULT_OPTIONS.exposure);
     this.update_();
   }
 
@@ -427,7 +379,7 @@ class Raster extends Style {
    * @api
    */
   setContrast(contrast) {
-    this.options_.contrast = Raster.normalizeContrast(contrast);
+    this.options_.contrast = Raster.normalizeSignedUnitRange(contrast, Raster.DEFAULT_OPTIONS.contrast);
     this.update_();
   }
 
@@ -452,7 +404,7 @@ class Raster extends Style {
    * @api
    */
   setBrightness(brightness) {
-    this.options_.brightness = Raster.normalizeBrightness(brightness);
+    this.options_.brightness = Raster.normalizeSignedUnitRange(brightness, Raster.DEFAULT_OPTIONS.brightness);
     this.update_();
   }
 
