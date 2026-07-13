@@ -21,6 +21,8 @@ const DEFAULT_FORM = {
   gamma: 1,
   saturation: 0,
   exposure: 0,
+  contrast: 0,
+  brightness: 0,
   nodata: '',
 };
 
@@ -149,6 +151,8 @@ const readForm = () => {
     gamma: parseFloat($('gamma').value),
     saturation: parseFloat($('saturation').value),
     exposure: parseFloat($('exposure').value),
+    contrast: parseFloat($('contrast').value),
+    brightness: parseFloat($('brightness').value),
     interpolation: $('interpolation').value,
     interpolationBase: parseFloat($('interpolationBase').value),
   };
@@ -173,6 +177,10 @@ const setFormValues = (values) => {
   $('saturation-value').textContent = String(values.saturation);
   $('exposure').value = values.exposure;
   $('exposure-value').textContent = String(values.exposure);
+  $('contrast').value = values.contrast;
+  $('contrast-value').textContent = String(values.contrast);
+  $('brightness').value = values.brightness;
+  $('brightness-value').textContent = String(values.brightness);
   let nodataValue = '';
   if (values.nodata !== '' && values.nodata !== undefined && values.nodata !== null) {
     nodataValue = values.nodata;
@@ -270,6 +278,8 @@ const applyRasterStyle = () => {
     rasterStyle.setGamma(options.gamma);
     rasterStyle.setSaturation(options.saturation);
     rasterStyle.setExposure(options.exposure);
+    rasterStyle.setContrast(options.contrast);
+    rasterStyle.setBrightness(options.brightness);
     rasterStyle.setInterpolation(options.interpolation, options.interpolationBase);
     if (options.nodata !== undefined) {
       rasterStyle.setNodata(options.nodata);
@@ -330,6 +340,24 @@ const updateExposureLabel = () => {
 
 $('exposure').addEventListener('input', () => {
   updateExposureLabel();
+  applyRasterStyle();
+});
+
+const updateContrastLabel = () => {
+  $('contrast-value').textContent = $('contrast').value;
+};
+
+$('contrast').addEventListener('input', () => {
+  updateContrastLabel();
+  applyRasterStyle();
+});
+
+const updateBrightnessLabel = () => {
+  $('brightness-value').textContent = $('brightness').value;
+};
+
+$('brightness').addEventListener('input', () => {
+  updateBrightnessLabel();
   applyRasterStyle();
 });
 

@@ -30,6 +30,8 @@ class Raster extends Style {
    * - gamma: Gamma de la capa (por defecto 1, rango OpenLayers: 0 a infinito).
    * - saturation: Saturación del color (OpenLayers: -1 a 1, por defecto 0).
   * - exposure: Exposición (OpenLayers: -1 a 1, por defecto 0).
+ * - contrast: Contraste (OpenLayers: -1 a 1, por defecto 0).
+ * - brightness: Brillo (OpenLayers: -1 a 1, por defecto 0).
    * - nodata: Valor nodata para transparencia.
    * - interpolation: Tipo de interpolación ('linear' o 'exponential').
    * - interpolationBase: Base para interpolación exponencial (por defecto 2).
@@ -61,6 +63,8 @@ class Raster extends Style {
     options.gamma = Raster.normalizeGamma(options.gamma);
     options.saturation = Raster.normalizeSaturation(options.saturation);
     options.exposure = Raster.normalizeExposure(options.exposure);
+    options.contrast = Raster.normalizeContrast(options.contrast);
+    options.brightness = Raster.normalizeBrightness(options.brightness);
     options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
       ? Raster.DEFAULT_OPTIONS.interpolationBase
@@ -174,17 +178,18 @@ class Raster extends Style {
   }
 
   /**
-   * Normaliza el parámetro saturation según el rango (-1 a 1).
+   * Normaliza un parámetro en el rango [-1, 1].
    *
    * @function
    * @private
-   * @param {number|string} saturation Saturación.
-   * @return {number} Saturación normalizada.
+   * @param {number|string} valueParam Valor.
+   * @param {number} defaultValue Valor por defecto si no es numérico.
+   * @return {number} Valor normalizado.
    */
-  static normalizeSaturation(saturation) {
-    const value = parseFloat(saturation);
+  static normalizeSignedUnitRange(valueParam, defaultValue) {
+    const value = parseFloat(valueParam);
     if (Number.isNaN(value)) {
-      return Raster.DEFAULT_OPTIONS.saturation;
+      return defaultValue;
     }
     if (value < -1) {
       return -1;
@@ -196,6 +201,18 @@ class Raster extends Style {
   }
 
   /**
+   * Normaliza el parámetro saturation según el rango (-1 a 1).
+   *
+   * @function
+   * @private
+   * @param {number|string} saturation Saturación.
+   * @return {number} Saturación normalizada.
+   */
+  static normalizeSaturation(saturation) {
+    return Raster.normalizeSignedUnitRange(saturation, Raster.DEFAULT_OPTIONS.saturation);
+  }
+
+  /**
    * Normaliza el parámetro exposure según el rango (-1 a 1).
    *
    * @function
@@ -204,17 +221,31 @@ class Raster extends Style {
    * @return {number} Exposición normalizada.
    */
   static normalizeExposure(exposure) {
-    const value = parseFloat(exposure);
-    if (Number.isNaN(value)) {
-      return Raster.DEFAULT_OPTIONS.exposure;
-    }
-    if (value < -1) {
-      return -1;
-    }
-    if (value > 1) {
-      return 1;
-    }
-    return value;
+    return Raster.normalizeSignedUnitRange(exposure, Raster.DEFAULT_OPTIONS.exposure);
+  }
+
+  /**
+   * Normaliza el parámetro contrast según el rango (-1 a 1).
+   *
+   * @function
+   * @private
+   * @param {number|string} contrast Contraste.
+   * @return {number} Contraste normalizado.
+   */
+  static normalizeContrast(contrast) {
+    return Raster.normalizeSignedUnitRange(contrast, Raster.DEFAULT_OPTIONS.contrast);
+  }
+
+  /**
+   * Normaliza el parámetro brightness según el rango (-1 a 1).
+   *
+   * @function
+   * @private
+   * @param {number|string} brightness Brillo.
+   * @return {number} Brillo normalizado.
+   */
+  static normalizeBrightness(brightness) {
+    return Raster.normalizeSignedUnitRange(brightness, Raster.DEFAULT_OPTIONS.brightness);
   }
 
   /**
@@ -376,6 +407,56 @@ class Raster extends Style {
   }
 
   /**
+   * Este método devuelve el contraste del estilo ráster.
+   *
+   * @function
+   * @public
+   * @return {number} Contraste.
+   * @api
+   */
+  getContrast() {
+    return this.options_.contrast;
+  }
+
+  /**
+   * Este método establece el contraste del estilo ráster.
+   *
+   * @function
+   * @public
+   * @param {number} contrast Contraste (-1 a 1).
+   * @api
+   */
+  setContrast(contrast) {
+    this.options_.contrast = Raster.normalizeContrast(contrast);
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve el brillo del estilo ráster.
+   *
+   * @function
+   * @public
+   * @return {number} Brillo.
+   * @api
+   */
+  getBrightness() {
+    return this.options_.brightness;
+  }
+
+  /**
+   * Este método establece el brillo del estilo ráster.
+   *
+   * @function
+   * @public
+   * @param {number} brightness Brillo (-1 a 1).
+   * @api
+   */
+  setBrightness(brightness) {
+    this.options_.brightness = Raster.normalizeBrightness(brightness);
+    this.update_();
+  }
+
+  /**
    * Este método devuelve el valor nodata del estilo ráster.
    *
    * @function
@@ -526,6 +607,8 @@ class Raster extends Style {
       gamma: options.gamma,
       saturation: options.saturation,
       exposure: options.exposure,
+      contrast: options.contrast,
+      brightness: options.brightness,
       nodata: options.nodata,
       interpolation: options.interpolation,
       interpolationBase: options.interpolationBase,
@@ -569,6 +652,8 @@ Raster.DEFAULT_OPTIONS = {
   gamma: 1,
   saturation: 0,
   exposure: 0,
+  contrast: 0,
+  brightness: 0,
   interpolation: 'linear',
   interpolationBase: 2,
 };

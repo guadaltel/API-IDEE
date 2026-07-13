@@ -161,6 +161,44 @@ Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 
 ---
 
+### `contrast`
+
+| | |
+|---|---|
+| **Tipo** | `number` |
+| **Por defecto** | `0` |
+| **Rango** | `-1` a `1` |
+| **Descripción** | Ajuste de contraste aplicado sobre el color resultante (incluida la rampa). |
+
+| Valor | Efecto |
+|-------|--------|
+| `0` | Sin cambio (por defecto) |
+| `> 0` | Aumenta el contraste |
+| `< 0` | Reduce el contraste |
+
+Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
+
+---
+
+### `brightness`
+
+| | |
+|---|---|
+| **Tipo** | `number` |
+| **Por defecto** | `0` |
+| **Rango** | `-1` a `1` |
+| **Descripción** | Ajuste de brillo aplicado sobre el color resultante (incluida la rampa). |
+
+| Valor | Efecto |
+|-------|--------|
+| `0` | Sin cambio (por defecto) |
+| `> 0` | Aumenta el brillo |
+| `< 0` | Reduce el brillo |
+
+Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
+
+---
+
 ### `nodata`
 
 | | |
