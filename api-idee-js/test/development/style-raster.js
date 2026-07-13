@@ -34,7 +34,7 @@ const layerGeoTIFF = new GeoTIFF({
 }, {
   // bands: [1, 2, 3],
   // convertToRGB: false,
-  normalize: false,
+  normalize: true,
   // style: new Raster({
   //   bands: [1, 2, 3],
   //   min: 0,
