@@ -142,6 +142,25 @@ Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 
 ---
 
+### `exposure`
+
+| | |
+|---|---|
+| **Tipo** | `number` |
+| **Por defecto** | `0` |
+| **Rango** | `-1` a `1` |
+| **Descripción** | Ajuste de exposición aplicado sobre el color resultante (incluida la rampa). |
+
+| Valor | Efecto |
+|-------|--------|
+| `0` | Sin cambio (por defecto) |
+| `> 0` | Aumenta la exposición |
+| `< 0` | Reduce la exposición |
+
+Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
+
+---
+
 ### `nodata`
 
 | | |
@@ -329,7 +348,7 @@ El estilo ráster interactúa con las opciones de la capa. Configuración típic
 
 ```javascript
 const layer = new IDEE.layer.GeoTIFF({
-  url: 'https://.../TCI.tif',
+  url: 'https://.../....tif',
   name: 'Sentinel TCI',
   legend: 'Sentinel-2 TCI',
 }, {

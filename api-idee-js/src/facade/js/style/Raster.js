@@ -29,6 +29,7 @@ class Raster extends Style {
    * - ramp: Rampa de colores.
    * - gamma: Gamma de la capa (por defecto 1, rango OpenLayers: 0 a infinito).
    * - saturation: Saturación del color (OpenLayers: -1 a 1, por defecto 0).
+  * - exposure: Exposición (OpenLayers: -1 a 1, por defecto 0).
    * - nodata: Valor nodata para transparencia.
    * - interpolation: Tipo de interpolación ('linear' o 'exponential').
    * - interpolationBase: Base para interpolación exponencial (por defecto 2).
@@ -59,6 +60,7 @@ class Raster extends Style {
       : parseFloat(options.max);
     options.gamma = Raster.normalizeGamma(options.gamma);
     options.saturation = Raster.normalizeSaturation(options.saturation);
+    options.exposure = Raster.normalizeExposure(options.exposure);
     options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
       ? Raster.DEFAULT_OPTIONS.interpolationBase
@@ -183,6 +185,28 @@ class Raster extends Style {
     const value = parseFloat(saturation);
     if (Number.isNaN(value)) {
       return Raster.DEFAULT_OPTIONS.saturation;
+    }
+    if (value < -1) {
+      return -1;
+    }
+    if (value > 1) {
+      return 1;
+    }
+    return value;
+  }
+
+  /**
+   * Normaliza el parámetro exposure según el rango (-1 a 1).
+   *
+   * @function
+   * @private
+   * @param {number|string} exposure Exposición.
+   * @return {number} Exposición normalizada.
+   */
+  static normalizeExposure(exposure) {
+    const value = parseFloat(exposure);
+    if (Number.isNaN(value)) {
+      return Raster.DEFAULT_OPTIONS.exposure;
     }
     if (value < -1) {
       return -1;
@@ -323,6 +347,31 @@ class Raster extends Style {
    */
   setSaturation(saturation) {
     this.options_.saturation = Raster.normalizeSaturation(saturation);
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la exposición del estilo ráster.
+   *
+   * @function
+   * @public
+   * @return {number} Exposición.
+   * @api
+   */
+  getExposure() {
+    return this.options_.exposure;
+  }
+
+  /**
+   * Este método establece la exposición del estilo ráster.
+   *
+   * @function
+   * @public
+   * @param {number} exposure Exposición (-1 a 1).
+   * @api
+   */
+  setExposure(exposure) {
+    this.options_.exposure = Raster.normalizeExposure(exposure);
     this.update_();
   }
 
@@ -476,6 +525,7 @@ class Raster extends Style {
       ramp: [...options.ramp],
       gamma: options.gamma,
       saturation: options.saturation,
+      exposure: options.exposure,
       nodata: options.nodata,
       interpolation: options.interpolation,
       interpolationBase: options.interpolationBase,
@@ -518,6 +568,7 @@ Raster.DEFAULT_OPTIONS = {
   ramp: ['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000'],
   gamma: 1,
   saturation: 0,
+  exposure: 0,
   interpolation: 'linear',
   interpolationBase: 2,
 };

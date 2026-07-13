@@ -57,7 +57,7 @@ class Raster extends Style {
    */
   buildOLStyle_() {
     const {
-      min, max, ramp, gamma, saturation, nodata, interpolation,
+      min, max, ramp, gamma, saturation, exposure, nodata, interpolation,
     } = this.options_;
 
     let rangeMin = min;
@@ -109,6 +109,10 @@ class Raster extends Style {
 
     if (!isNullOrEmpty(saturation) && saturation !== 0) {
       olStyle.saturation = saturation;
+    }
+
+    if (!isNullOrEmpty(exposure) && exposure !== 0) {
+      olStyle.exposure = exposure;
     }
 
     return olStyle;
