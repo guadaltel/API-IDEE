@@ -30,6 +30,33 @@ class Raster extends Style {
   }
 
   /**
+   * Indica si las opciones incluyen rampa de colores.
+   *
+   * @function
+   * @private
+   * @returns {boolean} Verdadero si hay rampa.
+   */
+  hasRamp_() {
+    const { ramp } = this.options_;
+    return !isNullOrEmpty(ramp) && isArray(ramp) && ramp.length >= 2;
+  }
+
+  /**
+   * Devuelve la banda usada para comparar nodata.
+   *
+   * @function
+   * @private
+   * @returns {number} Índice de banda.
+   */
+  getNodataBand_() {
+    const { bands } = this.options_;
+    if (!isArray(bands)) {
+      return bands;
+    }
+    return bands[0];
+  }
+
+  /**
    * Este método devuelve la expresión de valor para la rampa.
    *
    * @function
@@ -49,6 +76,88 @@ class Raster extends Style {
   }
 
   /**
+   * Expresión de color sin rampa (passthrough de bandas).
+   *
+   * @function
+   * @private
+   * @returns {Array} Expresión WebGL.
+   */
+  getPassthroughColorExpression_() {
+    const { bands } = this.options_;
+    if (!isArray(bands)) {
+      return ['color', ['band', bands], ['band', bands], ['band', bands]];
+    }
+    if (bands.length >= 3) {
+      return ['color', ['band', bands[0]], ['band', bands[1]], ['band', bands[2]]];
+    }
+    if (bands.length === 2) {
+      return ['color', ['band', bands[0]], ['band', bands[1]], ['band', bands[1]]];
+    }
+    return ['color', ['band', bands[0]], ['band', bands[0]], ['band', bands[0]]];
+  }
+
+  /**
+   * Construye la expresión color (rampa o passthrough con nodata).
+   *
+   * @function
+   * @private
+   * @returns {Array|undefined} Expresión WebGL de color.
+   */
+  buildColorExpression_() {
+    const {
+      min, max, ramp, nodata, interpolation,
+    } = this.options_;
+
+    if (this.hasRamp_()) {
+      let rangeMin = min;
+      let rangeMax = max;
+      if (this.layerNormalize_) {
+        rangeMin = 0;
+        rangeMax = 1;
+      }
+
+      const stops = generateIntervals([rangeMin, rangeMax], ramp.length);
+      let interpolateMode = ['linear'];
+      if (interpolation === 'exponential') {
+        let exponentialBase = this.options_.interpolationBase;
+        if (isNullOrEmpty(exponentialBase) || exponentialBase <= 0) {
+          exponentialBase = 2;
+        }
+        interpolateMode = ['exponential', exponentialBase];
+      }
+      const valueExpression = this.getValueExpression_();
+      const colorExpression = ['interpolate', interpolateMode, valueExpression];
+
+      ramp.forEach((color, index) => {
+        colorExpression.push(stops[index]);
+        colorExpression.push(chroma(color).rgb());
+      });
+
+      if (!isNullOrEmpty(nodata) || nodata === 0) {
+        return [
+          'case',
+          ['==', ['band', this.getNodataBand_()], nodata],
+          [0, 0, 0, 0],
+          colorExpression,
+        ];
+      }
+      return colorExpression;
+    }
+
+    if (!isNullOrEmpty(nodata) || nodata === 0) {
+      const passthroughColor = this.getPassthroughColorExpression_();
+      return [
+        'case',
+        ['==', ['band', this.getNodataBand_()], nodata],
+        [0, 0, 0, 0],
+        passthroughColor,
+      ];
+    }
+
+    return undefined;
+  }
+
+  /**
    * Este método construye el estilo WebGL de OpenLayers.
    *
    * @function
@@ -57,51 +166,14 @@ class Raster extends Style {
    */
   buildOLStyle_() {
     const {
-      min, max, ramp, gamma, saturation, exposure, contrast, brightness, nodata, interpolation,
+      gamma, saturation, exposure, contrast, brightness,
     } = this.options_;
 
-    let rangeMin = min;
-    let rangeMax = max;
-    if (this.layerNormalize_) {
-      rangeMin = 0;
-      rangeMax = 1;
+    const olStyle = {};
+    const color = this.buildColorExpression_();
+    if (!isNullOrEmpty(color)) {
+      olStyle.color = color;
     }
-
-    const stops = generateIntervals([rangeMin, rangeMax], ramp.length);
-    let interpolateMode = ['linear'];
-    if (interpolation === 'exponential') {
-      let exponentialBase = this.options_.interpolationBase;
-      if (isNullOrEmpty(exponentialBase) || exponentialBase <= 0) {
-        exponentialBase = 2;
-      }
-      interpolateMode = ['exponential', exponentialBase];
-    }
-    const valueExpression = this.getValueExpression_();
-    const colorExpression = ['interpolate', interpolateMode, valueExpression];
-
-    ramp.forEach((color, index) => {
-      colorExpression.push(stops[index]);
-      colorExpression.push(chroma(color).rgb());
-    });
-
-    let color = colorExpression;
-    if (!isNullOrEmpty(nodata)) {
-      const { bands } = this.options_;
-      let nodataBand = bands;
-      if (isArray(bands)) {
-        nodataBand = bands[0];
-      }
-      color = [
-        'case',
-        ['==', ['band', nodataBand], nodata],
-        [0, 0, 0, 0],
-        colorExpression,
-      ];
-    }
-
-    const olStyle = {
-      color,
-    };
 
     if (!isNullOrEmpty(gamma) && gamma !== 1) {
       olStyle.gamma = gamma;
@@ -199,18 +271,6 @@ class Raster extends Style {
    */
   setOptions(options, vendorOptions) {
     this.options_ = extendsObj(options, vendorOptions);
-  }
-
-  /**
-   * Este método devuelve las opciones del estilo.
-   *
-   * @public
-   * @function
-   * @returns {Object} Opciones del estilo.
-   * @api stable
-   */
-  getOptions() {
-    return this.options_;
   }
 }
 

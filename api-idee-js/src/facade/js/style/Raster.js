@@ -12,8 +12,8 @@ import { getValue } from '../i18n/language';
 
 /**
  * @classdesc
- * Crea un estilo ráster con rampa de colores
- * con parámetros especificados por el usuario.
+ * Crea un estilo ráster con rampa de colores opcional
+ * y filtros WebGL (gamma, saturación, exposición, etc.).
  * @api
  * @extends {IDEE.style}
  */
@@ -23,15 +23,15 @@ class Raster extends Style {
    *
    * @constructor
    * @param {Mx.RasterStyleOptions} optionsParam Opciones del estilo.
-   * - bands: Banda o bandas a utilizar. Número para una banda, array para media.
+   * - bands: Banda o bandas (solo con rampa o nodata).
    * - min: Valor mínimo de la rampa (por defecto 0).
    * - max: Valor máximo de la rampa (por defecto 1).
-   * - ramp: Rampa de colores.
-   * - gamma: Gamma de la capa (por defecto 1, rango OpenLayers: 0 a infinito).
-   * - saturation: Saturación del color (OpenLayers: -1 a 1, por defecto 0).
-  * - exposure: Exposición (OpenLayers: -1 a 1, por defecto 0).
- * - contrast: Contraste (OpenLayers: -1 a 1, por defecto 0).
- * - brightness: Brillo (OpenLayers: -1 a 1, por defecto 0).
+   * - ramp: Rampa de colores (opcional).
+   * - gamma: Gamma de la capa (por defecto 1, rango: 0 a infinito).
+   * - saturation: Saturación del color (rango: -1 a 1, por defecto 0).
+   * - exposure: Exposición (rango: -1 a 1, por defecto 0).
+   * - contrast: Contraste (rango: -1 a 1, por defecto 0).
+   * - brightness: Brillo (rango: -1 a 1, por defecto 0).
    * - nodata: Valor nodata para transparencia.
    * - interpolation: Tipo de interpolación ('linear' o 'exponential').
    * - interpolationBase: Base para interpolación exponencial (por defecto 2).
@@ -39,48 +39,8 @@ class Raster extends Style {
    * @api
    */
   constructor(optionsParam = {}, vendorOptionsParam = {}) {
-    const options = { ...optionsParam };
+    const options = Raster.normalizeOptions({ ...optionsParam }, false);
     const vendorOptions = vendorOptionsParam;
-
-    if (!isNullOrEmpty(options.ramp) && !isArray(options.ramp)) {
-      options.ramp = [options.ramp];
-    }
-
-    options.ramp = options.ramp || Raster.DEFAULT_OPTIONS.ramp;
-
-    if (options.ramp.length < 2) {
-      const inverseColorParam = inverseColor(options.ramp[0]);
-      options.ramp.push(inverseColorParam);
-    }
-
-    options.bands = Raster.normalizeBands(options);
-    options.min = isNullOrEmpty(options.min)
-      ? Raster.DEFAULT_OPTIONS.min
-      : parseFloat(options.min);
-    options.max = isNullOrEmpty(options.max)
-      ? Raster.DEFAULT_OPTIONS.max
-      : parseFloat(options.max);
-    options.gamma = Raster.normalizeGamma(options.gamma);
-    options.saturation = Raster.normalizeSignedUnitRange(
-      options.saturation,
-      Raster.DEFAULT_OPTIONS.saturation,
-    );
-    options.exposure = Raster.normalizeSignedUnitRange(
-      options.exposure,
-      Raster.DEFAULT_OPTIONS.exposure,
-    );
-    options.contrast = Raster.normalizeSignedUnitRange(
-      options.contrast,
-      Raster.DEFAULT_OPTIONS.contrast,
-    );
-    options.brightness = Raster.normalizeSignedUnitRange(
-      options.brightness,
-      Raster.DEFAULT_OPTIONS.brightness,
-    );
-    options.interpolation = options.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
-    options.interpolationBase = Number.isNaN(parseFloat(options.interpolationBase))
-      ? Raster.DEFAULT_OPTIONS.interpolationBase
-      : parseFloat(options.interpolationBase);
 
     if (isUndefined(RasterImpl) || (isObject(RasterImpl)
       && isNullOrEmpty(Object.keys(RasterImpl)))) {
@@ -103,17 +63,38 @@ class Raster extends Style {
     this.vendorOptions_ = vendorOptions;
   }
 
+  // #################################################
+  // ############ MÉTODOS GETTER Y SETTER ############
+  // #################################################
+
   /**
-   * Este método elimina los estilos.
+   * Este método devuelve la base de interpolación exponencial.
+   * Sólo es válido si el tipo de interpolación es 'exponential'.
    *
    * @function
    * @public
-   * @param {IDEE.layer} layer Capa.
+   * @return {number} Base de interpolación exponencial.
    * @api
    */
-  unapply(layer) {
-    this.layer_ = null;
-    this.getImpl().unapply(layer);
+  getInterpolationBase() {
+    return this.options_.interpolationBase;
+  }
+
+  /**
+   * Este método establece la base de interpolación exponencial.
+   * Sólo es válido si el tipo de interpolación es 'exponential'.
+   *
+   * @function
+   * @public
+   * @param {number} interpolationBase Base de interpolación exponencial.
+   * @api
+   */
+  setInterpolationBase(interpolationBase) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    this.options_.interpolationBase = parseFloat(interpolationBase);
+    this.update_();
   }
 
   /**
@@ -137,161 +118,12 @@ class Raster extends Style {
    * @api
    */
   setBands(bands) {
+    const hasNoRamp = !Raster.hasRamp(this.options_, true);
+    const hasNoNodata = isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0;
+    if (hasNoRamp && hasNoNodata) {
+      return;
+    }
     this.options_.bands = Raster.normalizeBands({ bands });
-    this.update_();
-  }
-
-  /**
-   * Normaliza el parámetro bands (número o array).
-   *
-   * @function
-   * @private
-   * @param {Object} options Opciones con bands.
-   * @return {number|Array<number>} Banda o bandas normalizadas.
-   */
-  static normalizeBands(options) {
-    const { bands } = options;
-
-    if (isNullOrEmpty(bands)) {
-      return Raster.DEFAULT_OPTIONS.bands;
-    }
-
-    if (isArray(bands)) {
-      if (bands.length === 0) {
-        Exception(getValue('exception').no_empty);
-      }
-      const normalized = bands.map((bandIndex) => parseInt(bandIndex, 10));
-      if (normalized.length === 1) {
-        return normalized[0];
-      }
-      return normalized;
-    }
-
-    return parseInt(bands, 10);
-  }
-
-  /**
-   * Normaliza el parámetro gamma según el rango (0 a infinito).
-   *
-   * @function
-   * @private
-   * @param {number|string} gamma Valor gamma.
-   * @return {number} Gamma normalizado.
-   */
-  static normalizeGamma(gamma) {
-    const value = parseFloat(gamma);
-    if (Number.isNaN(value)) {
-      return Raster.DEFAULT_OPTIONS.gamma;
-    }
-    if (value < 0) {
-      Exception(getValue('exception').invalid_raster_gamma);
-    }
-    return value;
-  }
-
-  /**
-   * Normaliza un parámetro en el rango [-1, 1].
-   *
-   * @function
-   * @private
-   * @param {number|string} valueParam Valor.
-   * @param {number} defaultValue Valor por defecto si no es numérico.
-   * @return {number} Valor normalizado.
-   */
-  static normalizeSignedUnitRange(valueParam, defaultValue) {
-    const value = parseFloat(valueParam);
-    if (Number.isNaN(value)) {
-      return defaultValue;
-    }
-    if (value < -1) {
-      return -1;
-    }
-    if (value > 1) {
-      return 1;
-    }
-    return value;
-  }
-
-  /**
-   * Este método devuelve el valor mínimo de la rampa.
-   *
-   * @function
-   * @public
-   * @return {number} Valor mínimo.
-   * @api
-   */
-  getMin() {
-    return this.options_.min;
-  }
-
-  /**
-   * Este método establece el valor mínimo de la rampa.
-   *
-   * @function
-   * @public
-   * @param {number} min Valor mínimo.
-   * @api
-   */
-  setMin(min) {
-    this.options_.min = parseFloat(min);
-    this.update_();
-  }
-
-  /**
-   * Este método devuelve el valor máximo de la rampa.
-   *
-   * @function
-   * @public
-   * @return {number} Valor máximo.
-   * @api
-   */
-  getMax() {
-    return this.options_.max;
-  }
-
-  /**
-   * Este método establece el valor máximo de la rampa.
-   *
-   * @function
-   * @public
-   * @param {number} max Valor máximo.
-   * @api
-   */
-  setMax(max) {
-    this.options_.max = parseFloat(max);
-    this.update_();
-  }
-
-  /**
-   * Este método devuelve la rampa de colores.
-   *
-   * @function
-   * @public
-   * @return {Array<string>} Rampa de colores.
-   * @api
-   */
-  getRamp() {
-    return this.options_.ramp;
-  }
-
-  /**
-   * Este método establece la rampa de colores.
-   *
-   * @function
-   * @public
-   * @param {Array<string>} rampParam Rampa de colores.
-   * @api
-   */
-  setRamp(rampParam) {
-    let ramp = rampParam;
-    if (!isArray(ramp)) {
-      ramp = [ramp];
-    }
-    if (ramp.length < 2) {
-      const inverseColorParam = inverseColor(ramp[0]);
-      ramp.push(inverseColorParam);
-    }
-    this.options_.ramp = ramp;
     this.update_();
   }
 
@@ -453,7 +285,20 @@ class Raster extends Style {
    * @api
    */
   setNodata(nodata) {
-    this.options_.nodata = nodata;
+    if (isNullOrEmpty(nodata) && nodata !== 0) {
+      delete this.options_.nodata;
+      if (!Raster.hasRamp(this.options_, true)) {
+        delete this.options_.bands;
+      }
+    } else {
+      this.options_.nodata = nodata;
+      if (!Raster.hasRamp(this.options_, true) && isNullOrEmpty(this.options_.bands)) {
+        this.options_.bands = Raster.DEFAULT_OPTIONS.bands;
+      }
+    }
+    if (!Raster.optionsHaveEffect(this.options_, true)) {
+      Exception(getValue('exception').invalid_raster_options);
+    }
     this.update_();
   }
 
@@ -479,6 +324,9 @@ class Raster extends Style {
    * @api
    */
   setInterpolation(interpolation, interpolationBase) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
     this.options_.interpolation = interpolation || Raster.DEFAULT_OPTIONS.interpolation;
     if (!isNullOrEmpty(interpolationBase)) {
       this.options_.interpolationBase = parseFloat(interpolationBase);
@@ -487,28 +335,324 @@ class Raster extends Style {
   }
 
   /**
-   * Este método devuelve la base de interpolación exponencial.
+   * Este método devuelve el valor mínimo de la rampa.
    *
    * @function
    * @public
-   * @return {number} Base de interpolación exponencial.
+   * @return {number} Valor mínimo.
    * @api
    */
-  getInterpolationBase() {
-    return this.options_.interpolationBase;
+  getMin() {
+    return this.options_.min;
   }
 
   /**
-   * Este método establece la base de interpolación exponencial.
+   * Este método establece el valor mínimo de la rampa.
    *
    * @function
    * @public
-   * @param {number} interpolationBase Base de interpolación exponencial.
+   * @param {number} min Valor mínimo.
    * @api
    */
-  setInterpolationBase(interpolationBase) {
-    this.options_.interpolationBase = parseFloat(interpolationBase);
+  setMin(min) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    this.options_.min = parseFloat(min);
     this.update_();
+  }
+
+  /**
+   * Este método devuelve el valor máximo de la rampa.
+   *
+   * @function
+   * @public
+   * @return {number} Valor máximo.
+   * @api
+   */
+  getMax() {
+    return this.options_.max;
+  }
+
+  /**
+   * Este método establece el valor máximo de la rampa.
+   *
+   * @function
+   * @public
+   * @param {number} max Valor máximo.
+   * @api
+   */
+  setMax(max) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    this.options_.max = parseFloat(max);
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la rampa de colores.
+   *
+   * @function
+   * @public
+   * @return {Array<string>} Rampa de colores.
+   * @api
+   */
+  getRamp() {
+    return this.options_.ramp || null;
+  }
+
+  /**
+   * Este método establece la rampa de colores.
+   *
+   * @function
+   * @public
+   * @param {Array<string>|null} rampParam Rampa de colores o null para eliminarla.
+   * @api
+   */
+  setRamp(rampParam) {
+    // Si ramp es null, se eliminan rampa, min, max, interpolación e interpolationBase.
+    if (isNullOrEmpty(rampParam)) {
+      const nextOptions = { ...this.options_ };
+      delete nextOptions.ramp;
+      delete nextOptions.min;
+      delete nextOptions.max;
+      delete nextOptions.interpolation;
+      delete nextOptions.interpolationBase;
+      if (isNullOrEmpty(nextOptions.nodata) && nextOptions.nodata !== 0) {
+        delete nextOptions.bands;
+      }
+      if (!Raster.optionsHaveEffect(nextOptions, true)) {
+        Exception(getValue('exception').invalid_raster_options);
+      }
+      delete this.options_.ramp;
+      delete this.options_.min;
+      delete this.options_.max;
+      delete this.options_.interpolation;
+      delete this.options_.interpolationBase;
+      if (isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0) {
+        delete this.options_.bands;
+      }
+      this.update_();
+      return;
+    }
+    let ramp = rampParam;
+    if (!isArray(ramp)) {
+      ramp = [ramp];
+    }
+    if (ramp.length < 2) {
+      const inverseColorParam = inverseColor(ramp[0]);
+      ramp.push(inverseColorParam);
+    }
+    this.options_.ramp = ramp;
+    if (isNullOrEmpty(this.options_.bands)) {
+      this.options_.bands = Raster.DEFAULT_OPTIONS.bands;
+    }
+    if (isNullOrEmpty(this.options_.min)) {
+      this.options_.min = Raster.DEFAULT_OPTIONS.min;
+    }
+    if (isNullOrEmpty(this.options_.max)) {
+      this.options_.max = Raster.DEFAULT_OPTIONS.max;
+    }
+    if (isNullOrEmpty(this.options_.interpolation)) {
+      this.options_.interpolation = Raster.DEFAULT_OPTIONS.interpolation;
+    }
+    if (isNullOrEmpty(this.options_.interpolationBase)) {
+      this.options_.interpolationBase = Raster.DEFAULT_OPTIONS.interpolationBase;
+    }
+    this.update_();
+  }
+
+  // #################################################
+  // ############ FIN MÉTODOS GETTER Y SETTER ############
+  // #################################################
+
+  /**
+   * Normaliza y valida las opciones del estilo.
+   *
+   * @function
+   * @private
+   * @param {Object} options Opciones del estilo.
+   * @param {boolean} validate Si es falso, no lanza error cuando las opciones no tienen efecto.
+   * @return {Object} Opciones normalizadas.
+   */
+  static normalizeOptions(options, validate = true) {
+    const normalized = { ...options };
+
+    if (!isNullOrEmpty(normalized.ramp) && !isArray(normalized.ramp)) {
+      normalized.ramp = [normalized.ramp];
+    }
+
+    if (isNullOrEmpty(normalized.ramp)) {
+      delete normalized.ramp;
+    } else if (normalized.ramp.length < 2) {
+      const inverseColorParam = inverseColor(normalized.ramp[0]);
+      normalized.ramp.push(inverseColorParam);
+    }
+
+    normalized.gamma = Raster.normalizeGamma(normalized.gamma);
+    normalized.saturation = Raster.normalizeSignedUnitRange(
+      normalized.saturation,
+      Raster.DEFAULT_OPTIONS.saturation,
+    );
+    normalized.exposure = Raster.normalizeSignedUnitRange(
+      normalized.exposure,
+      Raster.DEFAULT_OPTIONS.exposure,
+    );
+    normalized.contrast = Raster.normalizeSignedUnitRange(
+      normalized.contrast,
+      Raster.DEFAULT_OPTIONS.contrast,
+    );
+    normalized.brightness = Raster.normalizeSignedUnitRange(
+      normalized.brightness,
+      Raster.DEFAULT_OPTIONS.brightness,
+    );
+
+    if (Raster.hasRamp(normalized, true)) {
+      normalized.bands = Raster.normalizeBands(normalized);
+      normalized.min = isNullOrEmpty(normalized.min)
+        ? Raster.DEFAULT_OPTIONS.min
+        : parseFloat(normalized.min);
+      normalized.max = isNullOrEmpty(normalized.max)
+        ? Raster.DEFAULT_OPTIONS.max
+        : parseFloat(normalized.max);
+      normalized.interpolation = normalized.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
+      normalized.interpolationBase = Number.isNaN(parseFloat(normalized.interpolationBase))
+        ? Raster.DEFAULT_OPTIONS.interpolationBase
+        : parseFloat(normalized.interpolationBase);
+    } else if (!isNullOrEmpty(normalized.nodata) || normalized.nodata === 0) {
+      normalized.bands = Raster.normalizeBands(normalized);
+    } else {
+      delete normalized.bands;
+      delete normalized.min;
+      delete normalized.max;
+      delete normalized.interpolation;
+      delete normalized.interpolationBase;
+    }
+
+    if (validate && !Raster.optionsHaveEffect(normalized, true)) {
+      Exception(getValue('exception').invalid_raster_options);
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Normaliza el parámetro bands (número o array).
+   *
+   * @function
+   * @private
+   * @param {Object} options Opciones con bands.
+   * @return {number|Array<number>} Banda o bandas normalizadas.
+   */
+  static normalizeBands(options) {
+    const { bands } = options;
+
+    if (isNullOrEmpty(bands)) {
+      return Raster.DEFAULT_OPTIONS.bands;
+    }
+
+    if (isArray(bands)) {
+      if (bands.length === 0) {
+        Exception(getValue('exception').no_empty);
+      }
+      const normalized = bands.map((bandIndex) => parseInt(bandIndex, 10));
+      if (normalized.length === 1) {
+        return normalized[0];
+      }
+      return normalized;
+    }
+
+    return parseInt(bands, 10);
+  }
+
+  /**
+   * Normaliza el parámetro gamma según el rango (0 a infinito).
+   *
+   * @function
+   * @private
+   * @param {number|string} gamma Valor gamma.
+   * @return {number} Gamma normalizado.
+   */
+  static normalizeGamma(gamma) {
+    const value = parseFloat(gamma);
+    if (Number.isNaN(value)) {
+      return Raster.DEFAULT_OPTIONS.gamma;
+    }
+    if (value < 0) {
+      Exception(getValue('exception').invalid_raster_gamma);
+    }
+    return value;
+  }
+
+  /**
+   * Normaliza un parámetro en el rango [-1, 1].
+   *
+   * @function
+   * @private
+   * @param {number|string} valueParam Valor.
+   * @param {number} defaultValue Valor por defecto si no es numérico.
+   * @return {number} Valor normalizado.
+   */
+  static normalizeSignedUnitRange(valueParam, defaultValue) {
+    const value = parseFloat(valueParam);
+    if (Number.isNaN(value)) {
+      return defaultValue;
+    }
+    if (value < -1) {
+      return -1;
+    }
+    if (value > 1) {
+      return 1;
+    }
+    return value;
+  }
+
+  /**
+   * Indica si las opciones definen algún efecto aplicable (rampa, nodata o filtros).
+   *
+   * @function
+   * @public
+   * @param {Object} optionsParam Opciones del estilo.
+   * @param {boolean} alreadyNormalized Si es true, optionsParam ya está normalizado.
+   * @return {boolean} Verdadero si hay algo que aplicar.
+   * @api
+   */
+  static optionsHaveEffect(optionsParam = {}, alreadyNormalized = false) {
+    const options = alreadyNormalized
+      ? optionsParam
+      : Raster.normalizeOptions({ ...optionsParam }, false);
+
+    if (Raster.hasRamp(options, true)) {
+      return true;
+    }
+    if (!isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      return true;
+    }
+    const filterKeys = ['gamma', 'saturation', 'exposure', 'contrast', 'brightness'];
+    return filterKeys.some((key) => {
+      return !isNullOrEmpty(options[key])
+        && options[key] !== Raster.DEFAULT_OPTIONS[key];
+    });
+  }
+
+  /**
+   * Indica si las opciones incluyen rampa de colores.
+   *
+   * @function
+   * @public
+   * @param {Object} optionsParam Opciones del estilo.
+   * @param {boolean} alreadyNormalized Si es true, optionsParam ya está normalizado.
+   * @return {boolean} Verdadero si hay rampa.
+   * @api
+   */
+  static hasRamp(optionsParam = {}, alreadyNormalized = false) {
+    const options = alreadyNormalized
+      ? optionsParam
+      : Raster.normalizeOptions({ ...optionsParam }, false);
+    return !isNullOrEmpty(options.ramp)
+      && isArray(options.ramp)
+      && options.ramp.length >= 2;
   }
 
   /**
@@ -529,6 +673,19 @@ class Raster extends Style {
   }
 
   /**
+   * Este método elimina los estilos.
+   *
+   * @function
+   * @public
+   * @param {IDEE.layer} layer Capa.
+   * @api
+   */
+  unapply(layer) {
+    this.layer_ = null;
+    this.getImpl().unapply(layer);
+  }
+
+  /**
    * Este método dibuja el estilo en el canvas.
    *
    * @function
@@ -536,6 +693,9 @@ class Raster extends Style {
    * @api
    */
   drawGeometryToCanvas() {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
     const ctx = this.canvas_.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 20, 200, 20);
     const intervals = generateIntervals([0, 1], this.options_.ramp.length);
@@ -558,7 +718,9 @@ class Raster extends Style {
    * @api
    */
   updateCanvas() {
-    this.drawGeometryToCanvas();
+    if (Raster.hasRamp(this.options_, true)) {
+      this.drawGeometryToCanvas();
+    }
   }
 
   /**
@@ -572,23 +734,32 @@ class Raster extends Style {
    */
   toJSON() {
     const options = this.getOptions();
-    const serializedBands = isArray(options.bands)
-      ? [...options.bands]
-      : options.bands;
     const serializedOptions = {
-      bands: serializedBands,
-      min: options.min,
-      max: options.max,
-      ramp: [...options.ramp],
       gamma: options.gamma,
       saturation: options.saturation,
       exposure: options.exposure,
       contrast: options.contrast,
       brightness: options.brightness,
-      nodata: options.nodata,
-      interpolation: options.interpolation,
-      interpolationBase: options.interpolationBase,
     };
+    if (!isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      serializedOptions.nodata = options.nodata;
+    }
+    if (Raster.hasRamp(options, true)) {
+      const serializedBands = isArray(options.bands)
+        ? [...options.bands]
+        : options.bands;
+      serializedOptions.bands = serializedBands;
+      serializedOptions.min = options.min;
+      serializedOptions.max = options.max;
+      serializedOptions.ramp = [...options.ramp];
+      serializedOptions.interpolation = options.interpolation;
+      serializedOptions.interpolationBase = options.interpolationBase;
+    } else if (!isNullOrEmpty(options.bands)) {
+      const serializedBands = isArray(options.bands)
+        ? [...options.bands]
+        : options.bands;
+      serializedOptions.bands = serializedBands;
+    }
     const vendorOptions = this.vendorOptions_;
     const parameters = [serializedOptions, vendorOptions];
     const deserializedMethod = 'IDEE.style.Raster.deserialize';

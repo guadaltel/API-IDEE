@@ -1,6 +1,8 @@
 # IDEE.style.Raster
 
-Clase de estilo para capas ráster que permite aplicar **simbología con rampas de colores** sobre datos GeoTIFF y otras capas raster compatibles con `ol/layer/WebGLTile` (OpenLayers).
+Clase de estilo para capas ráster que permite aplicar **simbología con rampas de colores opcionales** y **filtros WebGL** (gamma, saturación, exposición, contraste, brillo) sobre datos GeoTIFF y otras capas raster compatibles con `ol/layer/WebGLTile` (OpenLayers).
+
+El estilo exige **al menos un efecto activo**: rampa, nodata o algún filtro distinto de su valor por defecto.
 
 ---
 
@@ -36,8 +38,8 @@ new IDEE.style.Raster(options, vendorOptions)
 | | |
 |---|---|
 | **Tipo** | `number` \| `Array<number>` |
-| **Por defecto** | `1` |
-| **Descripción** | Banda o bandas que intervienen en la simbología. |
+| **Por defecto** | `1` (solo si hay rampa o nodata) |
+| **Descripción** | Banda o bandas que intervienen en la simbología. Solo aplica con **rampa** o **nodata**. |
 
 | Valor | Comportamiento |
 |-------|----------------|
@@ -60,7 +62,7 @@ Reglas:
 |---|---|
 | **Tipo** | `number` |
 | **Por defecto** | `0` |
-| **Descripción** | Valor mínimo del rango de datos que se mapea al **primer color** de la rampa. |
+| **Descripción** | Valor mínimo del rango de datos que se mapea al **primer color** de la rampa. Solo aplica si hay **rampa**. |
 
 Los píxeles con valor **≤ min** reciben el primer color de `ramp`.
 
@@ -74,7 +76,7 @@ Los píxeles con valor **≤ min** reciben el primer color de `ramp`.
 |---|---|
 | **Tipo** | `number` |
 | **Por defecto** | `1` |
-| **Descripción** | Valor máximo del rango que se mapea al **último color** de la rampa. |
+| **Descripción** | Valor máximo del rango que se mapea al **último color** de la rampa. Solo aplica si hay **rampa**. |
 
 Los píxeles con valor **≥ max** reciben el último color de `ramp`.
 
@@ -86,14 +88,15 @@ Con `normalize: false`, usa el rango real del dato (p. ej. `0`–`255` para GeoT
 
 | | |
 |---|---|
-| **Tipo** | `Array<string>` |
-| **Por defecto** | `['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000']` |
+| **Tipo** | `Array<string>` \| `null` |
+| **Por defecto** | *(ninguna; opcional)* |
 | **Descripción** | Rampa de colores. Cada entrada es un color en hexadecimal (`#RRGGBB`) o formato CSS válido para `chroma-js`. |
 
 Reglas:
-- Debe tener **al menos 2 colores**. Si solo se pasa uno, se añade automáticamente su color inverso.
+- **Opcional.** Si no se define, el estilo puede limitarse a filtros WebGL y/o nodata.
+- Debe tener **al menos 2 colores** cuando se usa. Si solo se pasa uno, se añade automáticamente su color inverso.
 - Los colores se distribuyen **uniformemente** entre `min` y `max`.
-- Cuantos más colores, más suave será la transición.
+- `setRamp(null)` elimina la rampa y los campos asociados (`min`, `max`, `interpolation`, etc.).
 
 Ejemplo:
 
@@ -129,7 +132,7 @@ Valores negativos lanzan error. Si el valor no es numérico, se usa `1`.
 | **Tipo** | `number` |
 | **Por defecto** | `0` |
 | **Rango** | `-1` a `1` |
-| **Descripción** | Ajuste de saturación aplicado sobre el color resultante (incluida la rampa). |
+| **Descripción** | Ajuste de saturación aplicado sobre el color de la capa (rampa o color nativo). |
 
 | Valor | Efecto |
 |-------|--------|
@@ -149,7 +152,7 @@ Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 | **Tipo** | `number` |
 | **Por defecto** | `0` |
 | **Rango** | `-1` a `1` |
-| **Descripción** | Ajuste de exposición aplicado sobre el color resultante (incluida la rampa). |
+| **Descripción** | Ajuste de exposición aplicado sobre el color de la capa (rampa o color nativo). |
 
 | Valor | Efecto |
 |-------|--------|
@@ -168,7 +171,7 @@ Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 | **Tipo** | `number` |
 | **Por defecto** | `0` |
 | **Rango** | `-1` a `1` |
-| **Descripción** | Ajuste de contraste aplicado sobre el color resultante (incluida la rampa). |
+| **Descripción** | Ajuste de contraste aplicado sobre el color de la capa (rampa o color nativo). |
 
 | Valor | Efecto |
 |-------|--------|
@@ -187,7 +190,7 @@ Fuera de rango se ajusta a `-1` o `1`. Si el valor no es numérico, se usa `0`.
 | **Tipo** | `number` |
 | **Por defecto** | `0` |
 | **Rango** | `-1` a `1` |
-| **Descripción** | Ajuste de brillo aplicado sobre el color resultante (incluida la rampa). |
+| **Descripción** | Ajuste de brillo aplicado sobre el color de la capa (rampa o color nativo). |
 
 | Valor | Efecto |
 |-------|--------|
@@ -219,7 +222,7 @@ La comparación se hace sobre la **primera banda** del índice (p. ej. banda 1 s
 | **Tipo** | `string` |
 | **Por defecto** | `'linear'` |
 | **Valores** | `'linear'`, `'exponential'` |
-| **Descripción** | Tipo de interpolación entre los colores de la rampa. |
+| **Descripción** | Tipo de interpolación entre los colores de la rampa. Solo aplica si hay **rampa**. |
 
 | Valor | Comportamiento |
 |-------|----------------|
@@ -243,9 +246,38 @@ La comparación se hace sobre la **primera banda** del índice (p. ej. banda 1 s
 
 ---
 
-## Valores por defecto
+## Modo solo filtros (sin rampa)
 
-Definidos en `IDEE.style.Raster.DEFAULT_OPTIONS`:
+Puedes aplicar únicamente filtros WebGL sobre el color nativo de la capa (p. ej. una imagen TCI ya en color):
+
+```javascript
+const style = new IDEE.style.Raster({
+  saturation: 0.3,
+});
+
+layer.setStyle(style);
+```
+
+También puedes combinar filtros con nodata sin rampa:
+
+```javascript
+const style = new IDEE.style.Raster({
+  nodata: 0,
+  bands: [1, 2, 3],
+  contrast: 0.2,
+});
+```
+
+En este modo:
+- No se genera leyenda de rampa (`Raster.hasRamp(options)` devuelve `false`; `getLegendURL()` mantiene la leyenda de la capa).
+- Los setters de `min`, `max`, `interpolation` e `interpolationBase` no tienen efecto.
+- `setRamp(null)` permite pasar de rampa a solo filtros conservando los filtros activos.
+
+---
+
+## Valores por defecto de referencia
+
+Definidos en `IDEE.style.Raster.DEFAULT_OPTIONS` (referencia para rampa; no se aplican solos si no hay rampa):
 
 ```javascript
 {
@@ -254,6 +286,10 @@ Definidos en `IDEE.style.Raster.DEFAULT_OPTIONS`:
   max: 1,
   ramp: ['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000'],
   gamma: 1,
+  saturation: 0,
+  exposure: 0,
+  contrast: 0,
+  brightness: 0,
   interpolation: 'linear',
   interpolationBase: 2,
 }
@@ -269,11 +305,17 @@ Todos los setters llaman internamente a `update_()` para reaplicar el estilo si 
 
 | Método | Descripción |
 |--------|-------------|
-| `getBands()` / `setBands(bands)` | Banda o bandas (`number` \| `Array<number>`) |
+| `optionsHaveEffect(options)` | Indica si las opciones definen algún efecto aplicable (rampa, nodata o filtros) |
+| `Raster.hasRamp(options)` | Indica si las opciones incluyen rampa de colores |
+| `getBands()` / `setBands(bands)` | Banda o bandas (`number` \| `Array<number>`); solo con rampa o nodata |
 | `getMin()` / `setMin(min)` | Valor mínimo de la rampa |
 | `getMax()` / `setMax(max)` | Valor máximo de la rampa |
-| `getRamp()` / `setRamp(ramp)` | Rampa de colores |
+| `getRamp()` / `setRamp(ramp)` | Rampa de colores o `null` para eliminarla |
 | `getGamma()` / `setGamma(gamma)` | Corrección gamma |
+| `getSaturation()` / `setSaturation(saturation)` | Saturación (-1 a 1) |
+| `getExposure()` / `setExposure(exposure)` | Exposición (-1 a 1) |
+| `getContrast()` / `setContrast(contrast)` | Contraste (-1 a 1) |
+| `getBrightness()` / `setBrightness(brightness)` | Brillo (-1 a 1) |
 | `getNodata()` / `setNodata(nodata)` | Valor transparente |
 | `getInterpolation()` / `setInterpolation(interpolation, interpolationBase?)` | Tipo y base de interpolación |
 | `getInterpolationBase()` / `setInterpolationBase(base)` | Base exponencial |
@@ -304,6 +346,8 @@ layer.setStyle(style);   // llama internamente a applyStyle_ → style.apply(lay
 ```
 
 - `setStyle(null)` o `clearStyle()` elimina el estilo y restaura el anterior.
+- Si se pasa un objeto **sin efecto activo** (sin rampa, sin nodata y filtros en valor por defecto), se comporta igual que `setStyle(null)`.
+- Lo mismo aplica a una instancia vacía: `setStyle(new IDEE.style.Raster({}))` restaura el color nativo de la capa.
 - También puedes pasar un objeto de opciones (`setStyle({ bands: 1, ... })`) o un estilo serializado (`String`).
 
 
@@ -333,7 +377,7 @@ if (legendUrl instanceof Promise) {
 }
 ```
 
-Solo sustituye la URL por defecto de la capa cuando no se ha definido una leyenda personalizada (`setLegendURL`).
+Solo sustituye la URL por defecto de la capa cuando el estilo incluye rampa (`Raster.hasRamp(style.getOptions(), true)`) y no se ha definido una leyenda personalizada (`setLegendURL`).
 
 ---
 

@@ -182,9 +182,17 @@ class GeoTIFF extends LayerBase {
     if (isString(style)) {
       style = Style.deserialize(style);
     } else if (!(style instanceof Style)) {
+      if (!Raster.optionsHaveEffect(style)) {
+        this.clearStyle();
+        return;
+      }
       style = new Raster(style);
     }
     if (style instanceof Style) {
+      if (style instanceof Raster && !Raster.optionsHaveEffect(style.getOptions(), true)) {
+        this.clearStyle();
+        return;
+      }
       if (this.style_ === style) {
         style.apply(this);
         this.fire(EventType.CHANGE_STYLE, [style, this]);
@@ -239,7 +247,8 @@ class GeoTIFF extends LayerBase {
     let legendUrl = this.getImpl().getLegendURL();
     if (legendUrl.indexOf(LayerBase.LEGEND_DEFAULT) !== -1
       && legendUrl.indexOf(LayerBase.LEGEND_ERROR) === -1
-      && this.style_ instanceof Raster) {
+      && this.style_ instanceof Raster
+      && Raster.hasRamp(this.style_.getOptions(), true)) {
       legendUrl = this.style_.toImage();
     }
     return legendUrl;

@@ -311,6 +311,7 @@
     "heatmap_method": "La implementación usada no puede crear estilos Heatmap.",
     "raster_method": "La implementación usada no puede crear estilos Raster.",
     "invalid_raster_gamma": "El valor gamma debe ser mayor o igual que 0.",
+    "invalid_raster_options": "El estilo Raster debe incluir una rampa, filtros distintos del valor por defecto o nodata.",
     "flowline_method": "La implementación usada no puede crear estilos FlowLine.",
     "id_exists": "El ID indicado ya existe.",
     "transparent_deprecated": "El parámetro 'transparent' ha quedado obsoleto, se recomienda usar en su lugar 'isBase'.",
