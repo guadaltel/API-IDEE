@@ -3,7 +3,7 @@
  */
 import chroma from 'chroma-js';
 import {
-  isNullOrEmpty, extendsObj, generateIntervals, isArray,
+  isNullOrEmpty, extendsObj, generateIntervals, isArray, isString,
 } from 'IDEE/util/Utils';
 import Style from './Style';
 
@@ -97,11 +97,50 @@ class Raster extends Style {
   }
 
   /**
-   * Construye la expresión color (rampa o passthrough con nodata).
+   * Resuelve el color literal definido en las opciones.
    *
    * @function
    * @private
-   * @returns {Array|undefined} Expresión WebGL de color.
+   * @returns {Array<number>|string|undefined} Color para OpenLayers.
+   */
+  getCustomColor_() {
+    const { color } = this.options_;
+    if (isNullOrEmpty(color)) {
+      return undefined;
+    }
+    if (isString(color) || isArray(color)) {
+      return color;
+    }
+    return undefined;
+  }
+
+  /**
+   * Envuelve un color con transparencia para nodata.
+   *
+   * @function
+   * @private
+   * @param {Array|string|Array<number>} colorValue Color literal.
+   * @returns {Array|string|Array<number>} Color con nodata o el original.
+   */
+  wrapNodataCase_(colorValue) {
+    const { nodata } = this.options_;
+    if (!isNullOrEmpty(nodata) || nodata === 0) {
+      return [
+        'case',
+        ['==', ['band', this.getNodataBand_()], nodata],
+        [0, 0, 0, 0],
+        colorValue,
+      ];
+    }
+    return colorValue;
+  }
+
+  /**
+   * Construye la expresión color (rampa, color personalizado o passthrough con nodata).
+   *
+   * @function
+   * @private
+   * @returns {Array|string|undefined} Expresión WebGL de color o literal.
    */
   buildColorExpression_() {
     const {
@@ -133,25 +172,17 @@ class Raster extends Style {
         colorExpression.push(chroma(color).rgb());
       });
 
-      if (!isNullOrEmpty(nodata) || nodata === 0) {
-        return [
-          'case',
-          ['==', ['band', this.getNodataBand_()], nodata],
-          [0, 0, 0, 0],
-          colorExpression,
-        ];
-      }
-      return colorExpression;
+      return this.wrapNodataCase_(colorExpression);
+    }
+
+    const customColor = this.getCustomColor_();
+    if (!isNullOrEmpty(customColor)) {
+      return this.wrapNodataCase_(customColor);
     }
 
     if (!isNullOrEmpty(nodata) || nodata === 0) {
       const passthroughColor = this.getPassthroughColorExpression_();
-      return [
-        'case',
-        ['==', ['band', this.getNodataBand_()], nodata],
-        [0, 0, 0, 0],
-        passthroughColor,
-      ];
+      return this.wrapNodataCase_(passthroughColor);
     }
 
     return undefined;

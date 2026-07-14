@@ -13,10 +13,12 @@ const RAMP_PRESETS = {
 const DEFAULT_RAMP = RAMP_PRESETS[5];
 
 const DEFAULT_FORM = {
+  styleMode: 'ramp',
   bandsInput: '1, 2, 3',
   min: 0,
   max: 1,
   ramp: DEFAULT_RAMP,
+  colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
@@ -41,22 +43,16 @@ const layerGeoTIFF = new GeoTIFF({
   normalize: true,
 });
 
-// layerGeoTIFF.setStyle(new Raster({
-  // bands: [1, 2, 3],
-  // min: 0,
-  // max: 1,
-  // ramp: DEFAULT_RAMP,
-  // interpolation: 'linear',
-  // interpolationBase: 2,
-  // gamma: 1,
-// }));
-
 let rasterStyle = null;
 
 // Función para obtener el elemento del DOM por su id
 const $ = (id) => document.getElementById(id);
 
-const isUseRampForm = () => $('use-ramp').checked;
+const getStyleMode = () => $('style-mode').value;
+
+const isRampMode = () => getStyleMode() === 'ramp';
+
+const isColorMode = () => getStyleMode() === 'color';
 
 // Función para cambiar los inputs de colores según el número de colores seleccionados
 const renderRampColors = (ramp) => {
@@ -134,6 +130,17 @@ const readNodataFromForm = () => {
   return parseFloat(raw);
 };
 
+const readColorFromForm = () => {
+  return $('color-simple').value;
+};
+
+const formatColorForStatus = (color) => {
+  if (Array.isArray(color)) {
+    return JSON.stringify(color);
+  }
+  return String(color);
+};
+
 // Lee los valores del formulario y los convierte a números
 const readForm = () => {
   const options = {
@@ -144,7 +151,7 @@ const readForm = () => {
     brightness: parseFloat($('brightness').value),
   };
 
-  if (isUseRampForm()) {
+  if (isRampMode()) {
     options.bands = parseBandsInput($('bands-input').value);
     options.min = parseFloat($('min').value);
     options.max = parseFloat($('max').value);
@@ -153,10 +160,14 @@ const readForm = () => {
     options.interpolationBase = parseFloat($('interpolationBase').value);
   }
 
+  if (isColorMode()) {
+    options.color = readColorFromForm();
+  }
+
   const nodata = readNodataFromForm();
   if (nodata !== undefined) {
     options.nodata = nodata;
-    if (!isUseRampForm()) {
+    if (!isRampMode()) {
       options.bands = parseBandsInput($('bands-input').value);
     }
   }
@@ -166,9 +177,11 @@ const readForm = () => {
 
 // Establece los valores del formulario
 const setFormValues = (values) => {
+  $('style-mode').value = values.styleMode;
   $('bands-input').value = values.bandsInput;
   $('min').value = values.min;
   $('max').value = values.max;
+  $('color-simple').value = values.colorSimple;
   $('interpolation').value = values.interpolation;
   $('interpolationBase').value = values.interpolationBase;
   $('gamma').value = values.gamma;
@@ -191,18 +204,27 @@ const setFormValues = (values) => {
 
 // Actualiza la visibilidad de los elementos del formulario
 const updateFormVisibility = () => {
-  const useRamp = isUseRampForm();
+  const styleMode = getStyleMode();
+  const useRamp = isRampMode();
+  const useColor = isColorMode();
   const isExponential = $('interpolation').value === 'exponential';
   $('ramp-options').classList.toggle('hidden', !useRamp);
+  $('color-options').classList.toggle('hidden', !useColor);
   $('interpolationBase').disabled = !isExponential;
   $('interpolation-base-row').classList.toggle('disabled', !isExponential);
 
   if (useRamp) {
     const bandsLabel = formatBands(parseBandsInput($('bands-input').value));
     $('legend-title').textContent = `Rampa bands ${bandsLabel} (${$('min').value}–${$('max').value})`;
-  } else {
-    $('legend-title').textContent = 'Solo filtros WebGL';
+    return;
   }
+
+  if (useColor) {
+    $('legend-title').textContent = `Color personalizado (${$('color-simple').value})`;
+    return;
+  }
+
+  $('legend-title').textContent = 'Solo filtros WebGL';
 };
 
 const isValidLegendUrl = (url) => {
@@ -275,7 +297,6 @@ const setStatus = (message) => {
 // Aplica el estilo ráster
 const applyRasterStyle = () => {
   const options = readForm();
-  const useRamp = isUseRampForm();
 
   try {
     layerGeoTIFF.setStyle(options);
@@ -283,7 +304,7 @@ const applyRasterStyle = () => {
     window.rasterStyle = rasterStyle;
   } catch (err) {
     console.error(err);
-    setStatus('Error al aplicar el estilo. Revisa rampa, nodata o filtros.');
+    setStatus('Error al aplicar el estilo. Revisa rampa, color, nodata o filtros.');
     return;
   }
 
@@ -296,13 +317,15 @@ const applyRasterStyle = () => {
   }
 
   let status = 'Aplicado: ';
-  if (useRamp) {
+  if (isRampMode()) {
     status += `bands ${formatBands(options.bands)}, rango ${options.min}–${options.max}`;
     status += `, ${options.ramp.length} colores`;
     status += `, ${options.interpolation}`;
     if (options.interpolation === 'exponential') {
       status += ` (base ${$('interpolationBase').value})`;
     }
+  } else if (isColorMode()) {
+    status += `color ${formatColorForStatus(options.color)}`;
   } else {
     status += 'solo filtros WebGL';
   }
@@ -314,7 +337,6 @@ const applyRasterStyle = () => {
 
 // Restablece el formulario
 const resetForm = () => {
-  $('use-ramp').checked = true;
   setFormValues(DEFAULT_FORM);
   rasterStyle = null;
   layerGeoTIFF.clearStyle();
@@ -323,7 +345,7 @@ const resetForm = () => {
   setStatus('Formulario restablecido. Estilo ráster eliminado de la capa.');
 };
 
-$('use-ramp').addEventListener('change', () => {
+$('style-mode').addEventListener('change', () => {
   updateFormVisibility();
   applyRasterStyle();
 });
@@ -336,6 +358,7 @@ $('interpolation').addEventListener('change', () => {
 $('bands-input').addEventListener('change', applyRasterStyle);
 $('interpolationBase').addEventListener('change', applyRasterStyle);
 $('nodata').addEventListener('change', applyRasterStyle);
+$('color-simple').addEventListener('input', applyRasterStyle);
 
 const updateSaturationLabel = () => {
   $('saturation-value').textContent = $('saturation').value;
