@@ -342,7 +342,102 @@ const resetForm = () => {
   layerGeoTIFF.clearStyle();
   $('legend-title').textContent = 'Rampa de colores';
   clearLegendImage();
+  $('serialized-style').value = '';
   setStatus('Formulario restablecido. Estilo ráster eliminado de la capa.');
+};
+
+const getSerializedStyleText = () => {
+  if (!rasterStyle) {
+    return null;
+  }
+  return rasterStyle.serialize();
+};
+
+const copySerializedStyle = async () => {
+  const serialized = getSerializedStyleText();
+  if (!serialized) {
+    setStatus('No hay estilo activo para serializar.');
+    return;
+  }
+
+  $('serialized-style').value = serialized;
+
+  try {
+    await navigator.clipboard.writeText(serialized);
+    setStatus('Estilo serializado (base64) copiado al portapapeles.');
+  } catch (err) {
+    console.error(err);
+    setStatus('No se pudo copiar al portapapeles. El serializado está en el campo.');
+  }
+};
+
+const detectStyleModeFromOptions = (options) => {
+  if (Raster.hasRamp(options, true)) {
+    return 'ramp';
+  }
+  if (options.color !== undefined && options.color !== null && options.color !== '') {
+    return 'color';
+  }
+  return 'filters';
+};
+
+const syncFormFromStyle = (style) => {
+  const options = style.getOptions();
+  let colorSimple = DEFAULT_FORM.colorSimple;
+  if (typeof options.color === 'string') {
+    colorSimple = options.color;
+  }
+
+  let nodata = '';
+  if (options.nodata !== undefined && options.nodata !== null) {
+    nodata = options.nodata;
+  }
+
+  let ramp = DEFAULT_FORM.ramp;
+  if (Array.isArray(options.ramp) && options.ramp.length > 0) {
+    ramp = [...options.ramp];
+  }
+
+  setFormValues({
+    styleMode: detectStyleModeFromOptions(options),
+    bandsInput: formatBands(options.bands),
+    min: options.min,
+    max: options.max,
+    ramp,
+    colorSimple,
+    interpolation: options.interpolation,
+    interpolationBase: options.interpolationBase,
+    gamma: options.gamma,
+    saturation: options.saturation,
+    exposure: options.exposure,
+    contrast: options.contrast,
+    brightness: options.brightness,
+    nodata,
+  });
+};
+
+const applySerializedStyle = () => {
+  const raw = $('serialized-style').value.trim();
+  if (!raw) {
+    setStatus('Introduce un estilo serializado (base64 de serialize()).');
+    return;
+  }
+
+  try {
+    layerGeoTIFF.setStyle(raw);
+    rasterStyle = layerGeoTIFF.getStyle();
+    window.rasterStyle = rasterStyle;
+    if (!rasterStyle) {
+      setStatus('El serializado no produjo un estilo activo.');
+      return;
+    }
+    syncFormFromStyle(rasterStyle);
+    updateLegendImage();
+    setStatus('Estilo deserializado aplicado a la capa.');
+  } catch (err) {
+    console.error(err);
+    setStatus('Error al deserializar o aplicar el estilo. Revisa el base64.');
+  }
 };
 
 $('style-mode').addEventListener('change', () => {
@@ -410,10 +505,14 @@ document.querySelectorAll('.ramp-preset-btn').forEach((button) => {
 });
 
 $('reset-btn').addEventListener('click', resetForm);
+$('copy-serialized-btn').addEventListener('click', copySerializedStyle);
+$('apply-serialized-btn').addEventListener('click', applySerializedStyle);
 
 window.mapjs = mapjs;
 window.layerGeoTIFF = layerGeoTIFF;
 window.applyRasterStyle = applyRasterStyle;
+window.copySerializedStyle = copySerializedStyle;
+window.applySerializedStyle = applySerializedStyle;
 
 setFormValues(DEFAULT_FORM);
 mapjs.addGeoTIFF(layerGeoTIFF);

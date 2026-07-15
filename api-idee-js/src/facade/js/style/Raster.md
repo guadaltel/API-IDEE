@@ -1,19 +1,19 @@
 # IDEE.style.Raster
 
-Estilo visual para **capas de imagen geográfica** (GeoTIFF y similares) en el visor IDEE.
+Permite **cambiar cómo se ve una capa de imagen en el mapa** (GeoTIFF) dentro del visor IDEE: colores según el valor del dato, tintes, filtros de imagen o zonas transparentes.
 
 ---
 
 ## Índice
 
-**Parte 1 — Guía para empezar** *(léela primero si no conoces estos temas)*
+**Parte 1 — Guía para empezar** 
 
-1. [¿Qué hace esto?](#qué-hace-esto)
-2. [Recetas rápidas](#recetas-rápidas-quiero--uso)
+1. [¿Qué hace?](#qué-hace)
+2. [Guía rápida](#guía-rápida)
 3. [¿Dónde configuro cada cosa?](#dónde-configuro-cada-cosa)
 4. [Conceptos básicos](#conceptos-básicos-glosario)
 5. [Modos de estilo (resumen)](#modos-de-estilo-resumen)
-6. [Checklist visual de validación](#checklist-visual-de-validación)
+6. [Ejemplos de uso](#ejemplos-uso)
 
 **Parte 2 — Referencia técnica**
 
@@ -27,14 +27,13 @@ Estilo visual para **capas de imagen geográfica** (GeoTIFF y similares) en el v
 
 **Parte 3 — Avanzado** *(solo desarrolladores)*
 
-14. [Estilos OpenLayers a medida](#avanzado-estilos-openlayers-a-medida)
-15. [Checklist técnico de validación](#checklist-técnico-de-validación)
+14. [Estilos a medida](#avanzado-estilos-a-medida)
 
 ---
 
 # Parte 1 — Guía para empezar
 
-## ¿Qué hace esto?
+## ¿Qué hace?
 
 Imagina una **foto satélite** (o un mapa de alturas, temperaturas, etc.) cargada en el mapa. Por defecto se muestra tal cual viene del archivo.
 
@@ -49,11 +48,9 @@ Imagina una **foto satélite** (o un mapa de alturas, temperaturas, etc.) cargad
 
 El estilo siempre debe hacer **algo visible**. Si todas las opciones están en su valor por defecto, la capa ignora el estilo o lo quita.
 
-**Prueba interactiva:** abre `test/development/style-raster.html` en el entorno de desarrollo.
-
 ---
 
-## Recetas rápidas («Quiero… → uso…»)
+## Guía rápida («Quiero… → uso…»)
 
 ### Poner la foto en escala de grises
 
@@ -104,8 +101,6 @@ layer.setStyle(null);
 
 ## ¿Dónde configuro cada cosa?
 
-Hay **dos sitios**. Mezclarlos es el error más habitual.
-
 | Qué configuras | Dónde | Ejemplos |
 |----------------|-------|----------|
 | **Archivo**, nombre, leyenda del árbol | Capa `GeoTIFF` (1.er argumento) | `url`, `name`, `legend` |
@@ -129,15 +124,16 @@ layer.setStyle(style);
 
 | Término | En lenguaje sencillo |
 |---------|----------------------|
-| **GeoTIFF / capa ráster** | Archivo de imagen geográfica en el mapa (satélite, MDT, etc.) |
-| **Estilo Raster** | Reglas de **cómo se colorea o filtra** esa capa |
-| **Banda (`bands`)** | «Canal» del archivo. En una foto RGB hay banda 1 (rojo), 2 (verde), 3 (azul). Un MDT suele tener solo banda 1 (altura). |
-| **Rampa (`ramp`)** | Lista de colores ordenados: los valores **bajos** del dato → primer color; los **altos** → último color (como un termómetro de colores). |
+| **GeoTIFF / capa ráster** | Archivo de imagen geográfica en el mapa. |
+| **Estilo Raster** | Reglas de **cómo se colorea o filtra** esa capa. |
+| **Banda (`bands`)** | Cada píxel del archivo guarda **uno o más números**. Cada número es una banda. Cuando usas una rampa, `bands` le dice al estilo **qué número mirar** para elegir el color. |
+| **Rampa (`ramp`)** | Lista de colores ordenados: los valores **bajos** del dato → primer color; los **altos** → último color. |
+| **`interpolation`** | Con rampa: **cómo** se reparten esos colores entre `min` y `max`. `linear` = uniforme; `exponential` = más color en un extremo (ver [Interpolación exponencial](#interpolación-exponencial)). |
 | **`min` / `max`** | Qué valores numéricos del dato corresponden al primer y último color de la rampa. |
 | **`nodata`** | Número que significa «aquí no hay dato». Esos píxeles se hacen **transparentes**. |
 | **`normalize`** (en la capa) | Convierte los valores del archivo a un rango 0–1 (como un porcentaje). Si está activo, `min`/`max` del estilo suelen ser `0` y `1`. |
 | **`convertToRGB`** (en la capa) | Si es `true`, la capa convierte el dato a color automáticamente. Para usar **rampa personalizada**, ponlo en `false`. |
-| **Filtros** | Ajustes de imagen: saturación (color ↔ gris), brillo, contraste, exposición, gamma. |
+| **Filtros** | Ajustes de imagen: saturación, brillo, contraste, exposición, gamma. |
 | **Leyenda** | Barra de colores que explica la rampa. Solo se genera automáticamente cuando usas **rampa**. |
 
 ---
@@ -160,19 +156,15 @@ layer.setStyle(style);
 
 ---
 
-## Checklist visual de validación
+## Ejemplos de uso
 
-Marca lo que **ves** en el mapa (no hace falta leer código):
-
-- [ ] Con **rampa**, los colores cambian según el terreno/valor (no es un color plano).
-- [ ] Con **`color: 'blue'`**, toda la capa se tiñe de azul (no es una rampa).
-- [ ] Con **`saturation: -1`**, la imagen se ve en escala de grises.
-- [ ] Con **`nodata: 0`**, desaparecen los bordes vacíos del archivo.
-- [ ] Con **`clearStyle()`**, la imagen vuelve a como estaba antes del estilo.
-- [ ] Con **rampa**, la leyenda del visor muestra la barra de colores.
-- [ ] Con **solo filtros** o **color fijo**, la leyenda **no** cambia a barra de rampa.
-
-**Tests de desarrollo:** `test/development/style-raster.html` · `test/development/geotiff-only.html`
+- Con **rampa**, los colores cambian según el terreno/valor (no es un color plano).
+- Con **`color: 'blue'`**, toda la capa se tiñe de azul (no es una rampa).
+- Con **`saturation: -1`**, la imagen se ve en escala de grises.
+- Con **`nodata: 0`**, desaparecen los bordes vacíos del archivo.
+- Con **`clearStyle()`**, la imagen vuelve a como estaba antes del estilo.
+- Con **rampa**, la leyenda del visor muestra la barra de colores.
+- Con **solo filtros** o **color fijo**, la leyenda **no** cambia a barra de rampa.
 
 ---
 
@@ -181,8 +173,6 @@ Marca lo que **ves** en el mapa (no hace falta leer código):
 ## Importación y constructor
 
 ```javascript
-import Raster from 'IDEE/style/Raster';
-
 const style = new IDEE.style.Raster(options, vendorOptions);
 // o
 const style = new IDEE.style.Raster(options);
@@ -191,7 +181,7 @@ const style = new IDEE.style.Raster(options);
 | Argumento | Tipo | Descripción |
 |-----------|------|-------------|
 | `options` | `Object` | Opciones del estilo ráster |
-| `vendorOptions` | `Object` | Opciones adicionales para la implementación OpenLayers (opcional) |
+| `vendorOptions` | `Object` | Opciones adicionales para la implementación (Opcional) |
 
 El estilo exige **al menos un efecto activo**: rampa, color, nodata o algún filtro distinto de su valor por defecto.
 
@@ -205,7 +195,7 @@ El estilo exige **al menos un efecto activo**: rampa, color, nodata o algún fil
 |---|---|
 | **Tipo** | `number` \| `Array<number>` |
 | **Por defecto** | `1` (solo si hay rampa o nodata) |
-| **Descripción** | Banda o bandas usadas en la simbología. Solo con **rampa** o **nodata**. |
+| **Descripción** | Banda o bandas usadas en la simbología. Solo tiene efecto con **rampa** o **nodata**. |
 
 | Valor | Comportamiento |
 |-------|----------------|
@@ -256,7 +246,7 @@ ramp: ['#000080', '#0080ff', '#00ff80', '#ffff00', '#ff0000']
 | | |
 |---|---|
 | **Tipo** | `string` \| `Array<number>` |
-| **Descripción** | Color literal para toda la capa (OpenLayers WebGL). |
+| **Descripción** | Color literal para toda la capa. |
 
 | Formato | Ejemplo |
 |---------|---------|
@@ -278,9 +268,9 @@ Valores inválidos → excepción `invalid_raster_color`.
 
 ---
 
-### Filtros WebGL
+### Filtros
 
-Todos en rangos indicados. Valor por defecto = sin efecto.
+Todos en rangos indicados. Valor por defecto sin efecto.
 
 | Parámetro | Default | Rango | Efecto principal |
 |-----------|---------|-------|------------------|
@@ -290,7 +280,7 @@ Todos en rangos indicados. Valor por defecto = sin efecto.
 | `contrast` | `0` | `-1` … `1` | Más / menos contraste |
 | `brightness` | `0` | `-1` … `1` | Más / menos brillo |
 
-Valores fuera de rango en filtores ±1 se recortan. `gamma` negativo lanza error.
+Valores fuera de rango en filtros ±1 se recortan (lo ajusta al límite más cercano). `gamma` negativo lanza error.
 
 ---
 
@@ -307,12 +297,20 @@ Comparación sobre la **primera banda** del índice. Recomendable definir `nodat
 
 ### `interpolation` / `interpolationBase`
 
-Solo con **rampa**.
+Solo con **rampa**. Controla **cómo se reparten los colores** entre `min` y `max` (no cambia qué colores usa la rampa, sino en qué valores del dato aparece cada uno).
 
 | `interpolation` | Comportamiento |
 |-----------------|----------------|
-| `'linear'` | Reparto uniforme (por defecto) |
-| `'exponential'` | Curva; usa `interpolationBase` (default `2`) |
+| `'linear'` | Reparto **uniforme** (por defecto): un valor a mitad de rango tiene un color intermedio claro |
+| `'exponential'` | Reparto en **curva**: concentra más colores en un extremo (bajo o alto), según `interpolationBase` |
+
+| `interpolationBase` | Efecto aproximado (con `exponential`) |
+|---------------------|----------------------------------------|
+| **`2`** (por defecto) | Los valores **bajos** se quedan más tiempo en los **primeros** colores de la rampa |
+| **`> 1`** (p. ej. `2`) | Similar al default: predominan los colores del inicio de la rampa |
+| **`< 1`** (p. ej. `0.05`) | Hace falta un valor **muy alto** para llegar a los últimos colores; predominan colores «fríos» |
+
+Solo tiene efecto si `interpolation: 'exponential'`. Con `linear`, `interpolationBase` se ignora.
 
 ---
 
@@ -324,7 +322,6 @@ Solo con **rampa**.
 layer.setStyle(new IDEE.style.Raster({ saturation: 0.3 }));
 ```
 
-- `getLegendURL()` mantiene la leyenda de la capa.
 - Setters de rampa/color/min/max no aplican.
 
 ### Color personalizado
@@ -351,18 +348,7 @@ Referencia; no se aplican solos sin rampa:
 
 ---
 
-## Métodos de la API
-
-### Estáticos
-
-| Método | Descripción |
-|--------|-------------|
-| `Raster.optionsHaveEffect(options)` | Hay rampa, color, nodata o filtros activos |
-| `Raster.hasRamp(options)` | Hay rampa válida (≥ 2 colores) |
-| `Raster.hasColor(options)` | Hay `color` personalizado |
-| `Raster.deserialize(parameters)` | Restaura desde JSON |
-
-### Getters / setters (instancia)
+## Métodos  Getters / setters (instancia)
 
 Todos los setters reaplican el estilo si ya está en una capa (`update_()`).
 
@@ -376,8 +362,6 @@ Todos los setters reaplican el estilo si ya está en una capa (`update_()`).
 | `getGamma()` … `getBrightness()` | Filtros |
 | `getNodata()` / `setNodata()` | Transparencia |
 | `getInterpolation()` / `setInterpolation()` | Solo rampa |
-
-Setter sin efecto activo restante → `invalid_raster_options`.
 
 ### Heredados de `IDEE.style`
 
@@ -406,29 +390,19 @@ layer.setStyle(style);
 
 | Acción | Efecto |
 |--------|--------|
-| `setStyle(null)` / `clearStyle()` | Quita estilo IDEE; restaura estilo OL anterior |
-| `setStyle({})` / `new Raster({})` | Igual que clear (sin efecto activo) |
+| `setStyle(null)` / `clearStyle()` | Quita estilo IDEE; restaura estilo anterior |
+| `setStyle({})` / `new Raster({})` | Igual que clear |
 | Misma instancia otra vez | Reaplica sin `unapply` (útil tras setters) |
-
-**Capas compatibles:** `GeoTIFF`, `GenericRaster` (con `WebGLTile`).
 
 ### Leyenda: `layer.getLegendURL()`
 
 Solo sustituye la leyenda por la barra de rampa si `Raster.hasRamp(style.getOptions(), true)`.
 
-### Canvas / serialización
-
-```javascript
-rasterStyle.updateCanvas();  // solo con rampa
-const json = rasterStyle.toJSON();
-const restored = IDEE.style.Raster.deserialize(json.parameters);
-```
-
 ---
 
 ## Configuraciones recomendadas
 
-### Sentinel TCI (RGB) con rampa
+### Rampa
 
 ```javascript
 const layer = new IDEE.layer.GeoTIFF({ url: '...', name: 'TCI' }, {
@@ -440,7 +414,7 @@ layer.setStyle(new IDEE.style.Raster({
 }));
 ```
 
-### MDT monobanda
+### Monobanda
 
 ```javascript
 const layer = new IDEE.layer.GeoTIFF({ url: '.../mdt.tif' }, {
@@ -452,64 +426,21 @@ layer.setStyle(new IDEE.style.Raster({
 }));
 ```
 
-### Solo filtros en TCI
+### Solo filtros
 
 ```javascript
 layer.setStyle(new IDEE.style.Raster({ saturation: -0.8 }));
 ```
-
----
-
-## Casos especiales
-
-### `min` / `max` y `normalize`
-
-| `normalize` en capa | Rango de píxeles | `min` / `max` |
-|---------------------|------------------|---------------|
-| `true` | 0 – 1 | `0` y `1` |
-| `false` | Valores crudos | Según dato (0–255, 0–2000…) |
-
-Error típico: `normalize: true` con `max: 255` → casi todo el mapa en el primer color.
-
-### Interpolación exponencial
-
-```javascript
-new IDEE.style.Raster({
-  min: 0, max: 1, ramp: contrastRamp,
-  interpolation: 'exponential', interpolationBase: 0.05,
-});
-```
-
-### COG con bounding box mayor que la escena
-
-Zonas vacías suelen valer `0`. Con rampa se pintan del primer color. Solución: `nodata: 0` en capa **y** estilo.
-
-### Flujo completo
-
-```javascript
-const mapjs = IDEE.map({ container: 'map' });
-const layer = new IDEE.layer.GeoTIFF({ url: '...', name: 'Mi ráster' }, {
-  convertToRGB: false, normalize: true, bands: [1, 2, 3],
-});
-const style = new IDEE.style.Raster({
-  bands: [1, 2, 3], min: 0.05, max: 0.85,
-  ramp: ['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000'],
-  nodata: 0,
-});
-mapjs.addGeoTIFF(layer);
-layer.setStyle(style);
-style.setMin(0.1);
-layer.setStyle(style);
-```
+<>
 
 ---
 
 # Parte 3 — Avanzado
 
-> **No necesitas esta sección** para rampas, color fijo, filtros o nodata.  
-> Úsala solo si necesitas fórmulas a medida (NDVI, paletas científicas, etc.).
+**No necesitas esta sección** para rampas, color fijo, filtros o nodata.  
+Úsala solo si necesitas fórmulas a medida (NDVI, paletas científicas, etc.).
 
-## Avanzado: estilos OpenLayers a medida
+## Avanzado: estilos a medida
 
 `IDEE.style.Raster` **no** expone expresiones WebGL libres (`interpolate` custom, `palette`, `case` complejos, variables `['var', 'x']`, etc.).
 
@@ -525,30 +456,3 @@ new IDEE.layer.GeoTIFF({ url: '...', name: 'Capa' }, {
   },
 });
 ```
-
-**En runtime:**
-
-```javascript
-layer.getImpl().getLayer().setStyle({
-  color: ['array', ['band', 1], ['band', 2], ['band', 3], 1],
-});
-```
-
-Si después aplicas `IDEE.style.Raster`, se guarda el estilo OL previo y se restaura con `clearStyle()`.
-
-Documentación OpenLayers: [cog-style](https://openlayers.org/en/latest/examples/cog-style.html) · [ExpressionValue](https://openlayers.org/en/latest/apidoc/module-ol_style_expressions.html#~ExpressionValue)
-
----
-
-## Checklist técnico de validación
-
-- [ ] Rampa + `normalize: true` → `min`/`max` en 0–1
-- [ ] `convertToRGB: false` con rampa o simbología por bandas
-- [ ] `color: 'blue'` ≠ rampa monobanda (color plano vs gradiente por valor)
-- [ ] `Raster.optionsHaveEffect` / `hasRamp` / `hasColor` coherentes con UI
-- [ ] `setStyle({})` restaura estilo OL anterior (`vendorOptions` o `{}`)
-- [ ] Reaplicar misma instancia no rompe WebGL (`style_ === style`)
-- [ ] `getLegendURL()` solo con rampa
-- [ ] `invalid_raster_color` con color mal formado
-- [ ] `invalid_raster_options` al quitar último efecto activo
-- [ ] Tests: `style-raster.html`, `geotiff-only.html`

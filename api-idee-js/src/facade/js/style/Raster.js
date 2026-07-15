@@ -800,18 +800,48 @@ class Raster extends Style {
     if (!Raster.hasRamp(this.options_, true)) {
       return;
     }
+
     const ctx = this.canvas_.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 20, 200, 20);
+    const barWidth = 200;
+    const barHeight = 24;
+    const paddingX = 2;
+    const paddingTop = 4;
+    const paddingBottom = 4;
+    const labelGap = 4;
+    const fontSize = 10;
+    const font = `${fontSize}px sans-serif`;
+
+    ctx.font = font;
+    const minText = String(this.options_.min);
+    const maxText = String(this.options_.max);
+    const maxTextWidth = ctx.measureText(maxText).width;
+
+    const contentWidth = Math.max(barWidth, Math.ceil(maxTextWidth));
+    const canvasWidth = contentWidth + (paddingX * 2);
+    const canvasHeight = paddingTop + barHeight + labelGap + fontSize + paddingBottom;
+
+    this.canvas_.width = canvasWidth;
+    this.canvas_.height = canvasHeight;
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.font = font;
+
+    const barX = paddingX;
+    const barY = paddingTop;
+    const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
     const intervals = generateIntervals([0, 1], this.options_.ramp.length);
     this.options_.ramp.forEach((color, index) => {
       gradient.addColorStop(intervals[index], color);
     });
+
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 20, 200, 30);
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+
+    const labelY = barY + barHeight + labelGap + fontSize;
     ctx.fillStyle = '#000';
-    ctx.font = '10px sans-serif';
-    ctx.fillText(this.options_.min, 0, 65);
-    ctx.fillText(this.options_.max, 180, 65);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(minText, barX, labelY);
+    ctx.fillText(maxText, barX + barWidth - maxTextWidth, labelY);
   }
 
   /**
@@ -822,9 +852,12 @@ class Raster extends Style {
    * @api
    */
   updateCanvas() {
-    if (Raster.hasRamp(this.options_, true)) {
-      this.drawGeometryToCanvas();
+    if (!Raster.hasRamp(this.options_, true)) {
+      this.canvas_.width = 1;
+      this.canvas_.height = 1;
+      return;
     }
+    this.drawGeometryToCanvas();
   }
 
   /**

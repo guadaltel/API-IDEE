@@ -30,6 +30,7 @@ import Raster from '../style/Raster';
  * @property {Number} minZoom Limitar el zoom mínimo.
  * @property {Number} maxZoom Limitar el zoom máximo.
  * @property {Object} options Capa de opciones GeoTIFF.
+ * @property {Array<IDEE.style.Raster>} predefinedStyles Estilos predefinidos para la capa.
  *
  * @api
  * @extends {IDEE.Layer}
@@ -66,6 +67,7 @@ class GeoTIFF extends LayerBase {
    * - minResolution: Resolución mínima.
    * - maxResolution: Resolución máxima.
    * - style: Estilo de las bandas.
+   * - predefinedStyles: Estilos predefinidos para la capa.
    * @param {Object} vendorOptions Opciones para la biblioteca base. Ejemplo vendorOptions:
    * <pre><code>
    * import OLSourceTileCOG from 'ol/source/TileCOG';
@@ -142,7 +144,17 @@ class GeoTIFF extends LayerBase {
      */
     this.style_ = null;
 
+    /**
+     * Estilos predefinidos para la capa.
+     * @type {Array<IDEE.style.Raster>}
+     * @api
+     */
+    this.predefinedStyles = isUndefined(options.predefinedStyles)
+      ? []
+      : options.predefinedStyles;
+
     if (!isNullOrEmpty(options.style)) {
+      this.predefinedStyles.unshift(options.style);
       this.setStyle(options.style);
     }
   }

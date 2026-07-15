@@ -104,6 +104,21 @@
       width: auto;
     }
 
+    #raster-panel textarea#serialized-style {
+      width: 100%;
+      min-height: 72px;
+      box-sizing: border-box;
+      font-family: monospace;
+      font-size: 11px;
+      resize: vertical;
+    }
+
+    #raster-panel .serialize-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
     #raster-panel .field-hint {
       margin: 4px 0 0;
       font-size: 11px;
@@ -303,7 +318,20 @@
 
     <div class="actions">
       <button type="button" id="reset-btn">Restablecer</button>
+      <button type="button" id="copy-serialized-btn">Copiar serializado</button>
     </div>
+
+    <fieldset>
+      <legend>Serialización</legend>
+      <label>
+        Estilo serializado (serialize)
+        <textarea id="serialized-style" placeholder="Cadena base64 de style.serialize()"></textarea>
+      </label>
+      <div class="serialize-actions">
+        <button type="button" id="apply-serialized-btn">Aplicar serializado</button>
+      </div>
+      <p class="field-hint">Usa style.serialize() → base64. Al aplicar se deserializa con setStyle(string).</p>
+    </fieldset>
 
     <p id="status">Esperando cambio de estilo...</p>
   </div>

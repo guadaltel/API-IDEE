@@ -234,7 +234,7 @@ class Raster extends Style {
    *
    * @function
    * @public
-   * @param {IDEE.layer.GeoTIFF|IDEE.layer.GenericRaster} layer Capa.
+   * @param {IDEE.layer.GeoTIFF} layer Capa.
    * @api stable
    */
   applyToLayer(layer) {

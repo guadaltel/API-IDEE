@@ -56,6 +56,7 @@ class GeoTIFF extends LayerBase {
    * - minResolution: Resolución mínima.
    * - maxResolution: Resolución máxima.
    * - style: Estilo de las bandas.
+   * - predefinedStyles: Estilos predefinidos para la capa.
    * - visibility: Verdadero si la capa es visible, falso si queremos que no lo sea.
    *   En este caso la capa sería detectado por los plugins de tablas de contenidos
    *   y aparecería como no visible.

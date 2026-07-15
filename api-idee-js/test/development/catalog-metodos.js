@@ -44,12 +44,12 @@ window.catalog = catalog;
 // });
 
 // obtener los items de una colección
-// catalog.getItems('sentinel-2-pre-c1-l2a', 5).then((items) => {
-//   console.log('Items', items);
-//   drawResult(items);
-// }).catch((error) => {
-//   console.error('Error al obtener los items', error);
-// });
+catalog.getItems('sentinel-2-pre-c1-l2a', 5).then((items) => {
+  console.log('Items', items);
+  drawResult(items);
+}).catch((error) => {
+  console.error('Error al obtener los items', error);
+});
 
 // obtener un item concreto de una colección
 // catalog.getItem('sentinel-2-pre-c1-l2a', 'S2B_T21NYC_20221205T140704_L2A').then((item) => {
@@ -197,7 +197,7 @@ const drawResult = (items) => {
     for (let key of tiffsKeys) {
       const type = assets[key].type;
       if (type.includes('image/tif')) {
-        const geotiff = new GeoTIFF({url: assets[key].href});
+        const geotiff = new GeoTIFF({url: assets[key].href}, {nodata: 0});
         tiffs.push(geotiff);
       }
     }
