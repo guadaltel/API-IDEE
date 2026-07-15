@@ -26,7 +26,8 @@
       "last30days": "Últimos 30 días",
       "last3months": "Últimos 3 meses",
       "lastyear": "Último año",
-      "range": "Rango indicado"
+      "range": "Rango indicado",
+      "success": "Filtro temporal establecido correctamente."
     }
   },
   "imageActions": {

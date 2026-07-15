@@ -26,7 +26,8 @@
       "last30days": "Last 30 days",
       "last3months": "Last 3 months",
       "lastyear": "Last year",
-      "range": "Range indicated"
+      "range": "Range indicated",
+      "success": "Temporal filter set successfully."
     }
   },
   "imageActions": {

@@ -310,6 +310,30 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
+   * Formatea una fecha en hora local (YYYY-MM-DD).
+   *
+   * @private
+   * @param {Date} date Fecha a formatear
+   * @returns {string} Fecha en formato local
+   */
+  formatLocalDate(date) {
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  /**
+   * Formatea una hora en hora local (HH:mm:ss).
+   *
+   * @private
+   * @param {Date} date Fecha de la que extraer la hora
+   * @returns {string} Hora en formato local
+   */
+  formatLocalTime(date) {
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  /**
    * Establece el filtro temporal según el tipo seleccionado
    *
    * @private
@@ -317,27 +341,69 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {string} filterType Tipo de filtro ('last30days', 'last3months', 'lastyear', 'range')
    */
   setTemporalFilterByType(filterType) {
+    let fullDate = null;
+    let startDate = null;
+    let startTime = null;
+    let endDate = null;
+    let endTime = null;
     switch (filterType) {
       case 'last30days':
-        this.commonFilters_.datetime = `${new Date(new Date().setDate(new Date().getDate() - 30)).toISOString()}/${new Date().toISOString()}`;
+        fullDate = new Date(new Date().setDate(new Date().getDate() - 30));
+        startDate = this.formatLocalDate(fullDate);
+        startTime = this.formatLocalTime(fullDate);
+        fullDate = new Date();
+        endDate = this.formatLocalDate(fullDate);
+        endTime = this.formatLocalTime(fullDate);
+        this.addTemporalCommonFilter(startDate, startTime, endDate, endTime);
         break;
       case 'last3months':
-        this.commonFilters_.datetime = `${new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString()}/${new Date().toISOString()}`;
+        fullDate = new Date(new Date().setMonth(new Date().getMonth() - 3));
+        startDate = this.formatLocalDate(fullDate);
+        startTime = this.formatLocalTime(fullDate);
+        fullDate = new Date();
+        endDate = this.formatLocalDate(fullDate);
+        endTime = this.formatLocalTime(fullDate);
+        this.addTemporalCommonFilter(startDate, startTime, endDate, endTime);
         break;
       case 'lastyear':
-        this.commonFilters_.datetime = `${new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString()}/${new Date().toISOString()}`;
+        fullDate = new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+        startDate = this.formatLocalDate(fullDate);
+        startTime = this.formatLocalTime(fullDate);
+        fullDate = new Date();
+        endDate = this.formatLocalDate(fullDate);
+        endTime = this.formatLocalTime(fullDate);
+        this.addTemporalCommonFilter(startDate, startTime, endDate, endTime);
         break;
       case 'range':
-        const startDate = this.template_.querySelector('#m-catalogmanager-filters-temporal-start').value;
-        const startTime = this.template_.querySelector('#m-catalogmanager-filters-temporal-start-time').value;
-        const endDate = this.template_.querySelector('#m-catalogmanager-filters-temporal-end').value;
-        const endTime = this.template_.querySelector('#m-catalogmanager-filters-temporal-end-time').value;
-        this.commonFilters_.datetime = `${startDate}T${startTime}Z/${endDate}T${endTime}Z`;
+        startDate = this.template_.querySelector('#m-catalogmanager-filters-temporal-start').value;
+        startTime = this.template_.querySelector('#m-catalogmanager-filters-temporal-start-time').value;
+        endDate = this.template_.querySelector('#m-catalogmanager-filters-temporal-end').value;
+        endTime = this.template_.querySelector('#m-catalogmanager-filters-temporal-end-time').value;
+        this.addTemporalCommonFilter(startDate, startTime, endDate, endTime);
         break;
       default:
         delete this.commonFilters_.datetime;
         break;
     }
+  }
+
+  addTemporalCommonFilter(startDate, startTime, endDate, endTime) {
+    const startDateInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-start');
+    const startTimeInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-start-time');
+    const endDateInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-end');
+    const endTimeInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-end-time');
+    if (startTime && endTime) {
+      this.commonFilters_.datetime = `${startDate}T${startTime}Z/${endDate}T${endTime}Z`;
+      startDateInput.value = startDate;
+      startTimeInput.value = startTime;
+      endDateInput.value = endDate;
+      endTimeInput.value = endTime;
+    } else {
+      this.commonFilters_.datetime = `${startDate}/${endDate}`;
+      startDateInput.value = startDate;
+      endDateInput.value = endDate;
+    }
+    IDEE.toast.success(getValue('filtersTypes.temporal.success'), null, 2500);
   }
 
   /**
@@ -1596,7 +1662,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         html = IDEE.template.compileSync(imagesTemplate, {
           vars: {
             images,
-            downloadable: !catalog.obj.public,
+            downloadable: !catalog.obj.public || true,
             translations: {
               imageActions: getValue('imageActions'),
               images: getValue('images'),
