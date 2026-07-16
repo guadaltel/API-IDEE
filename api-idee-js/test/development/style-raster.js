@@ -19,7 +19,6 @@ const DEFAULT_FORM = {
   min: 0,
   max: 1,
   ramp: DEFAULT_RAMP,
-  colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
@@ -37,7 +36,6 @@ const NDVI_FORM = {
   min: -1,
   max: 1,
   ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
-  colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
@@ -55,7 +53,6 @@ const NDWI_FORM = {
   min: -1,
   max: 1,
   ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
-  colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
@@ -73,7 +70,6 @@ const NBR_FORM = {
   min: -1,
   max: 1,
   ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
-  colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
   gamma: 1,
@@ -112,8 +108,6 @@ const $ = (id) => document.getElementById(id);
 const getStyleMode = () => $('style-mode').value;
 
 const isRampMode = () => getStyleMode() === 'ramp';
-
-const isColorMode = () => getStyleMode() === 'color';
 
 const getFormulaFromForm = () => {
   const value = $('formula').value.trim();
@@ -203,17 +197,6 @@ const readNodataFromForm = () => {
   return parseFloat(raw);
 };
 
-const readColorFromForm = () => {
-  return $('color-simple').value;
-};
-
-const formatColorForStatus = (color) => {
-  if (Array.isArray(color)) {
-    return JSON.stringify(color);
-  }
-  return String(color);
-};
-
 // Lee los valores del formulario y los convierte a números
 const readForm = () => {
   const options = {
@@ -235,10 +218,6 @@ const readForm = () => {
     options.ramp = getRampFromForm();
     options.interpolation = $('interpolation').value;
     options.interpolationBase = parseFloat($('interpolationBase').value);
-  }
-
-  if (isColorMode()) {
-    options.color = readColorFromForm();
   }
 
   const nodata = readNodataFromForm();
@@ -263,7 +242,6 @@ const setFormValues = (values) => {
   $('bands-input').value = values.bandsInput;
   $('min').value = values.min;
   $('max').value = values.max;
-  $('color-simple').value = values.colorSimple;
   $('interpolation').value = values.interpolation;
   $('interpolationBase').value = values.interpolationBase;
   $('gamma').value = values.gamma;
@@ -287,11 +265,9 @@ const setFormValues = (values) => {
 // Actualiza la visibilidad de los elementos del formulario
 const updateFormVisibility = () => {
   const useRamp = isRampMode();
-  const useColor = isColorMode();
   const isExponential = $('interpolation').value === 'exponential';
   const formula = getFormulaFromForm();
   $('ramp-options').classList.toggle('hidden', !useRamp);
-  $('color-options').classList.toggle('hidden', !useColor);
   $('interpolationBase').disabled = !isExponential;
   $('interpolation-base-row').classList.toggle('disabled', !isExponential);
 
@@ -326,11 +302,6 @@ const updateFormVisibility = () => {
       title = `NBR ${bandsLabel} (${$('min').value}–${$('max').value})`;
     }
     $('legend-title').textContent = title;
-    return;
-  }
-
-  if (useColor) {
-    $('legend-title').textContent = `Color personalizado (${$('color-simple').value})`;
     return;
   }
 
@@ -433,7 +404,7 @@ const applyRasterStyle = () => {
     window.rasterStyle = rasterStyle;
   } catch (err) {
     console.error(err);
-    setStatus('Error al aplicar el estilo. Revisa rampa, color, nodata o filtros.');
+    setStatus('Error al aplicar el estilo. Revisa rampa, nodata o filtros.');
     return;
   }
 
@@ -456,8 +427,6 @@ const applyRasterStyle = () => {
     if (options.interpolation === 'exponential') {
       status += ` (base ${$('interpolationBase').value})`;
     }
-  } else if (isColorMode()) {
-    status += `color ${formatColorForStatus(options.color)}`;
   } else {
     status += 'solo filtros WebGL';
   }
@@ -507,18 +476,11 @@ const detectStyleModeFromOptions = (options) => {
   if (Raster.hasRamp(options, true)) {
     return 'ramp';
   }
-  if (options.color !== undefined && options.color !== null && options.color !== '') {
-    return 'color';
-  }
   return 'filters';
 };
 
 const syncFormFromStyle = (style) => {
   const options = style.getOptions();
-  let colorSimple = DEFAULT_FORM.colorSimple;
-  if (typeof options.color === 'string') {
-    colorSimple = options.color;
-  }
 
   let nodata = '';
   if (options.nodata !== undefined && options.nodata !== null) {
@@ -537,7 +499,6 @@ const syncFormFromStyle = (style) => {
     min: options.min,
     max: options.max,
     ramp,
-    colorSimple,
     interpolation: options.interpolation,
     interpolationBase: options.interpolationBase,
     gamma: options.gamma,
@@ -596,7 +557,6 @@ $('interpolation').addEventListener('change', () => {
 $('bands-input').addEventListener('change', applyRasterStyle);
 $('interpolationBase').addEventListener('change', applyRasterStyle);
 $('nodata').addEventListener('change', applyRasterStyle);
-$('color-simple').addEventListener('input', applyRasterStyle);
 
 const updateSaturationLabel = () => {
   $('saturation-value').textContent = $('saturation').value;

@@ -311,7 +311,6 @@
     "heatmap_method": "La implementación usada no puede crear estilos Heatmap.",
     "raster_method": "La implementación usada no puede crear estilos Raster.",
     "invalid_raster_gamma": "El valor gamma debe ser mayor o igual que 0.",
-    "invalid_raster_color": "El color debe ser un valor CSS o un array RGB/RGBA.",
     "invalid_raster_formula": "La fórmula del estilo Raster no es válida. Use 'ndvi', 'ndwi', 'nbr' o déjela vacía.",
     "invalid_raster_ndvi_bands": "La fórmula NDVI requiere exactamente dos bandas: [nir, red].",
     "invalid_raster_ndwi_bands": "La fórmula NDWI requiere exactamente dos bandas: [green, nir].",

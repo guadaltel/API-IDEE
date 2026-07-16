@@ -3,7 +3,7 @@
  */
 import chroma from 'chroma-js';
 import {
-  isNullOrEmpty, extendsObj, generateIntervals, isArray, isString,
+  isNullOrEmpty, extendsObj, generateIntervals, isArray,
 } from 'IDEE/util/Utils';
 import Style from './Style';
 
@@ -139,24 +139,6 @@ class Raster extends Style {
   }
 
   /**
-   * Resuelve el color literal definido en las opciones.
-   *
-   * @function
-   * @private
-   * @returns {Array<number>|string|undefined} Color para OpenLayers.
-   */
-  getCustomColor_() {
-    const { color } = this.options_;
-    if (isNullOrEmpty(color)) {
-      return undefined;
-    }
-    if (isString(color) || isArray(color)) {
-      return color;
-    }
-    return undefined;
-  }
-
-  /**
    * Envuelve un color con transparencia para nodata.
    *
    * @function
@@ -178,7 +160,7 @@ class Raster extends Style {
   }
 
   /**
-   * Construye la expresión color (rampa, color personalizado o passthrough con nodata).
+   * Construye la expresión color (rampa o passthrough con nodata).
    *
    * @function
    * @private
@@ -218,11 +200,6 @@ class Raster extends Style {
       });
 
       return this.wrapNodataCase_(colorExpression);
-    }
-
-    const customColor = this.getCustomColor_();
-    if (!isNullOrEmpty(customColor)) {
-      return this.wrapNodataCase_(customColor);
     }
 
     if (!isNullOrEmpty(nodata) || nodata === 0) {

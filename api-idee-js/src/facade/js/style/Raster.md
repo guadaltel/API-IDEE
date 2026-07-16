@@ -1,6 +1,6 @@
 # IDEE.style.Raster
 
-Permite **cambiar cómo se ve una capa de imagen en el mapa** (GeoTIFF) dentro del visor IDEE: colores según el valor del dato, tintes, filtros de imagen o zonas transparentes.
+Permite **cambiar cómo se ve una capa de imagen en el mapa** (GeoTIFF) dentro del visor IDEE: colores según el valor del dato, filtros de imagen o zonas transparentes.
 
 ---
 
@@ -19,7 +19,7 @@ Permite **cambiar cómo se ve una capa de imagen en el mapa** (GeoTIFF) dentro d
 
 7. [Importación y constructor](#importación-y-constructor)
 8. [Parámetros del estilo](#parámetros-del-estilo-options)
-9. [Modos detallados (filtros, color, rampa)](#modos-detallados)
+9. [Modos detallados (filtros, rampa)](#modos-detallados)
 10. [Métodos de la API](#métodos-de-la-api)
 11. [Uso con la capa GeoTIFF](#uso-con-la-capa-geotiff)
 12. [Configuraciones recomendadas](#configuraciones-recomendadas)
@@ -43,7 +43,6 @@ Imagina una **foto satélite** (o un mapa de alturas, temperaturas, etc.) cargad
 |----------------------|-------------------------|
 | Colorear según el **valor numérico** de cada píxel (bajo = azul, alto = rojo) | **Rampa** (`ramp`, `min`, `max`) |
 | Calcular un **índice** (NDVI, NDWI, NBR…) y colorearlo con rampa | **Fórmula** (`formula: 'ndvi'` / `'ndwi'` / `'nbr'`) + rampa |
-| **Teñir** toda la imagen de un color (p. ej. azul) | **Color fijo** (`color`) |
 | Ajustar la imagen como en un editor de fotos (más gris, más brillo…) | **Filtros** (`saturation`, `brightness`, etc.) |
 | **Ocultar** zonas sin dato (bordes vacíos del archivo) | **Nodata** (`nodata`) |
 
@@ -58,14 +57,6 @@ El estilo siempre debe hacer **algo visible**. Si todas las opciones están en s
 ```javascript
 layer.setStyle(new IDEE.style.Raster({ saturation: -1 }));
 ```
-
-### Teñir toda la capa de azul
-
-```javascript
-layer.setStyle(new IDEE.style.Raster({ color: 'blue' }));
-```
-
-> **Importante:** `color: 'blue'` pinta **toda** la capa de azul. **No** es lo mismo que una rampa azul→rojo según el valor del terreno.
 
 ### Mapa de colores por altura (MDT, una sola banda)
 
@@ -152,7 +143,7 @@ layer.setStyle(null);
 |----------------|-------|----------|
 | **Archivo**, nombre, leyenda del árbol | Capa `GeoTIFF` (1.er argumento) | `url`, `name`, `legend` |
 | **Cómo se leen** los datos del TIFF | Opciones de la **capa** (2.º argumento) | `bands`, `normalize`, `nodata`, `convertToRGB` |
-| **Cómo se pinta** en pantalla | **Estilo** `Raster` + `layer.setStyle()` | `ramp`, `color`, `saturation`, `min`, `max` |
+| **Cómo se pinta** en pantalla | **Estilo** `Raster` + `layer.setStyle()` | `ramp`, `saturation`, `min`, `max` |
 
 ```javascript
 const layer = new IDEE.layer.GeoTIFF(
@@ -191,28 +182,25 @@ layer.setStyle(style);
 | Modo | Qué verás en el mapa | Opciones principales | ¿Leyenda automática? |
 |------|----------------------|----------------------|----------------------|
 | **Rampa** | Colores según el valor del dato | `ramp`, `min`, `max`, `bands`, `formula` | Sí (barra min–max) |
-| **Color fijo** | Toda la capa teñida de un color | `color` | No |
 | **Solo filtros** | La foto original, pero más gris/brillante/etc. | `saturation`, `brightness`, … | No |
 | **Nodata** | Huecos transparentes donde no hay dato | `nodata` (+ banda para detectarlo) | Depende del modo anterior |
 
 **Reglas de prioridad** (solo puede haber una forma de colorear a la vez):
 
-1. Si hay **rampa** → se usa la rampa (se ignora `color`).
-2. Si no hay rampa pero hay **`color`** → color fijo.
-3. Si solo hay **nodata** → se muestran los colores originales de la imagen, excepto donde hay nodata.
-4. Los **filtros** se pueden combinar con cualquiera de los anteriores.
+1. Si hay **rampa** → se usa la rampa.
+2. Si solo hay **nodata** → se muestran los colores originales de la imagen, excepto donde hay nodata.
+3. Los **filtros** se pueden combinar con cualquiera de los anteriores.
 
 ---
 
 ## Ejemplos de uso
 
 - Con **rampa**, los colores cambian según el terreno/valor (no es un color plano).
-- Con **`color: 'blue'`**, toda la capa se tiñe de azul (no es una rampa).
 - Con **`saturation: -1`**, la imagen se ve en escala de grises.
 - Con **`nodata: 0`**, desaparecen los bordes vacíos del archivo.
 - Con **`clearStyle()`**, la imagen vuelve a como estaba antes del estilo.
 - Con **rampa**, la leyenda del visor muestra la barra de colores.
-- Con **solo filtros** o **color fijo**, la leyenda **no** cambia a barra de rampa.
+- Con **solo filtros**, la leyenda **no** cambia a barra de rampa.
 
 ---
 
@@ -231,7 +219,7 @@ const style = new IDEE.style.Raster(options);
 | `options` | `Object` | Opciones del estilo ráster |
 | `vendorOptions` | `Object` | Opciones adicionales para la implementación (Opcional) |
 
-El estilo exige **al menos un efecto activo**: rampa, color, nodata o algún filtro distinto de su valor por defecto.
+El estilo exige **al menos un efecto activo**: rampa, nodata o algún filtro distinto de su valor por defecto.
 
 ---
 
@@ -294,7 +282,6 @@ Solo con **rampa**. Cambia **cómo se calcula el valor** que se colorea; la ramp
 | `'nbr'` | `(NIR − SWIR) / (NIR + SWIR)` | `[nir, swir]` | `-1` / `1` |
 
 - La **media** mezcla bandas por igual; los **índices** usan fórmulas con dos bandas concretas. La rampa es la misma mecánica; cambia el valor que se colorea.
-- Excluyente con **`color`** (al haber rampa se ignora `color`).
 - Con **índices** (`ndvi`, `ndwi`, `nbr`) y `normalize: true` en la capa, **no** se fuerza el rango de la rampa a 0–1 (el índice ya sale en ≈[−1, 1]).
 - Si el denominador es 0, el valor se trata como `0`.
 - Valor inválido → excepción `invalid_raster_formula`.
@@ -336,7 +323,7 @@ Con **`normalize: false`**, usa el rango real (p. ej. `0`–`2000` en un MDT).
 | **Tipo** | `Array<string>` \| `null` |
 | **Descripción** | Colores en hex (`#RRGGBB`) o CSS válido para `chroma-js`. |
 
-- Opcional. **Excluyente con `color`** (al definir rampa se borra `color`).
+- Opcional.
 - Mínimo **2 colores**; si pasas 1, se añade su color inverso.
 - Colores repartidos uniformemente entre `min` y `max`.
 - `setRamp(null)` elimina rampa y campos asociados.
@@ -344,33 +331,6 @@ Con **`normalize: false`**, usa el rango real (p. ej. `0`–`2000` en un MDT).
 ```javascript
 ramp: ['#000080', '#0080ff', '#00ff80', '#ffff00', '#ff0000']
 ```
-
----
-
-### `color`
-
-| | |
-|---|---|
-| **Tipo** | `string` \| `Array<number>` |
-| **Descripción** | Color literal para toda la capa. |
-
-| Formato | Ejemplo |
-|---------|---------|
-| Nombre CSS | `'blue'`, `'red'` |
-| Hexadecimal | `'#3388ff'` |
-| RGB | `[51, 136, 255]` |
-| RGBA | `[51, 136, 255, 0.8]` |
-
-- No aplica si hay **rampa** activa.
-- Combinable con **filtros** y **nodata**.
-- **No** colorea por valor de banda (para eso usa `ramp`).
-
-```javascript
-new IDEE.style.Raster({ color: 'blue' });
-new IDEE.style.Raster({ color: '#3388ff', saturation: -0.5 });
-```
-
-Valores inválidos → excepción `invalid_raster_color`.
 
 ---
 
@@ -422,22 +382,13 @@ Solo tiene efecto si `interpolation: 'exponential'`. Con `linear`, `interpolatio
 
 ## Modos detallados
 
-### Solo filtros (sin rampa ni color)
+### Solo filtros (sin rampa)
 
 ```javascript
 layer.setStyle(new IDEE.style.Raster({ saturation: 0.3 }));
 ```
 
-- Setters de rampa/color/min/max no aplican.
-
-### Color personalizado
-
-```javascript
-layer.setStyle(new IDEE.style.Raster({ color: '#3388ff' }));
-```
-
-- `Raster.hasColor(options)` → `true`
-- No usa `bands` salvo con `nodata`.
+- Setters de rampa/min/max no aplican.
 
 ### Valores por defecto (`Raster.DEFAULT_OPTIONS`)
 
@@ -464,8 +415,7 @@ Todos los setters reaplican el estilo si ya está en una capa (`update_()`).
 | `getFormula()` / `setFormula()` | Solo rampa; `'ndvi'`, `'ndwi'`, `'nbr'` o vacío |
 | `getMin()` / `setMin()` | Solo rampa |
 | `getMax()` / `setMax()` | Solo rampa |
-| `getRamp()` / `setRamp(null)` | Al añadir rampa borra `color` |
-| `getColor()` / `setColor()` | No aplica con rampa |
+| `getRamp()` / `setRamp(null)` | Solo rampa |
 | `getGamma()` … `getBrightness()` | Filtros |
 | `getNodata()` / `setNodata()` | Transparencia |
 | `getInterpolation()` / `setInterpolation()` | Solo rampa |
@@ -544,7 +494,7 @@ layer.setStyle(new IDEE.style.Raster({ saturation: -0.8 }));
 
 # Parte 3 — Avanzado
 
-**No necesitas esta sección** para rampas, NDVI, NDWI, NBR, color fijo, filtros o nodata.  
+**No necesitas esta sección** para rampas, NDVI, NDWI, NBR, filtros o nodata.  
 Úsala solo si necesitas expresiones WebGL libres (paletas científicas custom, `case` complejos, etc.).
 
 ## Avanzado: estilos a medida

@@ -4,7 +4,7 @@
 import RasterImpl from 'impl/style/Raster';
 import Style from './Style';
 import {
-  isArray, isNullOrEmpty, isObject, isUndefined, isString, inverseColor,
+  isArray, isNullOrEmpty, isObject, isUndefined, inverseColor,
   generateIntervals, defineFunctionFromString,
 } from '../util/Utils';
 import Exception from '../exception/exception';
@@ -31,15 +31,14 @@ class Raster extends Style {
    * - min: Valor mínimo de la rampa (por defecto 0; con índices -1).
    * - max: Valor máximo de la rampa (por defecto 1).
    * - ramp: Rampa de colores (opcional).
-   * - color: Color literal CSS o array RGB/RGBA (opcional; no aplica con rampa).
+   * - nodata: Valor nodata para transparencia.
+   * - interpolation: Tipo de interpolación ('linear' o 'exponential').
+   * - interpolationBase: Base para interpolación exponencial (por defecto 2).
    * - gamma: Gamma de la capa (por defecto 1, rango: 0 a infinito).
    * - saturation: Saturación del color (rango: -1 a 1, por defecto 0).
    * - exposure: Exposición (rango: -1 a 1, por defecto 0).
    * - contrast: Contraste (rango: -1 a 1, por defecto 0).
    * - brightness: Brillo (rango: -1 a 1, por defecto 0).
-   * - nodata: Valor nodata para transparencia.
-   * - interpolation: Tipo de interpolación ('linear' o 'exponential').
-   * - interpolationBase: Base para interpolación exponencial (por defecto 2).
    * @param {object} vendorOptionsParam Opciones de la librería base.
    * @api
    */
@@ -71,111 +70,6 @@ class Raster extends Style {
   // #################################################
   // ############ MÉTODOS GETTER Y SETTER ############
   // #################################################
-
-  /**
-   * Este método devuelve la base de interpolación exponencial.
-   * Sólo es válido si el tipo de interpolación es 'exponential'.
-   *
-   * @function
-   * @public
-   * @return {number} Base de interpolación exponencial.
-   * @api
-   */
-  getInterpolationBase() {
-    return this.options_.interpolationBase;
-  }
-
-  /**
-   * Este método establece la base de interpolación exponencial.
-   * Sólo es válido si el tipo de interpolación es 'exponential'.
-   *
-   * @function
-   * @public
-   * @param {number} interpolationBase Base de interpolación exponencial.
-   * @api
-   */
-  setInterpolationBase(interpolationBase) {
-    if (!Raster.hasRamp(this.options_, true)) {
-      return;
-    }
-    this.options_.interpolationBase = parseFloat(interpolationBase);
-    this.update_();
-  }
-
-  /**
-   * Este método devuelve la banda o bandas utilizadas.
-   *
-   * @function
-   * @public
-   * @return {number|Array<number>} Banda o bandas.
-   * @api
-   */
-  getBands() {
-    return this.options_.bands;
-  }
-
-  /**
-   * Este método establece la banda o bandas del estilo ráster.
-   *
-   * @function
-   * @public
-   * @param {number|Array<number>} bands Banda o bandas.
-   * @api
-   */
-  setBands(bands) {
-    const hasNoRamp = !Raster.hasRamp(this.options_, true);
-    const hasNoNodata = isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0;
-    if (hasNoRamp && hasNoNodata) {
-      return;
-    }
-    this.options_.bands = Raster.normalizeBands({
-      bands,
-      formula: this.options_.formula,
-    });
-    this.update_();
-  }
-
-  /**
-   * Este método devuelve la fórmula del valor de la rampa.
-   *
-   * @function
-   * @public
-   * @return {string|undefined} Fórmula ('ndvi', 'ndwi', 'nbr') o undefined.
-   * @api
-   */
-  getFormula() {
-    return this.options_.formula;
-  }
-
-  /**
-   * Este método establece la fórmula del valor de la rampa.
-   * Solo aplica con rampa. Use 'ndvi', 'ndwi', 'nbr' o null/undefined para quitarla.
-   *
-   * @function
-   * @public
-   * @param {string|null|undefined} formula Fórmula ('ndvi', 'ndwi', 'nbr') o vacío.
-   * @api
-   */
-  setFormula(formula) {
-    if (!Raster.hasRamp(this.options_, true)) {
-      return;
-    }
-    const normalizedFormula = Raster.normalizeFormula(formula);
-    if (isNullOrEmpty(normalizedFormula)) {
-      delete this.options_.formula;
-      this.options_.bands = Raster.normalizeBands({ bands: this.options_.bands });
-    } else {
-      const formulaDefaults = Raster.getFormulaDefaults(normalizedFormula);
-      this.options_.formula = normalizedFormula;
-      this.options_.bands = Raster.normalizeBands({
-        bands: this.options_.bands,
-        formula: normalizedFormula,
-      });
-      this.options_.min = formulaDefaults.min;
-      this.options_.max = formulaDefaults.max;
-    }
-    this.update_();
-  }
 
   /**
    * Este método devuelve el valor gamma del estilo ráster.
@@ -315,6 +209,111 @@ class Raster extends Style {
   }
 
   /**
+   * Este método devuelve la base de interpolación exponencial.
+   * Sólo es válido si el tipo de interpolación es 'exponential'.
+   *
+   * @function
+   * @public
+   * @return {number} Base de interpolación exponencial.
+   * @api
+   */
+  getInterpolationBase() {
+    return this.options_.interpolationBase;
+  }
+
+  /**
+   * Este método establece la base de interpolación exponencial.
+   * Sólo es válido si el tipo de interpolación es 'exponential'.
+   *
+   * @function
+   * @public
+   * @param {number} interpolationBase Base de interpolación exponencial.
+   * @api
+   */
+  setInterpolationBase(interpolationBase) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    this.options_.interpolationBase = parseFloat(interpolationBase);
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la banda o bandas utilizadas.
+   *
+   * @function
+   * @public
+   * @return {number|Array<number>} Banda o bandas.
+   * @api
+   */
+  getBands() {
+    return this.options_.bands;
+  }
+
+  /**
+   * Este método establece la banda o bandas del estilo ráster.
+   *
+   * @function
+   * @public
+   * @param {number|Array<number>} bands Banda o bandas.
+   * @api
+   */
+  setBands(bands) {
+    const hasNoRamp = !Raster.hasRamp(this.options_, true);
+    const hasNoNodata = isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0;
+    if (hasNoRamp && hasNoNodata) {
+      return;
+    }
+    this.options_.bands = Raster.normalizeBands({
+      bands,
+      formula: this.options_.formula,
+    });
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la fórmula del valor de la rampa.
+   *
+   * @function
+   * @public
+   * @return {string|undefined} Fórmula ('ndvi', 'ndwi', 'nbr') o undefined.
+   * @api
+   */
+  getFormula() {
+    return this.options_.formula;
+  }
+
+  /**
+   * Este método establece la fórmula del valor de la rampa.
+   * Solo aplica con rampa. Use 'ndvi', 'ndwi', 'nbr' o null/undefined para quitarla.
+   *
+   * @function
+   * @public
+   * @param {string|null|undefined} formula Fórmula ('ndvi', 'ndwi', 'nbr') o vacío.
+   * @api
+   */
+  setFormula(formula) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    const normalizedFormula = Raster.normalizeFormula(formula);
+    if (isNullOrEmpty(normalizedFormula)) {
+      delete this.options_.formula;
+      this.options_.bands = Raster.normalizeBands({ bands: this.options_.bands });
+    } else {
+      const formulaDefaults = Raster.getFormulaDefaults(normalizedFormula);
+      this.options_.formula = normalizedFormula;
+      this.options_.bands = Raster.normalizeBands({
+        bands: this.options_.bands,
+        formula: normalizedFormula,
+      });
+      this.options_.min = formulaDefaults.min;
+      this.options_.max = formulaDefaults.max;
+    }
+    this.update_();
+  }
+
+  /**
    * Este método devuelve el valor nodata del estilo ráster.
    *
    * @function
@@ -337,7 +336,7 @@ class Raster extends Style {
   setNodata(nodata) {
     if (isNullOrEmpty(nodata) && nodata !== 0) {
       delete this.options_.nodata;
-      if (!Raster.hasRamp(this.options_, true) && !Raster.hasColor(this.options_, true)) {
+      if (!Raster.hasRamp(this.options_, true)) {
         delete this.options_.bands;
       }
     } else {
@@ -471,9 +470,7 @@ class Raster extends Style {
       delete nextOptions.interpolationBase;
       delete nextOptions.formula;
       if (isNullOrEmpty(nextOptions.nodata) && nextOptions.nodata !== 0) {
-        if (!Raster.hasColor(nextOptions, true)) {
-          delete nextOptions.bands;
-        }
+        delete nextOptions.bands;
       }
       if (!Raster.optionsHaveEffect(nextOptions, true)) {
         Exception(getValue('exception').invalid_raster_options);
@@ -485,9 +482,7 @@ class Raster extends Style {
       delete this.options_.interpolationBase;
       delete this.options_.formula;
       if (isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0) {
-        if (!Raster.hasColor(this.options_, true)) {
-          delete this.options_.bands;
-        }
+        delete this.options_.bands;
       }
       this.update_();
       return;
@@ -500,7 +495,6 @@ class Raster extends Style {
       const inverseColorParam = inverseColor(ramp[0]);
       ramp.push(inverseColorParam);
     }
-    delete this.options_.color;
     this.options_.ramp = ramp;
     if (isNullOrEmpty(this.options_.bands)) {
       this.options_.bands = Raster.DEFAULT_OPTIONS.bands;
@@ -516,42 +510,6 @@ class Raster extends Style {
     }
     if (isNullOrEmpty(this.options_.interpolationBase)) {
       this.options_.interpolationBase = Raster.DEFAULT_OPTIONS.interpolationBase;
-    }
-    this.update_();
-  }
-
-  /**
-   * Este método devuelve el color personalizado del estilo ráster.
-   *
-   * @function
-   * @public
-   * @return {string|Array<number>|undefined} Color literal.
-   * @api
-   */
-  getColor() {
-    return this.options_.color;
-  }
-
-  /**
-   * Este método establece el color personalizado del estilo ráster.
-   * No aplica si hay rampa activa (la rampa tiene prioridad).
-   *
-   * @function
-   * @public
-   * @param {string|Array<number>|null} color Color CSS o array RGB/RGBA.
-   * @api
-   */
-  setColor(color) {
-    if (Raster.hasRamp(this.options_, true)) {
-      return;
-    }
-    if (isNullOrEmpty(color)) {
-      delete this.options_.color;
-    } else {
-      this.options_.color = Raster.normalizeColor(color);
-    }
-    if (!Raster.optionsHaveEffect(this.options_, true)) {
-      Exception(getValue('exception').invalid_raster_options);
     }
     this.update_();
   }
@@ -614,7 +572,6 @@ class Raster extends Style {
     }
 
     if (Raster.hasRamp(normalized, true)) {
-      delete normalized.color;
       const formulaDefaults = Raster.getFormulaDefaults(normalized.formula);
       normalized.bands = Raster.normalizeBands(normalized);
       if (!isNullOrEmpty(formulaDefaults)) {
@@ -648,11 +605,7 @@ class Raster extends Style {
       delete normalized.interpolationBase;
     }
 
-    if (!isNullOrEmpty(normalized.color)) {
-      normalized.color = Raster.normalizeColor(normalized.color);
-    } else {
-      delete normalized.color;
-    }
+    delete normalized.color;
 
     if (validate && !Raster.optionsHaveEffect(normalized, true)) {
       Exception(getValue('exception').invalid_raster_options);
@@ -827,59 +780,7 @@ class Raster extends Style {
   }
 
   /**
-   * Normaliza el parámetro color (literal CSS o array RGB/RGBA).
-   *
-   * @function
-   * @private
-   * @param {string|Array<number>} color Valor de color.
-   * @return {string|Array<number>} Color normalizado.
-   */
-  static normalizeColor(color) {
-    if (isNullOrEmpty(color)) {
-      Exception(getValue('exception').invalid_raster_color);
-    }
-    if (isString(color)) {
-      const trimmed = color.trim();
-      if (trimmed === '') {
-        Exception(getValue('exception').invalid_raster_color);
-      }
-      return trimmed;
-    }
-    if (isArray(color)) {
-      if (color.length !== 3 && color.length !== 4) {
-        Exception(getValue('exception').invalid_raster_color);
-      }
-      return color.map((component) => {
-        const parsed = parseFloat(component);
-        if (Number.isNaN(parsed)) {
-          Exception(getValue('exception').invalid_raster_color);
-        }
-        return parsed;
-      });
-    }
-    Exception(getValue('exception').invalid_raster_color);
-    return color;
-  }
-
-  /**
-   * Indica si las opciones incluyen un color personalizado.
-   *
-   * @function
-   * @public
-   * @param {Object} optionsParam Opciones del estilo.
-   * @param {boolean} alreadyNormalized Si es true, optionsParam ya está normalizado.
-   * @return {boolean} Verdadero si hay color personalizado.
-   * @api
-   */
-  static hasColor(optionsParam = {}, alreadyNormalized = false) {
-    const options = alreadyNormalized
-      ? optionsParam
-      : Raster.normalizeOptions({ ...optionsParam }, false);
-    return !isNullOrEmpty(options.color);
-  }
-
-  /**
-   * Indica si las opciones definen algún efecto aplicable (rampa, color, nodata o filtros).
+   * Indica si las opciones definen algún efecto aplicable (rampa, nodata o filtros).
    *
    * @function
    * @public
@@ -894,9 +795,6 @@ class Raster extends Style {
       : Raster.normalizeOptions({ ...optionsParam }, false);
 
     if (Raster.hasRamp(options, true)) {
-      return true;
-    }
-    if (Raster.hasColor(options, true)) {
       return true;
     }
     if (!isNullOrEmpty(options.nodata) || options.nodata === 0) {
@@ -1049,13 +947,6 @@ class Raster extends Style {
     };
     if (!isNullOrEmpty(options.nodata) || options.nodata === 0) {
       serializedOptions.nodata = options.nodata;
-    }
-    if (!isNullOrEmpty(options.color)) {
-      if (isArray(options.color)) {
-        serializedOptions.color = [...options.color];
-      } else {
-        serializedOptions.color = options.color;
-      }
     }
     if (Raster.hasRamp(options, true)) {
       const serializedBands = isArray(options.bands)
