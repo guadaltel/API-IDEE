@@ -1224,11 +1224,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @private
    * @function
    */
-  addCatalog() {
+  async addCatalog() {
     const title = document.querySelector('.m-catalogmanager-add-panel #title').value;
     const url = document.querySelector('.m-catalogmanager-add-panel #catalog-url').value;
     const publicValue = document.querySelector('.m-catalogmanager-add-panel #cat-public').checked;
     const authUrl = document.querySelector('.m-catalogmanager-add-panel #auth-url').value;
+    const collectionsUrl = document.querySelector('.m-catalogmanager-add-panel #collections-url').value;
     const user = document.querySelector('.m-catalogmanager-add-panel #user').value;
     const password = document.querySelector('.m-catalogmanager-add-panel #password').value;
 
@@ -1238,9 +1239,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
         url,
         public: publicValue,
         authUrl,
+        collectionsUrl,
       });
       if (!publicValue) {
-        catalog.authenticate(user, password);
+        await catalog.authenticate(user, password);
       }
       this.catalogs_.push(this.getJsonCatalog(catalog));
       this.closeDialog();
@@ -1662,7 +1664,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         html = IDEE.template.compileSync(imagesTemplate, {
           vars: {
             images,
-            downloadable: !catalog.obj.public || true,
+            downloadable: !catalog.obj.public,
             translations: {
               imageActions: getValue('imageActions'),
               images: getValue('images'),
@@ -1825,6 +1827,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       legend: image.title,
     }, {
       convertToRGB: false,
+    }, {
       style,
     });
     if (catalog.layerGroup === null) {
@@ -1910,7 +1913,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const currentMouseCursorStyle = document.body.style.cursor ?? 'auto';
     document.body.style.cursor = 'wait';
     IDEE.gdalUtils.getHistogramGdalinfo(asset.href, bands)
-      .then((histogram) => {
+      .then((response) => {
+        const histogram = JSON.parse(response.text).histogram;
         this.showHistogramDialog(asset, histogram, bands);
       })
       .catch((err) => {

@@ -93,6 +93,7 @@ class Catalog extends Base {
       }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
         if (response.code === 401) {
           showError(getValue('exception').invalid_user_password);
+          throw new Error(getValue('exception').invalid_user_password);
         } else if (response.code === 200) {
           const data = JSON.parse(response.text);
           if (data.access_token) {

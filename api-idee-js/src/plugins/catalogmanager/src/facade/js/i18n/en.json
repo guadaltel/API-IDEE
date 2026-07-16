@@ -90,6 +90,7 @@
   "cat_url": "Catalog URL",
   "cat_public": "Public",
   "cat_auth_url": "Authentication URL",
+  "cat_collections_url": "Collections URL",
   "cat_user": "User",
   "cat_password": "Password",
   "add": "Add",
