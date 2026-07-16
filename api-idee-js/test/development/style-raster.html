@@ -98,6 +98,13 @@
       width: 70px;
     }
 
+    #raster-panel select#formula,
+    #raster-panel select#style-mode {
+      width: auto;
+      flex: 1;
+      min-width: 140px;
+    }
+
     #raster-panel input[type="text"]#bands-input {
       flex: 1;
       min-width: 120px;
@@ -230,12 +237,24 @@
 
     <div id="ramp-options">
     <fieldset>
+      <legend>formula</legend>
+      <label class="inline">
+        Valor
+        <select id="formula">
+          <option value="" selected>Ninguna (banda / media)</option>
+          <option value="ndvi">NDVI (nir − red) / (nir + red)</option>
+        </select>
+      </label>
+      <p class="field-hint" id="formula-hint">Sin fórmula: una banda o media. NDVI exige 2 bandas [nir, red].</p>
+    </fieldset>
+
+    <fieldset>
       <legend>bands</legend>
       <label class="inline">
         Valor
         <input type="text" id="bands-input" value="1, 2, 3" placeholder="1 o 1, 2, 3">
       </label>
-      <p class="field-hint">Un número para una banda; varios separados por coma para media.</p>
+      <p class="field-hint" id="bands-hint">Un número para una banda; varios separados por coma para media.</p>
     </fieldset>
 
     <fieldset>
@@ -248,7 +267,7 @@
         Max
         <input type="number" id="max" step="any" value="1">
       </label>
-      <p class="field-hint">Rango de datos de la rampa (0–1 con normalize, valores entre 0–255 sin normalizar).</p>
+      <p class="field-hint" id="range-hint">Rango de datos de la rampa (0–1 con normalize; NDVI típico −1…1).</p>
     </fieldset>
 
     <fieldset>

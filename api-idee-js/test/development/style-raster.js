@@ -14,10 +14,29 @@ const DEFAULT_RAMP = RAMP_PRESETS[5];
 
 const DEFAULT_FORM = {
   styleMode: 'ramp',
+  formula: '',
   bandsInput: '1, 2, 3',
   min: 0,
   max: 1,
   ramp: DEFAULT_RAMP,
+  colorSimple: '#3388ff',
+  interpolation: 'linear',
+  interpolationBase: 2,
+  gamma: 1,
+  saturation: 0,
+  exposure: 0,
+  contrast: 0,
+  brightness: 0,
+  nodata: '',
+};
+
+const NDVI_FORM = {
+  styleMode: 'ramp',
+  formula: 'ndvi',
+  bandsInput: '2, 1',
+  min: -1,
+  max: 1,
+  ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
   colorSimple: '#3388ff',
   interpolation: 'linear',
   interpolationBase: 2,
@@ -53,6 +72,16 @@ const getStyleMode = () => $('style-mode').value;
 const isRampMode = () => getStyleMode() === 'ramp';
 
 const isColorMode = () => getStyleMode() === 'color';
+
+const isNdviFormula = () => $('formula').value === 'ndvi';
+
+const getFormulaFromForm = () => {
+  const value = $('formula').value.trim();
+  if (!value) {
+    return undefined;
+  }
+  return value;
+};
 
 // Función para cambiar los inputs de colores según el número de colores seleccionados
 const renderRampColors = (ramp) => {
@@ -152,6 +181,10 @@ const readForm = () => {
   };
 
   if (isRampMode()) {
+    const formula = getFormulaFromForm();
+    if (formula) {
+      options.formula = formula;
+    }
     options.bands = parseBandsInput($('bands-input').value);
     options.min = parseFloat($('min').value);
     options.max = parseFloat($('max').value);
@@ -178,6 +211,11 @@ const readForm = () => {
 // Establece los valores del formulario
 const setFormValues = (values) => {
   $('style-mode').value = values.styleMode;
+  let formulaValue = '';
+  if (values.formula) {
+    formulaValue = values.formula;
+  }
+  $('formula').value = formulaValue;
   $('bands-input').value = values.bandsInput;
   $('min').value = values.min;
   $('max').value = values.max;
@@ -204,18 +242,32 @@ const setFormValues = (values) => {
 
 // Actualiza la visibilidad de los elementos del formulario
 const updateFormVisibility = () => {
-  const styleMode = getStyleMode();
   const useRamp = isRampMode();
   const useColor = isColorMode();
   const isExponential = $('interpolation').value === 'exponential';
+  const useNdvi = isNdviFormula();
   $('ramp-options').classList.toggle('hidden', !useRamp);
   $('color-options').classList.toggle('hidden', !useColor);
   $('interpolationBase').disabled = !isExponential;
   $('interpolation-base-row').classList.toggle('disabled', !isExponential);
 
+  if (useNdvi) {
+    $('bands-hint').textContent = 'NDVI: exactamente dos bandas [nir, red]. En este TCI RGB de demo: [2, 1] ≈ (G−R)/(G+R).';
+    $('range-hint').textContent = 'Rango del índice NDVI (típico −1…1). No se fuerza a 0–1 aunque la capa tenga normalize.';
+    $('formula-hint').textContent = 'NDVI colorea (nir−red)/(nir+red). Requiere rampa. En TCI RGB no es NDVI real (falta NIR).';
+  } else {
+    $('bands-hint').textContent = 'Un número para una banda; varios separados por coma para media.';
+    $('range-hint').textContent = 'Rango de datos de la rampa (0–1 con normalize; valores crudos sin normalizar).';
+    $('formula-hint').textContent = 'Sin fórmula: una banda o media. NDVI exige 2 bandas [nir, red].';
+  }
+
   if (useRamp) {
     const bandsLabel = formatBands(parseBandsInput($('bands-input').value));
-    $('legend-title').textContent = `Rampa bands ${bandsLabel} (${$('min').value}–${$('max').value})`;
+    let title = `Rampa bands ${bandsLabel} (${$('min').value}–${$('max').value})`;
+    if (useNdvi) {
+      title = `NDVI ${bandsLabel} (${$('min').value}–${$('max').value})`;
+    }
+    $('legend-title').textContent = title;
     return;
   }
 
@@ -225,6 +277,19 @@ const updateFormVisibility = () => {
   }
 
   $('legend-title').textContent = 'Solo filtros WebGL';
+};
+
+const applyNdviPreset = () => {
+  setFormValues({
+    ...NDVI_FORM,
+    gamma: parseFloat($('gamma').value),
+    saturation: parseFloat($('saturation').value),
+    exposure: parseFloat($('exposure').value),
+    contrast: parseFloat($('contrast').value),
+    brightness: parseFloat($('brightness').value),
+    nodata: $('nodata').value,
+  });
+  applyRasterStyle();
 };
 
 const isValidLegendUrl = (url) => {
@@ -318,6 +383,9 @@ const applyRasterStyle = () => {
 
   let status = 'Aplicado: ';
   if (isRampMode()) {
+    if (options.formula) {
+      status += `formula ${options.formula}, `;
+    }
     status += `bands ${formatBands(options.bands)}, rango ${options.min}–${options.max}`;
     status += `, ${options.ramp.length} colores`;
     status += `, ${options.interpolation}`;
@@ -400,6 +468,7 @@ const syncFormFromStyle = (style) => {
 
   setFormValues({
     styleMode: detectStyleModeFromOptions(options),
+    formula: options.formula || '',
     bandsInput: formatBands(options.bands),
     min: options.min,
     max: options.max,
@@ -441,6 +510,15 @@ const applySerializedStyle = () => {
 };
 
 $('style-mode').addEventListener('change', () => {
+  updateFormVisibility();
+  applyRasterStyle();
+});
+
+$('formula').addEventListener('change', () => {
+  if (isNdviFormula()) {
+    applyNdviPreset();
+    return;
+  }
   updateFormVisibility();
   applyRasterStyle();
 });

@@ -24,7 +24,9 @@ class Raster extends Style {
    * @constructor
    * @param {Mx.RasterStyleOptions} optionsParam Opciones del estilo.
    * - bands: Banda o bandas (solo con rampa o nodata).
-   * - min: Valor mínimo de la rampa (por defecto 0).
+   *   Con formula 'ndvi': array [nir, red] (exactamente 2 bandas).
+   * - formula: Fórmula del valor para la rampa ('ndvi' o sin fórmula).
+   * - min: Valor mínimo de la rampa (por defecto 0; con NDVI -1).
    * - max: Valor máximo de la rampa (por defecto 1).
    * - ramp: Rampa de colores (opcional).
    * - color: Color literal CSS o array RGB/RGBA (opcional; no aplica con rampa).
@@ -124,7 +126,51 @@ class Raster extends Style {
     if (hasNoRamp && hasNoNodata) {
       return;
     }
-    this.options_.bands = Raster.normalizeBands({ bands });
+    this.options_.bands = Raster.normalizeBands({
+      bands,
+      formula: this.options_.formula,
+    });
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve la fórmula del valor de la rampa.
+   *
+   * @function
+   * @public
+   * @return {string|undefined} Fórmula ('ndvi') o undefined.
+   * @api
+   */
+  getFormula() {
+    return this.options_.formula;
+  }
+
+  /**
+   * Este método establece la fórmula del valor de la rampa.
+   * Solo aplica con rampa. Use 'ndvi' o null/undefined para quitarla.
+   *
+   * @function
+   * @public
+   * @param {string|null|undefined} formula Fórmula ('ndvi') o vacío.
+   * @api
+   */
+  setFormula(formula) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    const normalizedFormula = Raster.normalizeFormula(formula);
+    if (isNullOrEmpty(normalizedFormula)) {
+      delete this.options_.formula;
+      this.options_.bands = Raster.normalizeBands({ bands: this.options_.bands });
+    } else {
+      this.options_.formula = normalizedFormula;
+      this.options_.bands = Raster.normalizeBands({
+        bands: this.options_.bands,
+        formula: normalizedFormula,
+      });
+      this.options_.min = Raster.DEFAULT_NDVI.min;
+      this.options_.max = Raster.DEFAULT_NDVI.max;
+    }
     this.update_();
   }
 
@@ -420,6 +466,7 @@ class Raster extends Style {
       delete nextOptions.max;
       delete nextOptions.interpolation;
       delete nextOptions.interpolationBase;
+      delete nextOptions.formula;
       if (isNullOrEmpty(nextOptions.nodata) && nextOptions.nodata !== 0) {
         if (!Raster.hasColor(nextOptions, true)) {
           delete nextOptions.bands;
@@ -433,6 +480,7 @@ class Raster extends Style {
       delete this.options_.max;
       delete this.options_.interpolation;
       delete this.options_.interpolationBase;
+      delete this.options_.formula;
       if (isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0) {
         if (!Raster.hasColor(this.options_, true)) {
           delete this.options_.bands;
@@ -550,22 +598,46 @@ class Raster extends Style {
       Raster.DEFAULT_OPTIONS.brightness,
     );
 
+    const formula = Raster.normalizeFormula(normalized.formula);
+    if (!isNullOrEmpty(formula) && !Raster.hasRamp(normalized, true)) {
+      if (validate) {
+        Exception(getValue('exception').invalid_raster_options);
+      }
+      delete normalized.formula;
+    } else if (!isNullOrEmpty(formula)) {
+      normalized.formula = formula;
+    } else {
+      delete normalized.formula;
+    }
+
     if (Raster.hasRamp(normalized, true)) {
       delete normalized.color;
+      const isNdvi = normalized.formula === Raster.FORMULA.NDVI;
       normalized.bands = Raster.normalizeBands(normalized);
-      normalized.min = isNullOrEmpty(normalized.min)
-        ? Raster.DEFAULT_OPTIONS.min
-        : parseFloat(normalized.min);
-      normalized.max = isNullOrEmpty(normalized.max)
-        ? Raster.DEFAULT_OPTIONS.max
-        : parseFloat(normalized.max);
+      if (isNdvi) {
+        normalized.min = isNullOrEmpty(normalized.min) && normalized.min !== 0
+          ? Raster.DEFAULT_NDVI.min
+          : parseFloat(normalized.min);
+        normalized.max = isNullOrEmpty(normalized.max) && normalized.max !== 0
+          ? Raster.DEFAULT_NDVI.max
+          : parseFloat(normalized.max);
+      } else {
+        normalized.min = isNullOrEmpty(normalized.min)
+          ? Raster.DEFAULT_OPTIONS.min
+          : parseFloat(normalized.min);
+        normalized.max = isNullOrEmpty(normalized.max)
+          ? Raster.DEFAULT_OPTIONS.max
+          : parseFloat(normalized.max);
+      }
       normalized.interpolation = normalized.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
       normalized.interpolationBase = Number.isNaN(parseFloat(normalized.interpolationBase))
         ? Raster.DEFAULT_OPTIONS.interpolationBase
         : parseFloat(normalized.interpolationBase);
     } else if (!isNullOrEmpty(normalized.nodata) || normalized.nodata === 0) {
+      delete normalized.formula;
       normalized.bands = Raster.normalizeBands(normalized);
     } else {
+      delete normalized.formula;
       delete normalized.bands;
       delete normalized.min;
       delete normalized.max;
@@ -587,15 +659,47 @@ class Raster extends Style {
   }
 
   /**
-   * Normaliza el parámetro bands (número o array).
+   * Normaliza el parámetro formula.
    *
    * @function
    * @private
-   * @param {Object} options Opciones con bands.
+   * @param {string|null|undefined} formula Fórmula.
+   * @return {string|undefined} Fórmula normalizada.
+   */
+  static normalizeFormula(formula) {
+    if (isNullOrEmpty(formula)) {
+      return undefined;
+    }
+    const normalized = String(formula).trim().toLowerCase();
+    if (normalized === Raster.FORMULA.NDVI) {
+      return Raster.FORMULA.NDVI;
+    }
+    Exception(getValue('exception').invalid_raster_formula);
+    return undefined;
+  }
+
+  /**
+   * Normaliza el parámetro bands (número o array).
+   * Con formula 'ndvi' exige exactamente dos bandas [nir, red].
+   *
+   * @function
+   * @private
+   * @param {Object} options Opciones con bands (y formula opcional).
    * @return {number|Array<number>} Banda o bandas normalizadas.
    */
   static normalizeBands(options) {
-    const { bands } = options;
+    const { bands, formula } = options;
+    const isNdvi = formula === Raster.FORMULA.NDVI;
+
+    if (isNdvi) {
+      if (isNullOrEmpty(bands)) {
+        return [...Raster.DEFAULT_NDVI.bands];
+      }
+      if (!isArray(bands) || bands.length !== 2) {
+        Exception(getValue('exception').invalid_raster_ndvi_bands);
+      }
+      return bands.map((bandIndex) => parseInt(bandIndex, 10));
+    }
 
     if (isNullOrEmpty(bands)) {
       return Raster.DEFAULT_OPTIONS.bands;
@@ -898,6 +1002,9 @@ class Raster extends Style {
       serializedOptions.ramp = [...options.ramp];
       serializedOptions.interpolation = options.interpolation;
       serializedOptions.interpolationBase = options.interpolationBase;
+      if (!isNullOrEmpty(options.formula)) {
+        serializedOptions.formula = options.formula;
+      }
     } else if (!isNullOrEmpty(options.bands)) {
       const serializedBands = isArray(options.bands)
         ? [...options.bands]
@@ -947,6 +1054,29 @@ Raster.DEFAULT_OPTIONS = {
   brightness: 0,
   interpolation: 'linear',
   interpolationBase: 2,
+};
+
+/**
+ * Valores por defecto al usar formula NDVI.
+ * @constant
+ * @public
+ * @api
+ */
+Raster.DEFAULT_NDVI = {
+  bands: [2, 1],
+  min: -1,
+  max: 1,
+  ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
+};
+
+/**
+ * Fórmulas soportadas para el valor de la rampa.
+ * @constant
+ * @public
+ * @api
+ */
+Raster.FORMULA = {
+  NDVI: 'ndvi',
 };
 
 export default Raster;

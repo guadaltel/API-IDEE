@@ -64,7 +64,21 @@ class Raster extends Style {
    * @returns {Array} Expresión WebGL.
    */
   getValueExpression_() {
-    const { bands } = this.options_;
+    const { bands, formula } = this.options_;
+    if (formula === 'ndvi') {
+      const nirBand = bands[0];
+      const redBand = bands[1];
+      const nir = ['band', nirBand];
+      const red = ['band', redBand];
+      const sum = ['+', nir, red];
+      const diff = ['-', nir, red];
+      return [
+        'case',
+        ['==', sum, 0],
+        0,
+        ['/', diff, sum],
+      ];
+    }
     if (!isArray(bands)) {
       return ['band', bands];
     }
@@ -150,7 +164,8 @@ class Raster extends Style {
     if (this.hasRamp_()) {
       let rangeMin = min;
       let rangeMax = max;
-      if (this.layerNormalize_) {
+      const isNdvi = this.options_.formula === 'ndvi';
+      if (this.layerNormalize_ && !isNdvi) {
         rangeMin = 0;
         rangeMax = 1;
       }

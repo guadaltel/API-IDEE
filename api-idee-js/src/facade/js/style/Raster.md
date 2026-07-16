@@ -42,6 +42,7 @@ Imagina una **foto satélite** (o un mapa de alturas, temperaturas, etc.) cargad
 | Lo que quieres lograr | Cómo se llama en la API |
 |----------------------|-------------------------|
 | Colorear según el **valor numérico** de cada píxel (bajo = azul, alto = rojo) | **Rampa** (`ramp`, `min`, `max`) |
+| Calcular un **índice** (p. ej. vegetación NDVI) y colorearlo con rampa | **Fórmula** (`formula: 'ndvi'`) + rampa |
 | **Teñir** toda la imagen de un color (p. ej. azul) | **Color fijo** (`color`) |
 | Ajustar la imagen como en un editor de fotos (más gris, más brillo…) | **Filtros** (`saturation`, `brightness`, etc.) |
 | **Ocultar** zonas sin dato (bordes vacíos del archivo) | **Nodata** (`nodata`) |
@@ -76,6 +77,22 @@ layer.setStyle(new IDEE.style.Raster({
   ramp: ['#000080', '#0000ff', '#00ff00', '#ffff00', '#ff0000'],
 }));
 ```
+
+### Índice de vegetación (NDVI)
+
+Necesitas **dos bandas**: NIR y Rojo, en ese orden. El valor `(NIR − Rojo) / (NIR + Rojo)` se colorea con la rampa (rango típico −1…1).
+
+```javascript
+layer.setStyle(new IDEE.style.Raster({
+  formula: 'ndvi',
+  bands: [2, 1], // [nir, red] — índices según tu GeoTIFF
+  min: -1,
+  max: 1,
+  ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
+}));
+```
+
+> Con `normalize: true` en la capa, las bandas están en 0–1, pero el **resultado NDVI** sigue en ≈[−1, 1]. No se fuerza el rango de la rampa a 0–1.
 
 ### Quitar los bordes azules/vacíos de un COG
 
@@ -126,7 +143,8 @@ layer.setStyle(style);
 |---------|----------------------|
 | **GeoTIFF / capa ráster** | Archivo de imagen geográfica en el mapa. |
 | **Estilo Raster** | Reglas de **cómo se colorea o filtra** esa capa. |
-| **Banda (`bands`)** | Cada píxel del archivo guarda **uno o más números**. Cada número es una banda. Cuando usas una rampa, `bands` le dice al estilo **qué número mirar** para elegir el color. |
+| **Banda (`bands`)** | Cada píxel del archivo guarda **uno o más números**. Cada número es una banda. Cuando usas una rampa, `bands` le dice al estilo **qué número mirar** para elegir el color. Con NDVI: exactamente `[nir, red]`. |
+| **Fórmula (`formula`)** | Cómo se calcula el valor que alimenta la rampa. Sin fórmula: valor de banda o media. Con `'ndvi'`: índice de vegetación. |
 | **Rampa (`ramp`)** | Lista de colores ordenados: los valores **bajos** del dato → primer color; los **altos** → último color. |
 | **`interpolation`** | Con rampa: **cómo** se reparten esos colores entre `min` y `max`. `linear` = uniforme; `exponential` = más color en un extremo (ver [Interpolación exponencial](#interpolación-exponencial)). |
 | **`min` / `max`** | Qué valores numéricos del dato corresponden al primer y último color de la rampa. |
@@ -142,7 +160,7 @@ layer.setStyle(style);
 
 | Modo | Qué verás en el mapa | Opciones principales | ¿Leyenda automática? |
 |------|----------------------|----------------------|----------------------|
-| **Rampa** | Colores según el valor del dato | `ramp`, `min`, `max`, `bands` | Sí (barra min–max) |
+| **Rampa** | Colores según el valor del dato | `ramp`, `min`, `max`, `bands`, `formula` | Sí (barra min–max) |
 | **Color fijo** | Toda la capa teñida de un color | `color` | No |
 | **Solo filtros** | La foto original, pero más gris/brillante/etc. | `saturation`, `brightness`, … | No |
 | **Nodata** | Huecos transparentes donde no hay dato | `nodata` (+ banda para detectarlo) | Depende del modo anterior |
@@ -194,16 +212,56 @@ El estilo exige **al menos un efecto activo**: rampa, color, nodata o algún fil
 | | |
 |---|---|
 | **Tipo** | `number` \| `Array<number>` |
-| **Por defecto** | `1` (solo si hay rampa o nodata) |
+| **Por defecto** | `1` (rampa/nodata); con NDVI: `[2, 1]` |
 | **Descripción** | Banda o bandas usadas en la simbología. Solo tiene efecto con **rampa** o **nodata**. |
 
-| Valor | Comportamiento |
+| Valor | Comportamiento (sin fórmula) |
 |-------|----------------|
 | `1` | Valor de esa banda |
 | `[1, 2, 3]` | **Media aritmética** de las bandas (útil para brillo en RGB) |
 
-- `bands: [1]` ≡ `bands: 1`
+Con **`formula: 'ndvi'`**:
+
+| Valor | Comportamiento |
+|-------|----------------|
+| `[nir, red]` | Exactamente **2** bandas: NIR y Rojo. Calcula `(nir − red) / (nir + red)` |
+| Otro | Error `invalid_raster_ndvi_bands` |
+
+- `bands: [1]` ≡ `bands: 1` (sin fórmula)
 - `bands: []` → error
+
+---
+
+### `formula`
+
+| | |
+|---|---|
+| **Tipo** | `string` |
+| **Por defecto** | *(sin fórmula)* |
+| **Valores** | `'ndvi'` |
+
+Solo con **rampa**. Cambia **cómo se calcula el valor** que se colorea; la rampa (`ramp`, `min`, `max`, interpolación) se reutiliza.
+
+| Fórmula | Expresión | `bands` | `min`/`max` por defecto |
+|---------|-----------|---------|-------------------------|
+| *(ninguna)* | Banda o media | número o array | `0` / `1` |
+| `'ndvi'` | `(NIR − Rojo) / (NIR + Rojo)` | `[nir, red]` | `-1` / `1` |
+
+- La media mezcla bandas por igual; el NDVI las combina con una fórmula física para resaltar vegetación. La rampa de colores es la misma; cambia solo qué valor se colorea.
+- Excluyente con **`color`** (al haber rampa se ignora `color`).
+- Con NDVI y `normalize: true` en la capa, **no** se fuerza el rango de la rampa a 0–1 (el índice ya sale en ≈[−1, 1]).
+- Si el denominador es 0, el valor se trata como `0`.
+- Valor inválido → excepción `invalid_raster_formula`.
+
+```javascript
+new IDEE.style.Raster({
+  formula: 'ndvi',
+  bands: [8, 4], // índices de banda en tu archivo
+  min: -1,
+  max: 1,
+  ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
+});
+```
 
 ---
 
@@ -217,7 +275,9 @@ Solo con **rampa**. Definen qué valores del dato se mapean al primer y último 
 | Píxeles ≤ `min` | Primer color de `ramp` | — |
 | Píxeles ≥ `max` | — | Último color de `ramp` |
 
-Con **`normalize: true`** en la capa, los datos están en **0–1**: usa `min: 0`, `max: 1`. La implementación ajusta la interpolación automáticamente.
+Con **`normalize: true`** en la capa (y **sin** fórmula NDVI), los datos están en **0–1**: usa `min: 0`, `max: 1`. La implementación ajusta la interpolación automáticamente.
+
+Con **`formula: 'ndvi'`**, usa el rango del índice (por defecto `-1`…`1`), aunque la capa tenga `normalize: true`.
 
 Con **`normalize: false`**, usa el rango real (p. ej. `0`–`2000` en un MDT).
 
@@ -354,7 +414,8 @@ Todos los setters reaplican el estilo si ya está en una capa (`update_()`).
 
 | Método | Notas |
 |--------|-------|
-| `getBands()` / `setBands()` | Solo rampa o nodata |
+| `getBands()` / `setBands()` | Solo rampa o nodata; con NDVI exactamente `[nir, red]` |
+| `getFormula()` / `setFormula()` | Solo rampa; `'ndvi'` o vacío |
 | `getMin()` / `setMin()` | Solo rampa |
 | `getMax()` / `setMax()` | Solo rampa |
 | `getRamp()` / `setRamp(null)` | Al añadir rampa borra `color` |
@@ -437,12 +498,13 @@ layer.setStyle(new IDEE.style.Raster({ saturation: -0.8 }));
 
 # Parte 3 — Avanzado
 
-**No necesitas esta sección** para rampas, color fijo, filtros o nodata.  
-Úsala solo si necesitas fórmulas a medida (NDVI, paletas científicas, etc.).
+**No necesitas esta sección** para rampas, NDVI, color fijo, filtros o nodata.  
+Úsala solo si necesitas expresiones WebGL libres (paletas científicas custom, `case` complejos, etc.).
 
 ## Avanzado: estilos a medida
 
-`IDEE.style.Raster` **no** expone expresiones WebGL libres (`interpolate` custom, `palette`, `case` complejos, variables `['var', 'x']`, etc.).
+`IDEE.style.Raster` **no** expone expresiones WebGL libres (`interpolate` custom, `palette`, `case` complejos, variables `['var', 'x']`, etc.).  
+El NDVI ya está cubierto con `formula: 'ndvi'`.
 
 **Al crear la capa** (3.er argumento `vendorOptions`, sin pasar por `setStyle`):
 

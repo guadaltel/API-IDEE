@@ -312,6 +312,8 @@
     "raster_method": "La implementación usada no puede crear estilos Raster.",
     "invalid_raster_gamma": "El valor gamma debe ser mayor o igual que 0.",
     "invalid_raster_color": "El color debe ser un valor CSS o un array RGB/RGBA.",
+    "invalid_raster_formula": "La fórmula del estilo Raster no es válida. Use 'ndvi' o déjela vacía.",
+    "invalid_raster_ndvi_bands": "La fórmula NDVI requiere exactamente dos bandas: [nir, red].",
     "invalid_raster_options": "El estilo Raster debe incluir una rampa, un color, filtros distintos del valor por defecto o nodata.",
     "flowline_method": "La implementación usada no puede crear estilos FlowLine.",
     "id_exists": "El ID indicado ya existe.",
