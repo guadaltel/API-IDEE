@@ -243,9 +243,11 @@
         <select id="formula">
           <option value="" selected>Ninguna (banda / media)</option>
           <option value="ndvi">NDVI (nir − red) / (nir + red)</option>
+          <option value="ndwi">NDWI (green − nir) / (green + nir)</option>
+          <option value="nbr">NBR (nir − swir) / (nir + swir)</option>
         </select>
       </label>
-      <p class="field-hint" id="formula-hint">Sin fórmula: una banda o media. NDVI exige 2 bandas [nir, red].</p>
+      <p class="field-hint" id="formula-hint">Sin fórmula: una banda o media. NDVI [nir, red]; NDWI [green, nir]; NBR [nir, swir].</p>
     </fieldset>
 
     <fieldset>
@@ -267,7 +269,7 @@
         Max
         <input type="number" id="max" step="any" value="1">
       </label>
-      <p class="field-hint" id="range-hint">Rango de datos de la rampa (0–1 con normalize; NDVI típico −1…1).</p>
+      <p class="field-hint" id="range-hint">Rango de datos de la rampa (0–1 con normalize; índices típico −1…1).</p>
     </fieldset>
 
     <fieldset>

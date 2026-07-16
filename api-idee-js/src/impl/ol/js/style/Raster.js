@@ -79,6 +79,34 @@ class Raster extends Style {
         ['/', diff, sum],
       ];
     }
+    if (formula === 'ndwi') {
+      const greenBand = bands[0];
+      const nirBand = bands[1];
+      const green = ['band', greenBand];
+      const nir = ['band', nirBand];
+      const sum = ['+', green, nir];
+      const diff = ['-', green, nir];
+      return [
+        'case',
+        ['==', sum, 0],
+        0,
+        ['/', diff, sum],
+      ];
+    }
+    if (formula === 'nbr') {
+      const nirBand = bands[0];
+      const swirBand = bands[1];
+      const nir = ['band', nirBand];
+      const swir = ['band', swirBand];
+      const sum = ['+', nir, swir];
+      const diff = ['-', nir, swir];
+      return [
+        'case',
+        ['==', sum, 0],
+        0,
+        ['/', diff, sum],
+      ];
+    }
     if (!isArray(bands)) {
       return ['band', bands];
     }
@@ -164,8 +192,10 @@ class Raster extends Style {
     if (this.hasRamp_()) {
       let rangeMin = min;
       let rangeMax = max;
-      const isNdvi = this.options_.formula === 'ndvi';
-      if (this.layerNormalize_ && !isNdvi) {
+      const isIndexFormula = this.options_.formula === 'ndvi'
+        || this.options_.formula === 'ndwi'
+        || this.options_.formula === 'nbr';
+      if (this.layerNormalize_ && !isIndexFormula) {
         rangeMin = 0;
         rangeMax = 1;
       }

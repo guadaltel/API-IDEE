@@ -48,6 +48,48 @@ const NDVI_FORM = {
   nodata: '',
 };
 
+const NDWI_FORM = {
+  styleMode: 'ramp',
+  formula: 'ndwi',
+  bandsInput: '2, 3',
+  min: -1,
+  max: 1,
+  ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
+  colorSimple: '#3388ff',
+  interpolation: 'linear',
+  interpolationBase: 2,
+  gamma: 1,
+  saturation: 0,
+  exposure: 0,
+  contrast: 0,
+  brightness: 0,
+  nodata: '',
+};
+
+const NBR_FORM = {
+  styleMode: 'ramp',
+  formula: 'nbr',
+  bandsInput: '1, 3',
+  min: -1,
+  max: 1,
+  ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+  colorSimple: '#3388ff',
+  interpolation: 'linear',
+  interpolationBase: 2,
+  gamma: 1,
+  saturation: 0,
+  exposure: 0,
+  contrast: 0,
+  brightness: 0,
+  nodata: '',
+};
+
+const FORMULA_PRESETS = {
+  ndvi: NDVI_FORM,
+  ndwi: NDWI_FORM,
+  nbr: NBR_FORM,
+};
+
 const mapjs = Mmap({
   container: 'map',
   bbox: [3226511.5398818217, 1735204.4920150614, 4207995.393869615, 2056231.5025902353],
@@ -73,14 +115,16 @@ const isRampMode = () => getStyleMode() === 'ramp';
 
 const isColorMode = () => getStyleMode() === 'color';
 
-const isNdviFormula = () => $('formula').value === 'ndvi';
-
 const getFormulaFromForm = () => {
   const value = $('formula').value.trim();
   if (!value) {
     return undefined;
   }
   return value;
+};
+
+const getFormulaPreset = () => {
+  return FORMULA_PRESETS[getFormulaFromForm()];
 };
 
 // Función para cambiar los inputs de colores según el número de colores seleccionados
@@ -245,27 +289,41 @@ const updateFormVisibility = () => {
   const useRamp = isRampMode();
   const useColor = isColorMode();
   const isExponential = $('interpolation').value === 'exponential';
-  const useNdvi = isNdviFormula();
+  const formula = getFormulaFromForm();
   $('ramp-options').classList.toggle('hidden', !useRamp);
   $('color-options').classList.toggle('hidden', !useColor);
   $('interpolationBase').disabled = !isExponential;
   $('interpolation-base-row').classList.toggle('disabled', !isExponential);
 
-  if (useNdvi) {
-    $('bands-hint').textContent = 'NDVI: exactamente dos bandas [nir, red]. En este TCI RGB de demo: [2, 1] ≈ (G−R)/(G+R).';
-    $('range-hint').textContent = 'Rango del índice NDVI (típico −1…1). No se fuerza a 0–1 aunque la capa tenga normalize.';
-    $('formula-hint').textContent = 'NDVI colorea (nir−red)/(nir+red). Requiere rampa. En TCI RGB no es NDVI real (falta NIR).';
+  if (formula === 'ndvi') {
+    $('bands-hint').textContent = 'NDVI: exactamente dos bandas [nir, red]. En TCI RGB de demo: [2, 1] ≈ (G−R)/(G+R).';
+    $('range-hint').textContent = 'Rango del índice (típico −1…1). No se fuerza a 0–1 aunque la capa tenga normalize.';
+    $('formula-hint').textContent = 'NDVI: (nir−red)/(nir+red). En TCI RGB no es NDVI real (falta NIR).';
+  } else if (formula === 'ndwi') {
+    $('bands-hint').textContent = 'NDWI: exactamente dos bandas [green, nir]. En TCI RGB de demo: [2, 3] ≈ (G−B)/(G+B).';
+    $('range-hint').textContent = 'Rango del índice (típico −1…1). No se fuerza a 0–1 aunque la capa tenga normalize.';
+    $('formula-hint').textContent = 'NDWI: (green−nir)/(green+nir). En TCI RGB no es NDWI real (falta NIR).';
+  } else if (formula === 'nbr') {
+    $('bands-hint').textContent = 'NBR: exactamente dos bandas [nir, swir]. En TCI RGB de demo: [1, 3] ≈ (R−B)/(R+B).';
+    $('range-hint').textContent = 'Rango del índice (típico −1…1). No se fuerza a 0–1 aunque la capa tenga normalize.';
+    $('formula-hint').textContent = 'NBR: (nir−swir)/(nir+swir). En TCI RGB no es NBR real (falta SWIR).';
   } else {
     $('bands-hint').textContent = 'Un número para una banda; varios separados por coma para media.';
-    $('range-hint').textContent = 'Rango de datos de la rampa (0–1 con normalize; valores crudos sin normalizar).';
-    $('formula-hint').textContent = 'Sin fórmula: una banda o media. NDVI exige 2 bandas [nir, red].';
+    $('range-hint').textContent = 'Rango de datos de la rampa (0–1 con normalize; índices típico −1…1).';
+    $('formula-hint').textContent = 'Sin fórmula: banda o media. NDVI [nir, red]; NDWI [green, nir]; NBR [nir, swir].';
   }
 
   if (useRamp) {
     const bandsLabel = formatBands(parseBandsInput($('bands-input').value));
     let title = `Rampa bands ${bandsLabel} (${$('min').value}–${$('max').value})`;
-    if (useNdvi) {
+    if (formula === 'ndvi') {
       title = `NDVI ${bandsLabel} (${$('min').value}–${$('max').value})`;
+    }
+    if (formula === 'ndwi') {
+      title = `NDWI ${bandsLabel} (${$('min').value}–${$('max').value})`;
+    }
+    if (formula === 'nbr') {
+      title = `NBR ${bandsLabel} (${$('min').value}–${$('max').value})`;
     }
     $('legend-title').textContent = title;
     return;
@@ -279,9 +337,15 @@ const updateFormVisibility = () => {
   $('legend-title').textContent = 'Solo filtros WebGL';
 };
 
-const applyNdviPreset = () => {
+const applyFormulaPreset = (formula) => {
+  const preset = FORMULA_PRESETS[formula];
+  if (!preset) {
+    updateFormVisibility();
+    applyRasterStyle();
+    return;
+  }
   setFormValues({
-    ...NDVI_FORM,
+    ...preset,
     gamma: parseFloat($('gamma').value),
     saturation: parseFloat($('saturation').value),
     exposure: parseFloat($('exposure').value),
@@ -515,8 +579,9 @@ $('style-mode').addEventListener('change', () => {
 });
 
 $('formula').addEventListener('change', () => {
-  if (isNdviFormula()) {
-    applyNdviPreset();
+  const preset = getFormulaPreset();
+  if (preset) {
+    applyFormulaPreset(getFormulaFromForm());
     return;
   }
   updateFormVisibility();

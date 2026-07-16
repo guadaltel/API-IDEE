@@ -25,8 +25,10 @@ class Raster extends Style {
    * @param {Mx.RasterStyleOptions} optionsParam Opciones del estilo.
    * - bands: Banda o bandas (solo con rampa o nodata).
    *   Con formula 'ndvi': array [nir, red] (exactamente 2 bandas).
-   * - formula: Fórmula del valor para la rampa ('ndvi' o sin fórmula).
-   * - min: Valor mínimo de la rampa (por defecto 0; con NDVI -1).
+   *   Con formula 'ndwi': array [green, nir] (exactamente 2 bandas).
+   *   Con formula 'nbr': array [nir, swir] (exactamente 2 bandas).
+   * - formula: Fórmula del valor para la rampa ('ndvi', 'ndwi', 'nbr' o sin fórmula).
+   * - min: Valor mínimo de la rampa (por defecto 0; con índices -1).
    * - max: Valor máximo de la rampa (por defecto 1).
    * - ramp: Rampa de colores (opcional).
    * - color: Color literal CSS o array RGB/RGBA (opcional; no aplica con rampa).
@@ -138,7 +140,7 @@ class Raster extends Style {
    *
    * @function
    * @public
-   * @return {string|undefined} Fórmula ('ndvi') o undefined.
+   * @return {string|undefined} Fórmula ('ndvi', 'ndwi', 'nbr') o undefined.
    * @api
    */
   getFormula() {
@@ -147,11 +149,11 @@ class Raster extends Style {
 
   /**
    * Este método establece la fórmula del valor de la rampa.
-   * Solo aplica con rampa. Use 'ndvi' o null/undefined para quitarla.
+   * Solo aplica con rampa. Use 'ndvi', 'ndwi', 'nbr' o null/undefined para quitarla.
    *
    * @function
    * @public
-   * @param {string|null|undefined} formula Fórmula ('ndvi') o vacío.
+   * @param {string|null|undefined} formula Fórmula ('ndvi', 'ndwi', 'nbr') o vacío.
    * @api
    */
   setFormula(formula) {
@@ -163,13 +165,14 @@ class Raster extends Style {
       delete this.options_.formula;
       this.options_.bands = Raster.normalizeBands({ bands: this.options_.bands });
     } else {
+      const formulaDefaults = Raster.getFormulaDefaults(normalizedFormula);
       this.options_.formula = normalizedFormula;
       this.options_.bands = Raster.normalizeBands({
         bands: this.options_.bands,
         formula: normalizedFormula,
       });
-      this.options_.min = Raster.DEFAULT_NDVI.min;
-      this.options_.max = Raster.DEFAULT_NDVI.max;
+      this.options_.min = formulaDefaults.min;
+      this.options_.max = formulaDefaults.max;
     }
     this.update_();
   }
@@ -612,14 +615,14 @@ class Raster extends Style {
 
     if (Raster.hasRamp(normalized, true)) {
       delete normalized.color;
-      const isNdvi = normalized.formula === Raster.FORMULA.NDVI;
+      const formulaDefaults = Raster.getFormulaDefaults(normalized.formula);
       normalized.bands = Raster.normalizeBands(normalized);
-      if (isNdvi) {
+      if (!isNullOrEmpty(formulaDefaults)) {
         normalized.min = isNullOrEmpty(normalized.min) && normalized.min !== 0
-          ? Raster.DEFAULT_NDVI.min
+          ? formulaDefaults.min
           : parseFloat(normalized.min);
         normalized.max = isNullOrEmpty(normalized.max) && normalized.max !== 0
-          ? Raster.DEFAULT_NDVI.max
+          ? formulaDefaults.max
           : parseFloat(normalized.max);
       } else {
         normalized.min = isNullOrEmpty(normalized.min)
@@ -674,13 +677,75 @@ class Raster extends Style {
     if (normalized === Raster.FORMULA.NDVI) {
       return Raster.FORMULA.NDVI;
     }
+    if (normalized === Raster.FORMULA.NDWI) {
+      return Raster.FORMULA.NDWI;
+    }
+    if (normalized === Raster.FORMULA.NBR) {
+      return Raster.FORMULA.NBR;
+    }
     Exception(getValue('exception').invalid_raster_formula);
     return undefined;
   }
 
   /**
+   * Lanza excepción por bandas inválidas para una fórmula de índice.
+   *
+   * @function
+   * @private
+   * @param {string} formula Fórmula.
+   */
+  static throwInvalidFormulaBands(formula) {
+    if (formula === Raster.FORMULA.NDVI) {
+      Exception(getValue('exception').invalid_raster_ndvi_bands);
+    }
+    if (formula === Raster.FORMULA.NDWI) {
+      Exception(getValue('exception').invalid_raster_ndwi_bands);
+    }
+    if (formula === Raster.FORMULA.NBR) {
+      Exception(getValue('exception').invalid_raster_nbr_bands);
+    }
+    Exception(getValue('exception').invalid_raster_formula);
+  }
+
+  /**
+   * Indica si la fórmula es un índice espectral (NDVI, NDWI, NBR, etc.).
+   *
+   * @function
+   * @public
+   * @param {string|undefined} formula Fórmula.
+   * @return {boolean} Verdadero si es un índice.
+   * @api
+   */
+  static isIndexFormula(formula) {
+    return formula === Raster.FORMULA.NDVI
+      || formula === Raster.FORMULA.NDWI
+      || formula === Raster.FORMULA.NBR;
+  }
+
+  /**
+   * Devuelve los valores por defecto de una fórmula de índice.
+   *
+   * @function
+   * @private
+   * @param {string|undefined} formula Fórmula.
+   * @return {Object|null} Defaults o null.
+   */
+  static getFormulaDefaults(formula) {
+    if (formula === Raster.FORMULA.NDVI) {
+      return Raster.DEFAULT_NDVI;
+    }
+    if (formula === Raster.FORMULA.NDWI) {
+      return Raster.DEFAULT_NDWI;
+    }
+    if (formula === Raster.FORMULA.NBR) {
+      return Raster.DEFAULT_NBR;
+    }
+    return null;
+  }
+
+  /**
    * Normaliza el parámetro bands (número o array).
-   * Con formula 'ndvi' exige exactamente dos bandas [nir, red].
+   * Con fórmulas de índice exige exactamente dos bandas según la fórmula.
    *
    * @function
    * @private
@@ -689,14 +754,14 @@ class Raster extends Style {
    */
   static normalizeBands(options) {
     const { bands, formula } = options;
-    const isNdvi = formula === Raster.FORMULA.NDVI;
+    const formulaDefaults = Raster.getFormulaDefaults(formula);
 
-    if (isNdvi) {
+    if (!isNullOrEmpty(formulaDefaults)) {
       if (isNullOrEmpty(bands)) {
-        return [...Raster.DEFAULT_NDVI.bands];
+        return [...formulaDefaults.bands];
       }
       if (!isArray(bands) || bands.length !== 2) {
-        Exception(getValue('exception').invalid_raster_ndvi_bands);
+        Raster.throwInvalidFormulaBands(formula);
       }
       return bands.map((bandIndex) => parseInt(bandIndex, 10));
     }
@@ -1070,6 +1135,32 @@ Raster.DEFAULT_NDVI = {
 };
 
 /**
+ * Valores por defecto al usar formula NDWI.
+ * @constant
+ * @public
+ * @api
+ */
+Raster.DEFAULT_NDWI = {
+  bands: [2, 3],
+  min: -1,
+  max: 1,
+  ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
+};
+
+/**
+ * Valores por defecto al usar formula NBR.
+ * @constant
+ * @public
+ * @api
+ */
+Raster.DEFAULT_NBR = {
+  bands: [1, 3],
+  min: -1,
+  max: 1,
+  ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+};
+
+/**
  * Fórmulas soportadas para el valor de la rampa.
  * @constant
  * @public
@@ -1077,6 +1168,8 @@ Raster.DEFAULT_NDVI = {
  */
 Raster.FORMULA = {
   NDVI: 'ndvi',
+  NDWI: 'ndwi',
+  NBR: 'nbr',
 };
 
 export default Raster;
