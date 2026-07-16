@@ -96,6 +96,14 @@ class GeoTIFF extends LayerBase {
       console.warn(getValue('exception').transparent_deprecated);
     }
 
+    if (!isNullOrEmpty(options.style)
+      && !(options.style instanceof Style) && !(options.style instanceof Raster)) {
+    // eslint-disable-next-line no-param-reassign
+      vendorOptions.style = options.style;
+      // eslint-disable-next-line no-param-reassign
+      delete options.style;
+    }
+
     // This Layer is of parameters.
     const parameters = parameter.layer(userParameters, LayerType.GeoTIFF);
     const optionsVar = {
