@@ -260,7 +260,6 @@ class GeoTIFF extends LayerBase {
       opacity: this.opacity_,
       source,
       extent: this.maxExtent_,
-      style: this.style,
       minResolution: this.options.minResolution,
       maxResolution: this.options.maxResolution,
     }, this.vendorOptions_, true);

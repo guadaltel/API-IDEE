@@ -66,7 +66,8 @@ class GeoTIFF extends LayerBase {
    * - maxScale: Escala máxima.
    * - minResolution: Resolución mínima.
    * - maxResolution: Resolución máxima.
-   * - style: Estilo de las bandas.
+   * - style: Estilo de las bandas
+   * (IDEE.style.Raster u objeto con opciones que se envía a vendorOptions).
    * - predefinedStyles: Estilos predefinidos para la capa.
    * @param {Object} vendorOptions Opciones para la biblioteca base. Ejemplo vendorOptions:
    * <pre><code>
