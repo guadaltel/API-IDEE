@@ -118,28 +118,48 @@ class Raster extends Style {
   }
 
   /**
+   * Canales RGB del passthrough según bands.
+   *
+   * @function
+   * @private
+   * @returns {Array<Array>} Expresiones ['band', i] para R, G y B.
+   */
+  getPassthroughChannels_() {
+    const { bands } = this.options_;
+    if (!isArray(bands)) {
+      return [['band', bands], ['band', bands], ['band', bands]];
+    }
+    if (bands.length >= 3) {
+      return [['band', bands[0]], ['band', bands[1]], ['band', bands[2]]];
+    }
+    if (bands.length === 2) {
+      return [['band', bands[0]], ['band', bands[1]], ['band', bands[1]]];
+    }
+    return [['band', bands[0]], ['band', bands[0]], ['band', bands[0]]];
+  }
+
+  /**
    * Expresión de color sin rampa (passthrough de bandas).
+   * Con normalize (por defecto): mismo patrón que catalogmanager
+   * ['array', r, g, b, 1] con bandas en 0–1.
+   * Sin normalize: ['color', r, g, b] con valores crudos (p. ej. 0–255).
    *
    * @function
    * @private
    * @returns {Array} Expresión WebGL.
    */
   getPassthroughColorExpression_() {
-    const { bands } = this.options_;
-    if (!isArray(bands)) {
-      return ['color', ['band', bands], ['band', bands], ['band', bands]];
+    const channels = this.getPassthroughChannels_();
+    if (this.layerNormalize_) {
+      return ['array', channels[0], channels[1], channels[2], 1];
     }
-    if (bands.length >= 3) {
-      return ['color', ['band', bands[0]], ['band', bands[1]], ['band', bands[2]]];
-    }
-    if (bands.length === 2) {
-      return ['color', ['band', bands[0]], ['band', bands[1]], ['band', bands[1]]];
-    }
-    return ['color', ['band', bands[0]], ['band', bands[0]], ['band', bands[0]]];
+    return ['color', channels[0], channels[1], channels[2]];
   }
 
   /**
    * Envuelve un color con transparencia para nodata.
+   * Sin rampa (passthrough RGB) compara siempre la banda 1, como catalogmanager.
+   * Con rampa usa la primera banda de options.bands.
    *
    * @function
    * @private
@@ -149,9 +169,13 @@ class Raster extends Style {
   wrapNodataCase_(colorValue) {
     const { nodata } = this.options_;
     if (!isNullOrEmpty(nodata) || nodata === 0) {
+      let nodataBand = this.getNodataBand_();
+      if (!this.hasRamp_()) {
+        nodataBand = 1;
+      }
       return [
         'case',
-        ['==', ['band', this.getNodataBand_()], nodata],
+        ['==', ['band', nodataBand], ['var', 'nodata']],
         [0, 0, 0, 0],
         colorValue,
       ];
@@ -219,13 +243,17 @@ class Raster extends Style {
    */
   buildOLStyle_() {
     const {
-      gamma, saturation, exposure, contrast, brightness,
+      gamma, saturation, exposure, contrast, brightness, nodata,
     } = this.options_;
 
     const olStyle = {};
     const color = this.buildColorExpression_();
     if (!isNullOrEmpty(color)) {
       olStyle.color = color;
+    }
+
+    if (!isNullOrEmpty(nodata) || nodata === 0) {
+      olStyle.variables = { nodata };
     }
 
     if (!isNullOrEmpty(gamma) && gamma !== 1) {
