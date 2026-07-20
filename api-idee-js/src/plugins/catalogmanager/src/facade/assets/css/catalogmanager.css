@@ -6,6 +6,7 @@
 
 .m-areas>div.m-area>div.m-panel.m-plugin-catalogmanager.opened {
     width: max-content;
+	z-index: 9999999999;
 }
 
 .m-plugin-catalogmanager.opened #div-contenedor {
@@ -15,7 +16,7 @@
     width: 33vw;
     background-color: white !important;
     box-shadow: 0 2px 4px rgb(0 0 0 / 20%), 0 -1px 0 rgb(0 0 0 / 2%);
-  }
+}
 
 div.m-area.m-left .m-plugin-catalogmanager.opened #div-contenedor {
     left: 0px;
