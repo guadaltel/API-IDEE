@@ -174,7 +174,6 @@ Para crear una plantilla personalizada para el plugin de impresión, se deben de
    - `api-idee-template-texto-libre`
    - `api-idee-template-leyenda`
    - `api-idee-template-flecha-norte`
-   - `api-idee-template-escala`
    - `api-idee-template-borde`
    
    Ejemplo:
@@ -263,6 +262,8 @@ A continuación, se muestran ejemplos de elementos correctamente configurados pa
        </div>
    </div>
    ```
+
+- **Escala (barra gráfica)**: no requiere `data-type` en la plantilla. El diseñador muestra siempre el checkbox "Escala" y la barra la pinta el control `ScaleLine` del mapa de previsualización.
 
 # API-REST
 

@@ -873,6 +873,65 @@ div.m-area.m-bottom.m-left>div.m-plugin-printviewmanagement.m-panel.opened>butto
 }
 
 /*******************
+ * ScaleLine (barra OL en preview de impresión)
+ * El ol.css de API-IDEE no incluye display:flex en .ol-scale-bar-inner
+ *******************/
+#imagen-mascara .ol-scale-bar {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    z-index: 20;
+}
+
+#imagen-mascara .ol-scale-bar-inner {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 2px 4px 4px;
+}
+
+#imagen-mascara .ol-scale-singlebar {
+    position: relative;
+    height: 10px;
+    z-index: 9;
+    box-sizing: border-box;
+    border: 1px solid #000;
+}
+
+#imagen-mascara .ol-scale-singlebar-odd {
+    background-color: #fff;
+}
+
+#imagen-mascara .ol-scale-singlebar-even {
+    background-color: #000;
+}
+
+#imagen-mascara .ol-scale-step-marker {
+    width: 1px;
+    height: 15px;
+    background-color: #000;
+    float: right;
+    z-index: 10;
+}
+
+#imagen-mascara .ol-scale-step-text {
+    position: absolute;
+    bottom: -5px;
+    font-size: 10px;
+    z-index: 11;
+    color: #000;
+    text-shadow: -1.5px 0 #fff, 0 1.5px #fff, 1.5px 0 #fff, 0 -1.5px #fff;
+}
+
+#imagen-mascara .ol-scale-text {
+    position: absolute;
+    font-size: 12px;
+    text-align: center;
+    bottom: 25px;
+    color: #000;
+    text-shadow: -1.5px 0 #fff, 0 1.5px #fff, 1.5px 0 #fff, 0 -1.5px #fff;
+}
+
+/*******************
  * Loading Spinner *
  *******************/
 .loading-overlay {

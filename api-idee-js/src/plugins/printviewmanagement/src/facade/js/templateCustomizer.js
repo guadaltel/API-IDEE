@@ -195,14 +195,24 @@ export default class TemplateCustomizer extends IDEE.Control {
   init() {
     const currentProjection = this.map.getMapImpl().getView().getProjection().getCode();
     this.projection = currentProjection;
-    this.templateItems_ = this.templateData_.types.map((fullType) => {
-      const [type, name] = fullType.split(':');
-      return {
-        id: name ? `texto-libre-${name}` : type,
-        type: type || fullType,
-        name: name || null,
-        label: name || getValue(type) || type,
-      };
+    this.templateItems_ = this.templateData_.types
+      .map((fullType) => {
+        const [type, name] = fullType.split(':');
+        return {
+          id: name ? `texto-libre-${name}` : type,
+          type: type || fullType,
+          name: name || null,
+          label: name || getValue(type) || type,
+        };
+      })
+      .filter((item) => item.type !== 'escala');
+
+    // Escala siempre disponible (no depende de data-type en la plantilla)
+    this.templateItems_.push({
+      id: 'escala',
+      type: 'escala',
+      name: null,
+      label: getValue('scale').toLowerCase(),
     });
     const content = IDEE.template.compileSync(templateCustomizer, {
       jsonp: true,
@@ -354,6 +364,7 @@ export default class TemplateCustomizer extends IDEE.Control {
       container: containerId,
       zoom: this.map.getImpl().getZoom(),
       center: Object.values(this.map.getImpl().getCenter()),
+      projection: this.map.getProjection().code,
     });
 
     this.previewMap.addLayers(this.map.getLayers().map((layer) => layer.clone()));
@@ -369,6 +380,30 @@ export default class TemplateCustomizer extends IDEE.Control {
     this.setupMapChangeListener();
     this.applyTemplateStyles();
     this.applyTemplateScripts();
+    this.addScaleLineControl();
+  }
+
+  /**
+   * Añade el control ScaleLine al mapa de previsualización
+   */
+  addScaleLineControl() {
+    if (!this.previewMap) {
+      return;
+    }
+    this.previewMap.addControls(new IDEE.control.ScaleLine({
+      bar: true,
+      steps: 4,
+    }));
+  }
+
+  /**
+   * Elimina el control ScaleLine del mapa de previsualización
+   */
+  removeScaleLineControl() {
+    if (!this.previewMap) {
+      return;
+    }
+    this.previewMap.removeControls('scaleline');
   }
 
   /**
@@ -524,6 +559,12 @@ export default class TemplateCustomizer extends IDEE.Control {
    * @param {*} name - Nombre del elemento de plantilla (en caso de que sea texto-libre)
    */
   addTemplateElement(type, name = null) {
+    if (type === 'escala') {
+      this.addScaleLineControl();
+      this.previewMap.getMapImpl().renderSync();
+      return;
+    }
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(this.templateData_.content, 'text/html');
     const fullType = `api-idee-template-${type}`;
@@ -582,9 +623,6 @@ export default class TemplateCustomizer extends IDEE.Control {
           case 'flecha-norte':
             this.northArrowElement_ = clonedElement;
             break;
-          case 'escala':
-            this.scaleElement_ = clonedElement;
-            break;
           case 'perfil-topografico':
             this.profileElement_ = clonedElement;
             break;
@@ -607,6 +645,11 @@ export default class TemplateCustomizer extends IDEE.Control {
    * @param {string} type - Tipo de elemento a eliminar (ej. 'titulo', 'texto-libre', etc.)
    */
   removeTemplateElement(type, name = null) {
+    if (type === 'escala') {
+      this.removeScaleLineControl();
+      return;
+    }
+
     const fullType = `api-idee-template-${type}`;
     let selector = `[data-type="${fullType}"]`;
     if (name !== null) {
@@ -631,7 +674,9 @@ export default class TemplateCustomizer extends IDEE.Control {
         this.templateElementsContainer_.removeChild(element);
         this.borderElement_ = null;
       } else {
-        this.templateElementsContainer_.removeChild(element);
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
 
         switch (type) {
           case 'titulo':
@@ -645,9 +690,6 @@ export default class TemplateCustomizer extends IDEE.Control {
             break;
           case 'flecha-norte':
             this.northArrowElement_ = null;
-            break;
-          case 'escala':
-            this.scaleElement_ = null;
             break;
           case 'perfil-topografico':
             this.profileElement_ = null;
@@ -1175,6 +1217,11 @@ export default class TemplateCustomizer extends IDEE.Control {
     const originalMapViewport = map.getViewport();
     const parentNode = originalMapViewport.parentNode;
 
+    // La captura del mapa solo incluye canvas de capas (no controles DOM).
+    // Clonamos la barra antes del resize para reinsertarla sobre la imagen.
+    const scaleBarClone = this.cloneScaleBarForExport_();
+    this.setPreviewOverlayControlsVisible_(false);
+
     map.once('rendercomplete', async () => {
       const canvas = document.createElement('canvas');
       canvas.width = newWidth;
@@ -1203,7 +1250,7 @@ export default class TemplateCustomizer extends IDEE.Control {
       map.setSize(originalSize);
       map.getView().setResolution(originalResolution);
 
-      this.insertMapImageIntoTemplate(canvas.toDataURL('image/png'));
+      this.insertMapImageIntoTemplate(canvas.toDataURL('image/png'), scaleBarClone);
       const templateImage64 = await this.generateTemplateImage64();
       const event = new CustomEvent('templateConfigApplied', {
         detail: { templateImage64, config },
@@ -1224,6 +1271,7 @@ export default class TemplateCustomizer extends IDEE.Control {
       }
       maskImageContainer.innerHTML = '';
       parentNode.appendChild(originalMapViewport);
+      this.setPreviewOverlayControlsVisible_(true);
     });
     map.setSize([newWidth, newHeight]);
     const scaling = Math.min(newWidth / originalSize[0], newHeight / originalSize[1]);
@@ -1231,10 +1279,42 @@ export default class TemplateCustomizer extends IDEE.Control {
   }
 
   /**
+   * Clona la barra de escala OL para incluirla en la exportación
+   * @returns {HTMLElement|null}
+   */
+  cloneScaleBarForExport_() {
+    const scaleBar = document.querySelector(`${ID_MAP_CONTAINER_TEMPLATE} .ol-scale-bar`);
+    if (!scaleBar) {
+      return null;
+    }
+    return scaleBar.cloneNode(true);
+  }
+
+  /**
+   * Muestra u oculta la barra de escala del preview durante la captura
+   * @param {boolean} visible
+   */
+  setPreviewOverlayControlsVisible_(visible) {
+    const mask = document.querySelector(ID_MAP_CONTAINER_TEMPLATE);
+    if (!mask) {
+      return;
+    }
+    let displayValue = 'none';
+    if (visible) {
+      displayValue = '';
+    }
+    mask.querySelectorAll('.ol-scale-bar').forEach((el) => {
+      const element = el;
+      element.style.display = displayValue;
+    });
+  }
+
+  /**
    * Se crea elemento HTML img y en el src se introduce la imagen del mapa en base 64
    * @param {String} mapImage64 Imagen del mapa en base 64
+   * @param {HTMLElement|null} scaleBarClone Clon de la barra de escala a superponer
    */
-  insertMapImageIntoTemplate(mapImage64) {
+  insertMapImageIntoTemplate(mapImage64, scaleBarClone = null) {
     const img = document.createElement('img');
     img.src = mapImage64;
     img.style.width = '100%';
@@ -1244,5 +1324,14 @@ export default class TemplateCustomizer extends IDEE.Control {
     const maskImageContainer = document.querySelector(`#${containerId}`);
     maskImageContainer.innerHTML = '';
     maskImageContainer.appendChild(img);
+    if (scaleBarClone) {
+      const bar = scaleBarClone;
+      bar.style.position = 'absolute';
+      bar.style.bottom = '8px';
+      bar.style.left = '8px';
+      bar.style.zIndex = '20';
+      bar.style.display = '';
+      maskImageContainer.appendChild(bar);
+    }
   }
 }
