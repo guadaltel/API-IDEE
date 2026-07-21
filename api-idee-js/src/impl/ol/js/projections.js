@@ -563,6 +563,31 @@ const projections = [
 ];
 
 /**
+ * Esta función refactoriza las unidades de una proyección devuelta
+ * por la API EPSG.io en formato WKT2 para que sea compatible
+ * con las unidades proj4 de OpenLayers.
+ * @param {String} units Unidades de la proyección en formato WKT2.
+ * @return {String} Unidades refactorizadas.
+ * @function
+ * @api
+ */
+const refactorUnits = (units) => {
+  switch (units) {
+    case 'metre':
+    case 'meters':
+      return 'm';
+    case 'd':
+    case 'degree':
+    case 'deg':
+      return 'degrees';
+    case 'foot':
+      return 'ft';
+    default:
+      return units;
+  }
+};
+
+/**
  * Este método registra un conjunto de proyecciones
  * usando ol/proj (libreria de proyecciones de openlayers).
  *
@@ -596,7 +621,7 @@ const addProjections = (projs, checkDuplicates = true) => {
       return new OLProjection({
         code,
         extent: projection.extent,
-        units: projection.units,
+        units: refactorUnits(projection.units),
         metersPerUnit: projection.metersPerUnit,
         getPointResolution: projection.getPointResolution,
         axisOrientation: projection.axisOrientation,
@@ -631,30 +656,6 @@ const getSupportedProjs = () => {
  */
 const getCode = (projection) => {
   return projection.split(':')[1];
-};
-
-/**
- * Esta función refactoriza las unidades de una proyección devuelta
- * por la API EPSG.io en formato WKT2 para que sea compatible
- * con las unidades proj4 de OpenLayers.
- * @param {String} units Unidades de la proyección en formato WKT2.
- * @return {String} Unidades refactorizadas.
- * @function
- * @api
- */
-const refactorUnits = (units) => {
-  switch (units) {
-    case 'metre':
-    case 'meters':
-      return 'm';
-    case 'degree':
-    case 'deg':
-      return 'degrees';
-    case 'foot':
-      return 'ft';
-    default:
-      return units;
-  }
 };
 
 /**
