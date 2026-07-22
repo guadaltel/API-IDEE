@@ -1,0 +1,16 @@
+.g-cartografia-raster-style::before {
+    content: '' !important;
+    display: block;
+    margin: auto;
+    width: 24px;
+    aspect-ratio: 1;
+    background-color: currentColor;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+	-webkit-mask-image: url('../icons/icn_raster-style.svg');
+	mask-image: url('../icons/icn_raster-style.svg');
+}

@@ -1,0 +1,62 @@
+/** Estilos propios*/
+
+.m-areas>div.m-area>div.m-panel.m-plugin-rastermanagement.collapsed {
+    max-height: 40px;
+}
+
+.m-areas>div.m-area>div.m-plugin-rastermanagement.collapsed>button.m-panel-btn {
+    background-color: #71a7d3 !important;
+}
+
+.m-areas>div.m-area>div.m-plugin-rastermanagement.opened>button.m-panel-btn {
+    background-color: white !important;
+    color: #71a7d3 !important;
+}
+
+.m-areas>div.m-area.m-left>div.m-plugin-rastermanagement.opened>button.m-panel-btn {
+    position: absolute;
+    right: -40px;
+    left: unset;
+    background-color: #71a7d3;
+}
+
+.m-areas>div.m-area.m-left>div.m-plugin-rastermanagement.opened.no-collapsible {
+    border-radius: 4px;
+}
+
+.m-areas>div.m-area.m-right>div.m-plugin-rastermanagement.opened>button.m-panel-btn {
+    position: absolute;
+    left: -40px;
+    background-color: #71a7d3;
+}
+
+#div-contenedor-m-rastermanagement {
+    display: block;
+    width: 200px;
+    box-sizing: border-box;
+}
+
+/*********************
+     TITLE
+*********************/
+
+.m-control.m-container.m-rastermanagement>div.title {
+    color: #fff !important;
+    background-color: #71a7d3;
+    font-family: 'Muli',
+        'sans-serif' !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 15px;
+    height: 39px;
+    line-height: 40px;
+    text-align: center;
+}
+
+#div-contenedor-m-rastermanagement > p {
+    margin: 0;
+    padding: 12px;
+    color: #404040;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 14px;
+    text-align: center;
+}

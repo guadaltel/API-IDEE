@@ -41,10 +41,15 @@ Imagina una **foto satélite** (o un mapa de alturas, temperaturas, etc.) cargad
 
 | Lo que quieres lograr | Cómo se llama en la API |
 |----------------------|-------------------------|
-| Colorear según el **valor numérico** de cada píxel (bajo = azul, alto = rojo) | **Rampa** (`ramp`, `min`, `max`) |
-| Calcular un **índice** (NDVI, NDWI, NBR…) y colorearlo con rampa | **Fórmula** (`formula: 'ndvi'` / `'ndwi'` / `'nbr'`) + rampa |
-| Ajustar la imagen como en un editor de fotos (más gris, más brillo…) | **Filtros** (`saturation`, `brightness`, etc.) |
-| **Ocultar** zonas sin dato (bordes vacíos del archivo) | **Nodata** (`nodata`) |
+| Colorear según el **valor numérico** de cada píxel (bajo = azul, alto = rojo) | **Rampa** (`ramp`) + rango (`min`, `max`) |
+| Decir **qué valores** van al primer y al último color de la rampa | **`min` / `max`** (con índices suele ser −1…1; con capa `normalize` y sin índice, 0…1) |
+| Elegir **qué banda(s)** del GeoTIFF se usan | **`bands`** (un número, o un array; con índices: exactamente 2) |
+| Calcular un **índice** (NDVI, NDWI, NBR…) y colorearlo con rampa | **Fórmula** (`formula: 'ndvi'` / `'ndwi'` / `'nbr'`) + rampa + `bands` |
+| Controlar **cómo** se pasa de un color a otro en la rampa | **Interpolación** (`interpolation: 'linear'` \| `'exponential'`, y opcionalmente `interpolationBase`) |
+| Ajustar la imagen como en un editor de fotos (gris, brillo, contraste…) | **Filtros** (`saturation`, `brightness`, `contrast`, `exposure`, `gamma`) |
+| **Ocultar** zonas sin dato (bordes vacíos del archivo) | **Nodata** (`nodata`; a menudo también en la capa GeoTIFF) |
+| Combinar **colores + filtros** (rampa y luego más brillo, etc.) | Rampa o nodata **+** filtros a la vez |
+| Volver a ver la imagen **como venía del archivo** | `layer.clearStyle()` o `layer.setStyle(null)` |
 
 El estilo siempre debe hacer **algo visible**. Si todas las opciones están en su valor por defecto, la capa ignora el estilo o lo quita.
 

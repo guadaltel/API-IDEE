@@ -1,0 +1,10 @@
+{
+  "exception": {
+    "impl": "La implementación usada no puede crear controles RasterManagementControl"
+  },
+  "textHelp": {
+    "help1": "Txt 1"
+  },
+  "tooltip": "Gestor de estilos ráster",
+  "title": "Gestor de estilos ráster"
+}

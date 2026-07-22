@@ -23,7 +23,7 @@ class Raster extends Style {
    *
    * @constructor
    * @param {Mx.RasterStyleOptions} optionsParam Opciones del estilo.
-   * - bands: Banda o bandas (solo con rampa o nodata).
+   * - bands: Banda o bandas. Solo con rampa o nodata (incl. índices).
    *   Con formula 'ndvi': array [nir, red] (exactamente 2 bandas).
    *   Con formula 'ndwi': array [green, nir] (exactamente 2 bandas).
    *   Con formula 'nbr': array [nir, swir] (exactamente 2 bandas).
