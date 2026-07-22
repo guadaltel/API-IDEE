@@ -108,6 +108,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
      */
     this.catalogs_ = [];
 
+    this.selectedCatalogIndex_ = 0;
+
     /**
      * Operadores SQL disponibles en el filtro avanzado
      * @private
@@ -207,15 +209,20 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @private
    * @function
    */
-  addPredefinedCatalogs() {
+  async addPredefinedCatalogs() {
+    const authenticatePromises = [];
     this.predefinedCatalogs_.forEach((predCatalog) => {
       const catalog = new IDEE.stac.Catalog(predCatalog);
       if (!predCatalog.public) {
-        catalog.authenticate(predCatalog.user, predCatalog.password);
+        authenticatePromises.push(catalog.authenticate(predCatalog.user, predCatalog.password));
       }
       this.catalogs_.push(this.getJsonCatalog(catalog));
     });
-    this.renderCatalogs();
+    await Promise.all(authenticatePromises);
+    if (this.catalogs_.length > 0) {
+      this.renderCatalogs();
+    }
+    this.initCollections();
   }
 
   /**
@@ -227,12 +234,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   addEvents() {
     this.template_.querySelector('#m-catalogmanager-addcatalog').addEventListener('click', this.openAddCatalog.bind(this));
-    this.template_.querySelector('#m-catalogmanager-filters').addEventListener('click', (evt) => this.toggleCommonFilters(evt));
-    this.template_.querySelector('.m-catalogmanager-filters-temporal-predefined').addEventListener('click', (evt) => this.setTemporalFilter(evt));
-    this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.toggleSpatialFilter(evt));
+    this.template_.querySelector('#m-catalogmanager-filters-temporal-predefined').addEventListener('click', (evt) => this.setTemporalFilter(evt));
+    this.template_.querySelector('#m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.toggleSpatialFilter(evt));
     this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.updateItems.bind(this));
     this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-download').addEventListener('click', this.masiveDownload.bind(this));
     this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-delete').addEventListener('click', this.clearSelection.bind(this));
+    this.template_.querySelector('#m-catalogmanager-filters-tabs').addEventListener('click', (evt) => this.toggleTabs(evt));
+    this.template_.querySelector('#m-catalogmanager-filters-tab-content').addEventListener('click', (evt) => this.toggleFilterSection(evt));
   }
 
   /**
@@ -261,6 +269,69 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.changeCloseButtonModal();
     document.querySelector('#add-catalog').addEventListener('click', this.addCatalog.bind(this));
     document.querySelector('.m-catalogmanager-add-panel #cat-public').addEventListener('change', this.togglePublic.bind(this));
+  }
+
+  /**
+   * Alterna la clase CSS 'hidden' de un elemento
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} elem Elemento DOM a mostrar u ocultar
+   */
+  toggleHidden(elem) {
+    if (elem.classList.contains('hidden')) {
+      elem.classList.remove('hidden');
+    } else {
+      elem.classList.add('hidden');
+    }
+  }
+
+  toggleIcon(elem) {
+    const iconElement = elem.querySelector('.m-catalogmanager-icon');
+    if (iconElement.classList.contains('icon-down-open')) {
+      iconElement.classList.remove('icon-down-open');
+      iconElement.classList.add('icon-up-open');
+    } else {
+      iconElement.classList.remove('icon-up-open');
+      iconElement.classList.add('icon-down-open');
+    }
+  }
+
+  toggleFilterSection(evt) {
+    evt.stopPropagation();
+    const target = evt.target;
+    let section = null;
+    if (target.classList.contains('m-catalogmanager-section-title')) {
+      section = target.parentElement;
+    } else if (target.classList.contains('m-catalogmanager-icon')) {
+      section = target.parentElement.parentElement;
+    }
+    const content = section.querySelector(`#${section.id}-content`);
+    this.toggleIcon(section);
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+    } else {
+      content.classList.add('hidden');
+    }
+  }
+
+  toggleTabs(evt) {
+    const tab = evt.target;
+    const tabs = tab.parentNode.children;
+    for (let i = 0; i < tabs.length; i += 1) {
+      const child = tabs.item(i);
+      child.classList.remove('active');
+    }
+    tab.classList.add('active');
+    const tabsContent = this.template_.querySelector('#m-catalogmanager-tabs-contents').children;
+    for (let i = 0; i < tabsContent.length; i += 1) {
+      const child = tabsContent.item(i);
+      if (child.id !== `${tab.id}-content`) {
+        child.classList.add('hidden');
+      } else if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
   }
 
   /**
@@ -478,7 +549,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {string} filterType Tipo de filtro espacial (`view`, `extent` o `referenced`)
    */
   toggleSpatialFilterHelp(filterType) {
-    const helpContainer = this.template_.querySelector('.m-catalogmanager-filters-spatial-help');
+    const helpContainer = this.template_.querySelector('#m-catalogmanager-filters-spatial-help');
     const helps = helpContainer.querySelectorAll('.spatial-help');
     helps.forEach((help) => {
       if (!help.classList.contains('hidden')) {
@@ -522,7 +593,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         translations: getValue('advancedFilter'),
       },
     });
-    const container = this.template_.querySelector('#m-catalogmanager-advanced-filters-content');
+    const container = this.template_.querySelector('#m-catalogmanager-advanced-filters');
     container.innerHTML = advancedFiltersHtml.outerHTML;
     this.initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields);
     this.renderQueryableFields();
@@ -567,7 +638,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {HTMLElement|null} Contenedor del filtro avanzado
    */
   getAdvancedFilterContainer() {
-    return this.template_.querySelector('#m-catalogmanager-advanced-filters-content #m-catalogmanager-advanced-filters-content');
+    return this.template_.querySelector('#m-catalogmanager-advanced-filters #m-catalogmanager-advanced-filters');
   }
 
   /**
@@ -600,12 +671,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {HTMLElement} container Contenedor raíz del filtro avanzado
    */
   addAdvancedFilterEvents(container) {
-    const root = container.querySelector('#m-catalogmanager-advanced-filters-content');
+    const root = container.querySelector('#m-catalogmanager-advanced-filters');
     root.querySelectorAll('#m-catalogmanager-operators-container>button').forEach((btn) => {
       btn.addEventListener('click', (evt) => this.advancedFilterOperatorClick(evt));
     });
     root.querySelector('#m-catalogmanager-advanced-filters-tabs').addEventListener('click', (evt) => this.changeAdvancedFilterTab(evt));
-    root.querySelector('#volver-btn').addEventListener('click', () => this.toggleAdvancedFilters());
     root.querySelector('#aplicar-btn').addEventListener('click', () => this.applyAdvancedFilter());
     root.querySelector('#limpiar-filtro-btn').addEventListener('click', () => this.clearAdvancedFilter());
   }
@@ -618,6 +688,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en una pestaña del filtro avanzado
    */
   changeAdvancedFilterTab(evt) {
+    evt.stopPropagation();
     const btn = evt.target;
     if (btn.id === 'advanced-filter-tab-assistant') {
       this.showAdvancedFilter('assistant');
@@ -1134,7 +1205,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   renderCollectionItems(catalogIndex, collectionIndex, items) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
-    const container = this.template_.querySelector(`.m-catalogmanager-items.collection-${collection.id}`);
+    const container = this.template_.querySelector('#m-catalogmanager-results-content');
     const itemsJson = this.getJsonItems(items.features, catalogIndex, collectionIndex);
     collection.items = itemsJson;
     const html = IDEE.template.compileSync(itemsTemplate, {
@@ -1161,6 +1232,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const huella = this.getHuellaLayer(collection);
     if (huella) {
       huella.setSource(items);
+    } else {
+      this.previewItems(catalogIndex, collectionIndex, items);
     }
   }
 
@@ -1196,13 +1269,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   toggleAdvancedFilters() {
-    const commonFiltersBtn = this.template_.querySelector('#m-catalogmanager-filters');
+    /* const commonFiltersBtn = this.template_.querySelector('#m-catalogmanager-filters');
     const sections = this.template_.querySelectorAll('section.m-catalogmanager-content');
     sections.forEach((section) => {
-      if (!(section.id === 'm-catalogmanager-filters-content' && !commonFiltersBtn.classList.contains('active'))) {
+      if (!(section.id === 'm-catalogmanager-filters-content' &&
+        !commonFiltersBtn.classList.contains('active'))) {
         this.toggleHidden(section);
       }
-    });
+    }); */
+    const advancedFiltersContent = this.template_.querySelector('#m-catalogmanager-advanced-filters');
+    advancedFiltersContent.classList.remove('hidden');
   }
 
   /**
@@ -1324,7 +1400,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   renderCatalogs() {
-    const contentElement = this.template_.querySelector('#m-catalogmanager-list-content');
+    const contentElement = this.template_.querySelector('#m-catalogmanager-filters-catalogs');
     const translations = {
       catalogs: getValue('catalogs'),
       public: getValue('cat_public'),
@@ -1337,7 +1413,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       },
     });
     contentElement.innerHTML = html.innerHTML;
-    contentElement.querySelector('.m-catalogmanager-ulcatalogs').addEventListener('click', (evt) => this.catalogEvent(evt));
+    contentElement.querySelector('#m-catalogmanager-filters-catalogs-content').addEventListener('change', (evt) => this.catalogEvent(evt));
   }
 
   /**
@@ -1360,6 +1436,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  initCollections() {
+    const collectionsElement = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
+    this.getCollections(this.selectedCatalogIndex_, collectionsElement);
+  }
+
   /**
    * Gestiona el clic en un catálogo para expandir o contraer sus colecciones
    *
@@ -1368,28 +1449,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el listado de catálogos
    */
   catalogEvent(evt) {
-    const target = this.findParentByClass(evt.target, 'm-catalogmanager-title-catalog');
-    const catalogIndex = target.dataset.catalogIndex;
-    const collectionsElement = this.template_.querySelector(`.m-catalogmanager-collections.catalog-${catalogIndex}`);
-    if (collectionsElement.classList.contains('empty')) {
-      this.getCollections(catalogIndex, collectionsElement);
-    }
-    this.toggleHidden(collectionsElement);
-  }
-
-  /**
-   * Alterna la clase CSS 'hidden' de un elemento
-   *
-   * @private
-   * @function
-   * @param {HTMLElement} elem Elemento DOM a mostrar u ocultar
-   */
-  toggleHidden(elem) {
-    if (elem.classList.contains('hidden')) {
-      elem.classList.remove('hidden');
-    } else {
-      elem.classList.add('hidden');
-    }
+    const catalogIndex = evt.target.value;
+    const collectionsElement = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
+    this.getCollections(catalogIndex, collectionsElement);
   }
 
   /**
@@ -1418,7 +1480,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       });
       container.innerHTML = html.outerHTML;
       container.classList.remove('empty');
-      container.querySelector('.m-catalogmanager-ulcollections').addEventListener('click', (evt) => this.collectionEvent(evt));
+      container.querySelector('.m-catalogmanager-collections-list').addEventListener('click', (evt) => this.collectionEvent(evt));
     });
   }
 
@@ -1481,10 +1543,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   collectionEvent(evt) {
     evt.stopPropagation();
-    const target = this.findParentByClass(evt.target, 'm-catalogmanager-title-collection');
+    const target = evt.target;
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
-    const collectionId = target.dataset.collectionId;
+    /* const collectionId = target.dataset.collectionId;
     if (evt.target.classList.contains('m-catalogmanager-footprint-button')) {
       this.previewItems(catalogIndex, collectionIndex);
       return;
@@ -1496,12 +1558,20 @@ export default class CatalogmanagerControl extends IDEE.Control {
     if (evt.target.classList.contains('m-catalogmanager-info-button')) {
       this.openCollectionInfo(catalogIndex, collectionIndex);
       return;
-    }
-    const itemsElement = this.template_.querySelector(`.m-catalogmanager-items.collection-${collectionId}`);
-    if (itemsElement.classList.contains('empty')) {
+    } */
+    if (target.classList.contains('active')) {
+      target.classList.remove('active');
+      const itemsElement = this.template_.querySelector('#m-catalogmanager-results-content');
+      itemsElement.innerHTML = '';
+    } else {
+      const collectionElements = this.template_.querySelectorAll('.m-catalogmanager-title-collection');
+      collectionElements.forEach((element) => {
+        element.classList.remove('active');
+      });
+      target.classList.add('active');
+      this.openAdvancedFilters(catalogIndex, collectionIndex);
       this.getItems(catalogIndex, collectionIndex);
     }
-    this.toggleHidden(itemsElement);
   }
 
   /**
@@ -1610,6 +1680,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       if (imagesElement.classList.contains('empty')) {
         this.getItemImages(catalogIndex, collectionIndex, itemId, imagesElement);
       }
+      this.toggleIcon(itemDiv);
       this.toggleHidden(imagesElement);
     }
   }
@@ -1820,14 +1891,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalog = cat;
     const collection = coll;
     const styleSpec = this.resolveStyleSpec(image);
-    const style = this.buildWebGlStyle(styleSpec);
+    // const style = this.buildWebGlStyle(styleSpec);
+    const style = this.buildRasterStyle(styleSpec);
     const geotiff = new IDEE.layer.GeoTIFF({
       url: image.href,
       name: image.title,
       legend: image.title,
     }, {
       convertToRGB: false,
-    }, {
+      normalize: true,
       style,
     });
     if (catalog.layerGroup === null) {
@@ -1855,7 +1927,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {number} catalogIndex Índice del catálogo
    * @param {number} collectionIndex Índice de la colección
    */
-  previewItems(catalogIndex, collectionIndex) {
+  previewItems(catalogIndex, collectionIndex, items) {
     const catalog = this.catalogs_[catalogIndex];
     if (catalog.layerGroup === null) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
@@ -1865,7 +1937,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.map_.addLayerGroups(catalog.layerGroup);
     }
     const collection = catalog.collections[collectionIndex];
-    let promise = null;
+    /* let promise = null;
     if (collection.links && this.linksHaveRel(collection.links, 'self')) {
       promise = catalog.obj.getItemsByLinks(collection.links, 'self');
     } else if (collection.advancedFilter) {
@@ -1879,40 +1951,47 @@ export default class CatalogmanagerControl extends IDEE.Control {
       promise = catalog.obj.getFilteredItems(collection.id, this.commonFilters_);
     } else {
       promise = catalog.obj.getItems(collection.id, 10);
+    } */
+
+    if (items.features.length === 0) {
+      IDEE.dialog.info(getValue('exception').no_results);
+      return;
     }
-    promise.then((items) => {
-      if (items.features.length === 0) {
-        IDEE.dialog.info(getValue('exception').no_results);
-        return;
-      }
-      if (!collection.layerGroup) {
-        collection.layerGroup = new IDEE.layer.LayerGroup({
-          name: collection.title,
-          legend: collection.title,
-        });
-        catalog.layerGroup.addLayers(collection.layerGroup);
-      }
-      const huella = this.getHuellaLayer(collection);
-      if (huella) {
-        huella.setSource(items);
-      } else {
-        const layer = new IDEE.layer.GeoJSON({
-          name: collection.id,
-          legend: 'Huella',
-          source: items,
-          extract: true,
-        });
-        collection.layerGroup.addLayers(layer);
-        this.getImpl().addLayerToSelectItem(layer.getImpl().getLayer());
-      }
-    });
+    if (!collection.layerGroup) {
+      collection.layerGroup = new IDEE.layer.LayerGroup({
+        name: collection.title,
+        legend: collection.title,
+      });
+      catalog.layerGroup.addLayers(collection.layerGroup);
+    }
+    const huella = this.getHuellaLayer(collection);
+    if (huella) {
+      huella.setSource(items);
+    } else {
+      const layer = new IDEE.layer.GeoJSON({
+        name: collection.id,
+        legend: 'Huella',
+        source: items,
+        extract: true,
+      });
+      layer.on('load', () => {
+        this.map_.setBbox(layer.getFeaturesExtent());
+      });
+      collection.layerGroup.addLayers(layer);
+      this.getImpl().addLayerToSelectItem(layer.getImpl().getLayer());
+    }
   }
 
   getHistogram(asset) {
     const bands = asset['eo:bands']?.map((band, index) => index + 1) ?? [];
     const currentMouseCursorStyle = document.body.style.cursor ?? 'auto';
     document.body.style.cursor = 'wait';
-    IDEE.gdalUtils.getHistogramGdalinfo(asset.href, bands)
+    // IDEE.gdalUtils.getHistogramGdalinfo(asset.href, bands)
+    const params = {
+      type: 'NDVI',
+      imageUrl: encodeURIComponent(asset.href),
+    };
+    IDEE.remote.get(`${IDEE.config.API_IDEE_URL}api/geoprocess/histogram`, params)
       .then((response) => {
         const histogram = JSON.parse(response.text).histogram;
         this.showHistogramDialog(asset, histogram, bands);
@@ -2123,7 +2202,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   updateBboxFilter() {
-    const btnView = this.template_.querySelector('.m-catalogmanager-filters-spatial-predefined #view');
+    const btnView = this.template_.querySelector('#m-catalogmanager-filters-spatial-predefined #view');
     if (btnView && btnView.classList.contains('active')) {
       const bbox = this.map_.getBbox();
       const extent = [bbox.x.min, bbox.y.min, bbox.x.max, bbox.y.max];
@@ -2325,10 +2404,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {{bands: {r: number, g: number, b: number}}|null} Índices de banda o null
    */
   resolveStyleSpec(asset) {
-    let spec = null;
+    let spec = { bands: [1, 1, 1] };
     const eoBands = this.getAssetBands(asset);
     if (!Array.isArray(eoBands) || eoBands.length === 0) {
-      return null;
+      return spec;
     }
 
     // RGB Monobanda
@@ -2449,6 +2528,23 @@ export default class CatalogmanagerControl extends IDEE.Control {
         styleBands,
       ],
     };
+  }
+
+  buildRasterStyle(spec) {
+    if (!spec) {
+      return null;
+    }
+    const bands = spec.bands;
+    const options = {
+      bands,
+      nodata: 0,
+      gamma: 1,
+      saturation: 0,
+      exposure: 0,
+      contrast: 0,
+      brightness: 0,
+    };
+    return new IDEE.style.Raster(options);
   }
 
   /**

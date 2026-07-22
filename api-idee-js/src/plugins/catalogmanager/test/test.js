@@ -11,6 +11,14 @@ window.map = map;
 
 const PREDEFINED_CATALOGS = [
   {
+    title: 'GNEIS',
+    url: 'http://localhost:8090',
+    authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
+    collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
+    public: false,
+    user: 'test@liferay.com',
+    password: 'testt',
+  }, {
     title: 'Astraea Earth',
     url: 'https://eod-catalog-svc-prod.astraea.earth',
     public: true,
@@ -22,14 +30,6 @@ const PREDEFINED_CATALOGS = [
     title: 'Copernicus',
     url: 'https://stac.dataspace.copernicus.eu/v1',
     public: true,
-  }, {
-    title: 'GNEIS',
-    url: 'http://localhost:8090',
-    authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
-    collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
-    public: false,
-    user: 'test@liferay.com',
-    password: 'testt',
   }
 ];
 
@@ -46,3 +46,5 @@ window.mp = mp;
 map.addPlugin(mp);
 
 map.addPlugin(new IDEE.plugin.Layerswitcher({}));
+
+IDEE.config.API_IDEE_URL = 'http://localhost:9090/api-idee/';

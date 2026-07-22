@@ -28,7 +28,9 @@
       "lastyear": "Last year",
       "range": "Range indicated",
       "success": "Temporal filter set successfully."
-    }
+    },
+    "collections": "Collections",
+    "catalogs": "Catalogs"
   },
   "imageActions": {
     "info": "Information",

@@ -28,12 +28,13 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
 
 .m-areas>div.m-area>div.m-plugin-catalogmanager.collapsed>button.m-panel-btn {
     background-color: #71a7d3 !important;
+    color: white !important;
     font-family: 'catalogmanager' !important;
 }
 
 .m-areas>div.m-area>div.m-plugin-catalogmanager.opened>button.m-panel-btn {
-    background-color: white !important;
-    color: #71a7d3 !important;
+    background-color: #71a7d3 !important;
+    color: white !important;
 }
 
 .m-areas>div.m-area.m-left>div.m-plugin-catalogmanager.opened.no-collapsible {
@@ -64,8 +65,8 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
 *********************/
 
 .m-control.m-container.m-catalogmanager>header .title {
-    color: #fff !important;
-    background-color: #71a7d3;
+    background-color: #f4f4f4;
+    color: #6c6c6c !important;
     font-family: 'Muli', 'sans-serif' !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     font-size: 15px;
@@ -114,17 +115,17 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
     margin-left: 10px;
 }
 
-.m-catalogmanager-filters-temporal>table tr {
+#m-catalogmanager-filters-temporal>table tr {
     margin-bottom: 0.5rem;
 }
 
-.m-catalogmanager-filters-temporal-predefined {
+#m-catalogmanager-filters-temporal-predefined {
     margin-top: 0.5rem;
 }
 
 .m-catalogmanager-actions button,
-.m-catalogmanager-filters-temporal-predefined button,
-.m-catalogmanager-filters-spatial-predefined button,
+#m-catalogmanager-filters-temporal-predefined button,
+#m-catalogmanager-filters-spatial-predefined button,
 .m-catalogmanager-items-buttons button {
     background-color: white;
     color: #71a7d3;
@@ -139,11 +140,11 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
 }
 
 .m-catalogmanager-actions button:hover,
-.m-catalogmanager-filters-temporal-predefined button:hover,
-.m-catalogmanager-filters-spatial-predefined button:hover,
+#m-catalogmanager-filters-temporal-predefined button:hover,
+#m-catalogmanager-filters-spatial-predefined button:hover,
 .m-catalogmanager-actions button.active,
-.m-catalogmanager-filters-temporal-predefined button.active,
-.m-catalogmanager-filters-spatial-predefined button.active {
+#m-catalogmanager-filters-temporal-predefined button.active,
+#m-catalogmanager-filters-spatial-predefined button.active {
     background-color: #71a7d3;
     color: white;
 }
@@ -219,6 +220,34 @@ ul.m-catalogmanager-ulcollections li>.m-catalogmanager-title-collection {
     padding: 0.5rem;
 }
 
+div.m-catalogmanager-collections-list {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+div.m-catalogmanager-collections-list div>.m-catalogmanager-title-collection {
+    background-color: #fff;
+    color: #71a7d3;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid #71a7d3;
+    cursor: pointer;
+}
+
+div.m-catalogmanager-collections-list div>.m-catalogmanager-title-collection:hover,
+div.m-catalogmanager-collections-list div>.m-catalogmanager-title-collection.active {
+    background-color: #71a7d3;
+    color: #fff;
+}
+
+#m-catalogmanager-filters-catalogs-content {
+    width: 95%;
+    background-color: #fff;
+    border: 2px solid #71a7d3;
+}
+
 ul.m-catalogmanager-ulitems, ul.m-catalogmanager-tableimages {
     list-style: none;
     overflow-y: auto;
@@ -226,6 +255,11 @@ ul.m-catalogmanager-ulitems, ul.m-catalogmanager-tableimages {
     max-width: 48vw;
     padding-left: 10px;
     padding-right: 10px;
+    max-height: 70vh;
+}
+
+.m-catalogmanager-title-item {
+    margin: 0.4rem 0;
 }
 
 ul.m-catalogmanager-ulcatalogs li {
@@ -344,7 +378,8 @@ button.m-catalogmanager-download-button {
   ADVANCED FILTER
 *********************/
 
-#m-catalogmanager-advanced-filters-tabs {
+#m-catalogmanager-advanced-filters-tabs,
+#m-catalogmanager-filters-tabs {
     display: flex;
 }
 
@@ -466,16 +501,36 @@ button.m-catalogmanager-download-button {
     font-style: italic;
 }
 
-.advanced-filter-tab {
+.m-catalogmanager-tab {
     padding: 0 10px;
     cursor: pointer;
     font-weight: bold;
+    width: 50%;
+    text-align: center;
+    font-size: medium;
 }
 
-.advanced-filter-tab.active {
+.m-catalogmanager-tab.active {
     background-color: #fff;
     color: #71a7d3;
     border-bottom: 2px solid #71a7d3;
+}
+
+#m-catalogmanager-filters-tab-content {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.m-catalogmanager-section-title {
+    border-bottom: 2px solid #71a7d3;
+    cursor: pointer;
+    width: 95%;
+}
+
+h3.m-catalogmanager-section-title>span.m-catalogmanager-icon {
+    float: right;
 }
 
 .m-catalogmanager-histogram {
@@ -510,7 +565,7 @@ button.m-catalogmanager-download-button {
     max-height: 80vh;
 }
 
-#m-catalogmanager-advanced-filters-content {
+#m-catalogmanager-advanced-filters {
     padding-left: 10px;
     padding-right: 10px;
     max-width: calc(33vw - 20px);

@@ -1,30 +1,11 @@
-<ul class="m-catalogmanager-ulcollections">
+<div class="m-catalogmanager-collections-list">
     {{#each collections}}
-        <li tabindex="0" class="m-catalogmanager-sectionPanel">
-            <div class="m-catalogmanager-title-collection"
-                data-collection-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{index}}">
-                <div class="m-catalogmanager-visible-typeContent">
-                    <table style="width: 100%;">
-                        <tbody>
-                            <tr>
-                                <td><span class="icon-picture m-catalogmanager-title-box"  
-                                        data-collection-id="{{id}}" title="{{title}}" 
-                                        tabindex="0">
-                                        {{title}}
-                                    </span>
-                                </td>
-                                <td style="text-align: end;">
-                                    <button class="m-catalogmanager-footprint-button action-btn" title="{{../translations.footprint}}"><span class="icon-object-ungroup m-catalogmanager-footprint-button"></span></button>
-                                    <button class="m-catalogmanager-info-button action-btn" title="{{../translations.metadata}}"><span class="icon-info m-catalogmanager-info-button"></span></button>
-                                    <button class="m-catalogmanager-filter-button action-btn" title="{{../translations.advancedFilters}}"><span class="icon-filter m-catalogmanager-filter-button"></span></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <div class="m-catalogmanager-sectionPanel">
+            <div class="m-catalogmanager-title-collection" 
+                data-collection-id="{{id}}" data-catalog-index="{{catalogIndex}}"
+                data-collection-index="{{index}}" title="{{title}}">
+                {{title}}
             </div>
-            <div class="m-catalogmanager-items collection-{{id}} hidden empty"
-            data-collection-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{index}}"></div>
-        </li>
+        </div>
     {{/each}}
-</ul>
+</div>

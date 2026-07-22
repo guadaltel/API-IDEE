@@ -28,7 +28,9 @@
       "lastyear": "Último año",
       "range": "Rango indicado",
       "success": "Filtro temporal establecido correctamente."
-    }
+    },
+    "collections": "Colecciones",
+    "catalogs": "Catálogos"
   },
   "imageActions": {
     "info": "Información",
