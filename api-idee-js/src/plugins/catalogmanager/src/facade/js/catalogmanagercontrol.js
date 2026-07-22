@@ -306,6 +306,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
     } else if (target.classList.contains('m-catalogmanager-icon')) {
       section = target.parentElement.parentElement;
     }
+    if (!section) {
+      return;
+    }
     const content = section.querySelector(`#${section.id}-content`);
     this.toggleIcon(section);
     if (content.classList.contains('hidden')) {
@@ -316,6 +319,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   toggleTabs(evt) {
+    evt.stopPropagation();
     const tab = evt.target;
     const tabs = tab.parentNode.children;
     for (let i = 0; i < tabs.length; i += 1) {
@@ -342,6 +346,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el botón de filtros
    */
   toggleCommonFilters(evt) {
+    evt.stopPropagation();
     const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
     const filtersContent = this.template_.querySelector('#m-catalogmanager-filters-content');
     const catalogContainer = this.template_.querySelector('ul.m-catalogmanager-ulcatalogs');
@@ -365,6 +370,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el botón de filtro temporal
    */
   setTemporalFilter(evt) {
+    evt.stopPropagation();
     const btn = evt.target;
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
@@ -485,6 +491,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el botón de filtro espacial
    */
   toggleSpatialFilter(evt) {
+    evt.stopPropagation();
     const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
 
     this.getImpl().deactivateAllInteractions();
@@ -837,6 +844,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en un botón de operador
    */
   advancedFilterOperatorClick(evt) {
+    evt.stopPropagation();
     const btn = evt.target;
     const textarea = this.getAdvancedFilterAssistantTextarea();
     switch (btn.innerHTML) {
@@ -1043,6 +1051,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en botón de paginación
    */
   changeAdvancedFilterPage(evt) {
+    evt.stopPropagation();
     const state = this.advancedFilterState_;
     const totalPages = state.fieldsPages.length;
     let currentPage = state.currentFieldsPage;
@@ -1449,6 +1458,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Event} evt Evento de clic en el listado de catálogos
    */
   catalogEvent(evt) {
+    evt.stopPropagation();
     const catalogIndex = evt.target.value;
     const collectionsElement = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
     this.getCollections(catalogIndex, collectionsElement);
