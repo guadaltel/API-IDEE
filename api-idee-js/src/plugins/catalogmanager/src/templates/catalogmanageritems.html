@@ -3,10 +3,15 @@
         <button class="m-catalogmanager-prev-items-button" {{#if hasNotPrev}}disabled{{/if}} title="{{translations.previous}}"><span class="icon-left-big m-catalogmanager-prev-items-button"></span></button>
         <button class="m-catalogmanager-next-items-button" {{#if hasNotNext}}disabled{{/if}} title="{{translations.next}}"><span class="icon-right-big m-catalogmanager-next-items-button"></span></button>
     </div>
+    <h3 class="m-catalogmanager-section-title no-event">
+        {{collectionTitle}}
+        <button class="m-catalogmanager-info-button action-btn" title="{{translations.metadata}}"><span class="icon-info m-catalogmanager-info-button"></span></button>
+        {{#if downloadable}}<button class="m-catalogmanager-download-button action-btn" title="{{translations.download}}"><span class="icon-download m-catalogmanager-download-button"></span></button>{{/if}}
+    </h3>
     <ul class="m-catalogmanager-ulitems">
         {{#each items}}
             <li tabindex="0" class="m-catalogmanager-sectionPanel">
-                <div id="{{id}}" class="m-catalogmanager-title-item"
+                <div id="item-{{id}}" class="m-catalogmanager-title-item"
                     data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
                     <div class="m-catalogmanager-visible-typeContent">
                         <table style="width: 100%;">
@@ -15,6 +20,12 @@
                                     <td style="text-align: start;">
                                         <span class="icon-down-open m-catalogmanager-icon"></span>
                                     </td>
+                                    {{#if ../downloadable}}
+                                    <td>
+                                        <input type="checkbox" class="m-catalogmanager-checkbox-item"
+                                        data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
+                                    </td>
+                                    {{/if}}
                                     <td><span class="m-catalogmanager-title-box"  
                                             title="{{id}}" tabindex="0">
                                             {{id}}

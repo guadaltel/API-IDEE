@@ -4,7 +4,9 @@
     </header>
     <section aria-label="Plugin catalogmanager" id="m-catalogmanager-actions-content" class="m-catalogmanager-content">
         <div class="m-catalogmanager-actions">
-            <button id="m-catalogmanager-addcatalog" title="{{translations.addCatalog}}"><span class="icon-plus"></span></button>
+            {{#if addCatalogEnabled}}
+                <button id="m-catalogmanager-addcatalog" title="{{translations.addCatalog}}"><span class="icon-plus"></span></button>
+            {{/if}}
         </div>
     </section>
     <div id="m-catalogmanager-filters-tabs">
@@ -59,8 +61,8 @@
                     <h3 class="m-catalogmanager-section-title">{{translations.filtersTypes.collections}} <span class="icon-up-open m-catalogmanager-icon"></span></h3>
                     <div id="m-catalogmanager-filters-collections-content"></div>
                 </div>
+                <div id="m-catalogmanager-filters-advanced"></div>
             </section>
-            <section aria-label="Plugin catalogmanager" id="m-catalogmanager-advanced-filters" class="m-catalogmanager-content hidden"></section>
         </div>
         <div id="m-catalogmanager-results-tab-content" class="hidden">
             <section aria-label="Plugin catalogmanager" id="m-catalogmanager-results-content" class="m-catalogmanager-content"></section>

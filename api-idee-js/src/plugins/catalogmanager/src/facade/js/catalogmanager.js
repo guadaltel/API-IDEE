@@ -98,6 +98,8 @@ export default class Catalogmanager extends IDEE.Plugin {
 
     this.predefinedCatalogs = options.predefinedCatalogs || [];
 
+    this.addCatalogEnabled = options.addCatalogEnabled || false;
+
     /**
      * Parámetros del plugin
      * @public
@@ -119,6 +121,7 @@ export default class Catalogmanager extends IDEE.Plugin {
       isDraggable: this.isDraggable,
       order: this.order,
       predefinedCatalogs: this.predefinedCatalogs,
+      addCatalogEnabled: this.addCatalogEnabled,
     }));
     this.map_ = map;
     this.panel_ = new IDEE.ui.Panel('Catalogmanager', {

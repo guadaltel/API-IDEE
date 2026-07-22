@@ -103,12 +103,6 @@ module.exports = {
         }, {
           from: 'src/facade/assets/images',
           to: 'images',
-        }, {
-          from: 'node_modules/streamsaver/mitm.html',
-          to: 'streamsaver/mitm.html',
-        }, {
-          from: 'node_modules/streamsaver/sw.js',
-          to: 'streamsaver/sw.js',
         },
       ],
     }),

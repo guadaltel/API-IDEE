@@ -25,11 +25,6 @@
     "check": "eslint ./src",
     "fix": "eslint --fix ./src"
   },
-  "dependencies": {
-    "chart.js": "^4.4.8",
-    "client-zip": "^2.5.0",
-    "streamsaver": "^2.0.6"
-  },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.14.8",

@@ -40,6 +40,7 @@ const mp = new Catalogmanager({
   tooltip: 'Gestor de catálogos',
   isDraggable: true,
   predefinedCatalogs: PREDEFINED_CATALOGS,
+  addCatalogEnabled: false,
 });
 window.mp = mp;
 

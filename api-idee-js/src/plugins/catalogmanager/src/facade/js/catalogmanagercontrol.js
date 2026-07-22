@@ -9,35 +9,16 @@ import contentTemplate from 'templates/catalogmanagercontent';
 import collectionsTemplate from 'templates/catalogmanagercollections';
 import itemsTemplate from 'templates/catalogmanageritems';
 import imagesTemplate from 'templates/catalogmanagerimages';
-import histogramTemplate from 'templates/catalogmanagerhistogram';
-import histogramStatsTemplate from 'templates/catalogmanagerhistogramstats';
 import itemMetadataTemplate from 'templates/itemMetadata';
 import collectionMetadataTemplate from 'templates/collectionMetadata';
 import advancedFilterTemplate from 'templates/advancedFilter';
 import fieldsTableTemplate from 'templates/fieldstable';
 import typeTableTemplate from 'templates/typetable';
-import Chart from 'chart.js/auto';
-import { downloadZip } from 'client-zip';
-import streamSaver from 'streamsaver';
 import { getValue } from './i18n/language';
 
 // - Modal
 /** @private @type {string} Selector CSS del botón de cierre del modal informativo */
 const BT_CLOSE_MODAL = 'div.m-dialog.info div.m-button > button';
-
-/** @private @type {Object<string, {border: string, background: string}>} Colores por banda */
-const HISTOGRAM_BAND_COLORS = {
-  1: { border: 'rgb(220, 53, 69)', background: 'rgba(220, 53, 69, 0.6)' },
-  2: { border: 'rgb(25, 135, 84)', background: 'rgba(25, 135, 84, 0.6)' },
-  3: { border: 'rgb(13, 110, 253)', background: 'rgba(13, 110, 253, 0.6)' },
-  4: { border: 'rgb(125, 125, 125)', background: 'rgba(125, 125, 125, 0.6)' },
-};
-
-/** @private @type {number} Pausa entre descargas nativas del navegador (ms) */
-const BROWSER_DOWNLOAD_DELAY_MS = 400;
-
-/** @private @type {string} Nombre base del ZIP de descarga masiva en Chrome/Edge */
-const MASIVE_DOWNLOAD_ZIP_BASENAME = 'catalogmanager.zip';
 
 export default class CatalogmanagerControl extends IDEE.Control {
   /**
@@ -101,6 +82,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
      */
     this.predefinedCatalogs_ = options.predefinedCatalogs || [];
 
+    this.addCatalogEnabled_ = options.addCatalogEnabled || false;
+
     /**
      * Catálogos STAC cargados en el control
      * @private
@@ -109,6 +92,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.catalogs_ = [];
 
     this.selectedCatalogIndex_ = 0;
+    this.selectedCollectionIndex_ = 0;
 
     /**
      * Operadores SQL disponibles en el filtro avanzado
@@ -189,6 +173,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
           startTime: '00:00:00',
           endDate: yesterday,
           endTime: '23:59:59',
+          addCatalogEnabled: this.addCatalogEnabled_,
         },
       });
 
@@ -233,7 +218,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @api stable
    */
   addEvents() {
-    this.template_.querySelector('#m-catalogmanager-addcatalog').addEventListener('click', this.openAddCatalog.bind(this));
+    const btnAddCatalog = this.template_.querySelector('#m-catalogmanager-addcatalog');
+    if (btnAddCatalog) {
+      btnAddCatalog.addEventListener('click', this.openAddCatalog.bind(this));
+    }
     this.template_.querySelector('#m-catalogmanager-filters-temporal-predefined').addEventListener('click', (evt) => this.setTemporalFilter(evt));
     this.template_.querySelector('#m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.toggleSpatialFilter(evt));
     this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.updateItems.bind(this));
@@ -301,7 +289,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     evt.stopPropagation();
     const target = evt.target;
     let section = null;
-    if (target.classList.contains('m-catalogmanager-section-title')) {
+    if (target.classList.contains('m-catalogmanager-section-title') && !target.classList.contains('no-event')) {
       section = target.parentElement;
     } else if (target.classList.contains('m-catalogmanager-icon')) {
       section = target.parentElement.parentElement;
@@ -600,7 +588,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         translations: getValue('advancedFilter'),
       },
     });
-    const container = this.template_.querySelector('#m-catalogmanager-advanced-filters');
+    const container = this.template_.querySelector('#m-catalogmanager-filters-advanced');
     container.innerHTML = advancedFiltersHtml.outerHTML;
     this.initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields);
     this.renderQueryableFields();
@@ -645,7 +633,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {HTMLElement|null} Contenedor del filtro avanzado
    */
   getAdvancedFilterContainer() {
-    return this.template_.querySelector('#m-catalogmanager-advanced-filters #m-catalogmanager-advanced-filters');
+    return this.template_.querySelector('#m-catalogmanager-filters-advanced #m-catalogmanager-advanced-filters');
   }
 
   /**
@@ -1214,18 +1202,22 @@ export default class CatalogmanagerControl extends IDEE.Control {
   renderCollectionItems(catalogIndex, collectionIndex, items) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
+    this.selectedCollectionIndex_ = collectionIndex;
     const container = this.template_.querySelector('#m-catalogmanager-results-content');
     const itemsJson = this.getJsonItems(items.features, catalogIndex, collectionIndex);
     collection.items = itemsJson;
     const html = IDEE.template.compileSync(itemsTemplate, {
       vars: {
         items: itemsJson,
+        downloadable: !catalog.obj.public,
         hasNotPrev: !this.linksHaveRel(items.links, 'previous'),
         hasNotNext: !this.linksHaveRel(items.links, 'next'),
+        collectionTitle: collection.title,
         translations: {
           metadata: getValue('metadata'),
           previous: getValue('previous'),
           next: getValue('next'),
+          download: getValue('imageActions.download'),
         },
       },
     });
@@ -1238,6 +1230,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       item.addEventListener('mouseenter', (evt) => this.applyFocusStyle(evt));
       item.addEventListener('mouseleave', (evt) => this.removeFocusStyle(evt));
     });
+    container.querySelector('.m-catalogmanager-section-title').addEventListener('click', (evt) => this.collectionEvent(evt));
     const huella = this.getHuellaLayer(collection);
     if (huella) {
       huella.setSource(items);
@@ -1553,22 +1546,34 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   collectionEvent(evt) {
     evt.stopPropagation();
-    const target = evt.target;
+    let target = evt.target;
+    if (target.tagName === 'SPAN') {
+      target = target.parentElement.parentElement;
+    } else if (target.tagName === 'BUTTON') {
+      target = target.parentElement;
+    }
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
     /* const collectionId = target.dataset.collectionId;
-    if (evt.target.classList.contains('m-catalogmanager-footprint-button')) {
+    if (target.classList.contains('m-catalogmanager-footprint-button')) {
       this.previewItems(catalogIndex, collectionIndex);
       return;
     }
-    if (evt.target.classList.contains('m-catalogmanager-filter-button')) {
+    if (target.classList.contains('m-catalogmanager-filter-button')) {
       this.openAdvancedFilters(catalogIndex, collectionIndex);
       return;
-    }
-    if (evt.target.classList.contains('m-catalogmanager-info-button')) {
-      this.openCollectionInfo(catalogIndex, collectionIndex);
-      return;
     } */
+    if (target.classList.contains('no-event')) {
+      return;
+    }
+    if (target.classList.contains('m-catalogmanager-info-button')) {
+      this.openCollectionInfo(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
+      return;
+    }
+    if (target.classList.contains('m-catalogmanager-download-button')) {
+      this.collectionDownload(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
+      return;
+    }
     if (target.classList.contains('active')) {
       target.classList.remove('active');
       const itemsElement = this.template_.querySelector('#m-catalogmanager-results-content');
@@ -1625,9 +1630,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   changeItemsPage(event, rel) {
     event.stopPropagation();
-    const target = this.findParentByClass(event.target, 'm-catalogmanager-items');
-    const catalogIndex = target.dataset.catalogIndex;
-    const collectionIndex = target.dataset.collectionIndex;
+    const catalogIndex = this.selectedCatalogIndex_;
+    const collectionIndex = this.selectedCollectionIndex_;
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     let promise = null;
@@ -1683,6 +1687,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalogIndex = itemDiv.dataset.catalogIndex;
     const collectionIndex = itemDiv.dataset.collectionIndex;
     const itemId = itemDiv.dataset.itemId;
+    if (target.classList.contains('m-catalogmanager-checkbox-item')) {
+      return;
+    }
     if (target.classList.contains('m-catalogmanager-info-button')) {
       this.openItemInfo(catalogIndex, collectionIndex, itemId);
     } else {
@@ -1703,7 +1710,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {string} itemId Identificador del ítem STAC seleccionado
    */
   onItemSelect(itemId) {
-    const itemElement = this.template_.querySelector(`#${itemId}`);
+    const itemElement = this.template_.querySelector(`#item-${itemId}`);
     const catalogIndex = itemElement.dataset.catalogIndex;
     const collectionIndex = itemElement.dataset.collectionIndex;
 
@@ -1801,91 +1808,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         const asset = item.assets[imageKey];
         window.open(asset.href, '_blank');
       });
-    } else if (target.classList.contains('m-catalogmanager-histogram-button')) {
-      this.closeDialog();
-      catalog.obj.getItem(collection.id, itemId).then((item) => {
-        const asset = item.assets[imageKey];
-        this.getHistogram(asset);
-      });
     }
-  }
-
-  /**
-   * Inicia una descarga nativa del navegador sin cargar el fichero en memoria
-   *
-   * @private
-   * @function
-   * @param {string} url URL del asset
-   * @param {string} filename Nombre sugerido del fichero
-   */
-  downloadViaBrowser(url, filename) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.rel = 'noopener';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-
-  /**
-   * Espera un intervalo de tiempo
-   *
-   * @private
-   * @function
-   * @param {number} ms Milisegundos de espera
-   * @returns {Promise<void>}
-   */
-  delay(ms) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  /**
-   * Descarga masivamente mediante el gestor de descargas del navegador (fallback)
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} tasks Tareas de descarga
-   * @returns {Promise<void>}
-   */
-  async masiveDownloadToBrowserDownloads(tasks) {
-    const usedNames = new Set();
-    let successCount = 0;
-    let failedCount = 0;
-    const errors = [];
-
-    this.showMasiveDownloadProgress(0, tasks.length, '');
-
-    for (let taskIndex = 0; taskIndex < tasks.length; taskIndex += 1) {
-      const task = tasks[taskIndex];
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        const asset = await this.resolveMasiveDownloadAsset(task);
-        const filename = this.ensureUniqueDownloadFilename(
-          this.sanitizeDownloadFilename(asset.title),
-          usedNames,
-        );
-        usedNames.add(filename);
-        this.showMasiveDownloadProgress(taskIndex + 1, tasks.length, filename);
-        this.downloadViaBrowser(asset.href, filename);
-        // eslint-disable-next-line no-await-in-loop
-        await this.delay(BROWSER_DOWNLOAD_DELAY_MS);
-        successCount += 1;
-      } catch (err) {
-        failedCount += 1;
-        errors.push({
-          filename: task.imageKey,
-          message: err.message || getValue('masiveDownload.error'),
-        });
-        console.error(err);
-      }
-    }
-
-    this.hideMasiveDownloadProgress();
-    this.clearSelection();
-    this.showMasiveDownloadCompleteMessage(successCount, failedCount, errors, true);
   }
 
   /**
@@ -1989,196 +1912,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
       });
       collection.layerGroup.addLayers(layer);
       this.getImpl().addLayerToSelectItem(layer.getImpl().getLayer());
-    }
-  }
-
-  getHistogram(asset) {
-    const bands = asset['eo:bands']?.map((band, index) => index + 1) ?? [];
-    const currentMouseCursorStyle = document.body.style.cursor ?? 'auto';
-    document.body.style.cursor = 'wait';
-    // IDEE.gdalUtils.getHistogramGdalinfo(asset.href, bands)
-    const params = {
-      type: 'NDVI',
-      imageUrl: encodeURIComponent(asset.href),
-    };
-    IDEE.remote.get(`${IDEE.config.API_IDEE_URL}api/geoprocess/histogram`, params)
-      .then((response) => {
-        const histogram = JSON.parse(response.text).histogram;
-        this.showHistogramDialog(asset, histogram, bands);
-      })
-      .catch((err) => {
-        console.error(err);
-        IDEE.dialog.error(getValue('histogramDialog.loadError'));
-      })
-      .finally(() => {
-        document.body.style.cursor = currentMouseCursorStyle;
-      });
-  }
-
-  /**
-   * Muestra el modal con el histograma de la imagen
-   *
-   * @private
-   * @function
-   * @param {Object} asset Asset STAC con href y title
-   * @param {Object} histogram Datos del histograma por banda
-   * @param {Array<number>} bandsIndex Bandas disponibles
-   */
-  showHistogramDialog(asset, histogram, bandsIndex) {
-    this.destroyHistogramChart();
-    this.histogramData_ = histogram;
-    const bands = asset['eo:bands']?.map((band, index) => ({ name: band.name, index: index + 1 })) ?? [];
-
-    const histogramHtml = IDEE.template.compileSync(histogramTemplate, {
-      parseToHtml: false,
-      vars: {
-        bands,
-        translations: getValue('histogramDialog'),
-      },
-    });
-    const title = `${getValue('histogramDialog.title')} - ${asset.title || asset.href}`;
-    IDEE.dialog.info(histogramHtml, title, this.order);
-    this.changeCloseButtonModal();
-
-    const dialogContent = document.querySelector('.m-dialog.info .m-content');
-    const canvas = dialogContent?.querySelector('.m-catalogmanager-histogram-canvas');
-    const statsContainer = dialogContent?.querySelector('.m-catalogmanager-histogram-stats-container');
-    const bandSelect = dialogContent?.querySelector('.m-catalogmanager-histogram-band-select');
-    const closeButton = document.querySelector(BT_CLOSE_MODAL);
-
-    if (!canvas || !bandSelect) {
-      return;
-    }
-
-    const defaultBand = bands[0].index;
-    bandSelect.value = String(defaultBand);
-    this.renderHistogramChart(canvas, Number(defaultBand));
-    this.renderHistogramStats(statsContainer, Number(defaultBand));
-
-    bandSelect.addEventListener('change', (evt) => {
-      this.renderHistogramChart(canvas, Number(evt.target.value));
-      this.renderHistogramStats(statsContainer, Number(evt.target.value));
-    });
-
-    if (closeButton) {
-      closeButton.addEventListener('click', () => {
-        this.destroyHistogramChart();
-        this.histogramData_ = null;
-      }, { once: true });
-    }
-  }
-
-  /**
-   * Construye las etiquetas del eje X a partir de los metadatos del histograma
-   *
-   * @private
-   * @function
-   * @param {Object} bandHistogram Datos de histograma de una banda
-   * @returns {Array<number|string>} Etiquetas del eje X
-   */
-  buildHistogramLabels(bandHistogram) {
-    const { buckets } = bandHistogram;
-    return buckets.map((_, index) => index);
-    /* if (min == null || max == null) {
-      return buckets.map((_, index) => index);
-    }
-    const step = (max - min) / buckets.length;
-    return buckets.map((_, index) => Math.round((min + (index + 0.5) * step) * 100) / 100); */
-  }
-
-  /**
-   * Renderiza el gráfico de histograma con Chart.js
-   *
-   * @private
-   * @function
-   * @param {HTMLCanvasElement} canvas Canvas donde dibujar el gráfico
-   * @param {number} band Número de banda
-   */
-  renderHistogramChart(canvas, band) {
-    const bandHistogram = this.histogramData_?.[band];
-    if (!bandHistogram) {
-      return;
-    }
-
-    this.destroyHistogramChart();
-    const colors = HISTOGRAM_BAND_COLORS[band.index] || {
-      border: 'rgb(20, 138, 235)',
-      background: 'rgba(20, 138, 235, 0.6)',
-    };
-    const translations = getValue('histogramDialog');
-
-    this.histogramChart_ = new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels: this.buildHistogramLabels(bandHistogram),
-        datasets: [{
-          label: `${translations.band} ${band}`,
-          data: bandHistogram.buckets,
-          borderColor: colors.border,
-          backgroundColor: colors.background,
-          borderWidth: 1,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: translations.pixelValue,
-            },
-            ticks: {
-              maxTicksLimit: 12,
-            },
-          },
-          y: {
-            title: {
-              display: true,
-              text: translations.frequency,
-            },
-            beginAtZero: true,
-          },
-        },
-      },
-    });
-  }
-
-  renderHistogramStats(statsContainer, band) {
-    const bandHistogram = this.histogramData_?.[band];
-    if (!bandHistogram) {
-      return;
-    }
-    const container = statsContainer;
-    const statsHtml = IDEE.template.compileSync(histogramStatsTemplate, {
-      parseToHtml: false,
-      vars: {
-        translations: getValue('histogramDialog'),
-        pixelCount: bandHistogram.pixelCount,
-        min: bandHistogram.min,
-        max: bandHistogram.max,
-        mean: bandHistogram.mean,
-        stddev: bandHistogram.stddev,
-      },
-    });
-    container.innerHTML = statsHtml;
-  }
-
-  /**
-   * Destruye la instancia activa del gráfico de histograma
-   *
-   * @private
-   * @function
-   */
-  destroyHistogramChart() {
-    if (this.histogramChart_) {
-      this.histogramChart_.destroy();
-      this.histogramChart_ = null;
     }
   }
 
@@ -2544,15 +2277,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
     if (!spec) {
       return null;
     }
-    const bands = spec.bands;
+    const bands = spec.bands.length > 3 ? spec.bands.slice(0, 3) : spec.bands;
     const options = {
       bands,
       nodata: 0,
-      gamma: 1,
-      saturation: 0,
-      exposure: 0,
-      contrast: 0,
-      brightness: 0,
+      gamma: 2,
     };
     return new IDEE.style.Raster(options);
   }
@@ -2593,23 +2322,29 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   clearSelection() {
-    const roots = [this.template_];
-    const dialog = document.querySelector('div.m-dialog.info');
-    if (dialog) {
-      roots.push(dialog);
+    const checkedInputs = this.tamplate_.querySelectorAll('.m-catalogmanager-checkbox-item:checked');
+    for (let i = 0; i < checkedInputs.length; i += 1) {
+      checkedInputs[i].checked = false;
     }
-    roots.forEach((root) => {
-      const checkedInputs = root.querySelectorAll('.m-catalogmanager-checkbox-image:checked');
-      for (let i = 0; i < checkedInputs.length; i += 1) {
-        checkedInputs[i].checked = false;
-      }
-    });
+  }
+
+  collectionDownload(catalogIndex, collectionIndex) {
+    const catalog = this.catalogs_[catalogIndex];
+    const collection = catalog.collections[collectionIndex];
+    const downloadData = {
+      selection: {
+        type: 'collection',
+        collectionId: collection.id,
+      },
+      options: {
+        assests: ['data'],
+      },
+    };
+    this.downloadRequest(downloadData);
   }
 
   /**
-   * Descarga masivamente las imágenes TIFF seleccionadas.
-   * Chrome/Edge: ZIP por streaming a carpeta elegida.
-   * Firefox: ZIP por streaming con StreamSaver. Fallback: descargas individuales.
+   * Descarga masivamente los elementos seleccionados.
    *
    * @public
    * @function
@@ -2617,488 +2352,59 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @api stable
    */
   async masiveDownload() {
-    const selections = this.collectSelectedImages();
-    if (selections.length === 0) {
+    const selection = this.collectSelectedItems();
+    if (selection.length === 0) {
       IDEE.dialog.info(getValue('exception').no_selection);
       return;
     }
-
-    const groups = this.groupSelectionsByItem(selections);
-    const tasks = this.resolveMasiveDownloadTasks(groups);
-
-    if (tasks.length === 0) {
-      IDEE.dialog.info(getValue('exception').no_selection);
-      return;
-    }
-
-    if (this.isDirectoryPickerSupported()) {
-      let directoryHandle;
-      try {
-        directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          IDEE.dialog.info(getValue('masiveDownload.cancelled'));
-        } else {
-          console.error(err);
-          IDEE.dialog.info(getValue('masiveDownload.error'));
-        }
-        return;
-      }
-      await this.masiveDownloadToDirectory(directoryHandle, tasks);
-      return;
-    }
-
-    if (this.isStreamSaverSupported()) {
-      await this.masiveDownloadToStreamSaverZip(tasks);
-      return;
-    }
-
-    await this.masiveDownloadToBrowserDownloads(tasks);
+    const downloadData = {
+      selection,
+      options: {
+        assests: ['data', 'json'],
+        includeStacJson: true,
+      },
+    };
+    this.downloadRequest(downloadData);
   }
 
   /**
-   * Recoge las imágenes TIFF marcadas en el panel y en el modal de diálogo
+   * Recoge los items marcados en el panel
    *
    * @private
    * @function
    * @returns {Array<Object>} Lista de selecciones con índices de catálogo/colección
    */
-  collectSelectedImages() {
-    const roots = [this.template_];
-    const dialog = document.querySelector('div.m-dialog.info');
-    if (dialog) {
-      roots.push(dialog);
-    }
-    const seen = new Set();
-    const selections = [];
-    roots.forEach((root) => {
-      root.querySelectorAll('.m-catalogmanager-checkbox-image:checked').forEach((input) => {
-        let {
-          imageKey, itemId, collectionIndex, catalogIndex,
-        } = input.dataset;
-        if (!imageKey) {
-          const parent = input.closest('.m-catalogmanager-title-image');
-          if (parent) {
-            imageKey = parent.dataset.imageKey;
-            itemId = parent.dataset.itemId;
-            collectionIndex = parent.dataset.collectionIndex;
-            catalogIndex = parent.dataset.catalogIndex;
-          }
-        }
-        const key = `${catalogIndex}|${collectionIndex}|${itemId}|${imageKey}`;
-        if (!seen.has(key) && imageKey && itemId) {
-          seen.add(key);
-          selections.push({
-            catalogIndex,
-            collectionIndex,
-            itemId,
-            imageKey,
-          });
-        }
-      });
+  collectSelectedItems() {
+    const selection = {
+      type: 'items',
+    };
+    let collectionIndex = null;
+    let catalogIndex = null;
+    const itemIds = [];
+    this.template_.querySelectorAll('.m-catalogmanager-checkbox-item:checked').forEach((input) => {
+      const itemId = input.dataset.itemId;
+      collectionIndex = input.dataset.collectionIndex;
+      catalogIndex = input.dataset.catalogIndex;
+      if (itemId) {
+        itemIds.push(itemId);
+      }
     });
-    return selections;
+    selection.collectionId = this.catalogs_[catalogIndex].collections[collectionIndex].id;
+    selection.itemIds = itemIds;
+    return selection;
   }
 
-  /**
-   * Agrupa selecciones por ítem STAC para minimizar llamadas a getItem
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} selections Selecciones de imágenes
-   * @returns {Array<Object>} Grupos con imageKeys por ítem
-   */
-  groupSelectionsByItem(selections) {
-    const groups = new Map();
-    selections.forEach((selection) => {
-      const key = `${selection.catalogIndex}|${selection.collectionIndex}|${selection.itemId}`;
-      if (!groups.has(key)) {
-        groups.set(key, {
-          catalogIndex: selection.catalogIndex,
-          collectionIndex: selection.collectionIndex,
-          itemId: selection.itemId,
-          imageKeys: [],
-        });
-      }
-      groups.get(key).imageKeys.push(selection.imageKey);
-    });
-    return Array.from(groups.values());
+  downloadRequest(downloadData) {
+    console.log(downloadData);
+    /* const token = this.catalogs_[this.selectedCatalogIndex_].obj.token;
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+    IDEE.remote.post(this.downloadUrl_, downloadData, { headers }).then((response) => {
+      console.log(response);
+    }).catch((error) => {
+      console.error(error);
+    }); */
   }
-
-  /**
-   * Construye las tareas de descarga a partir de los grupos de selección.
-   * La URL del asset se resuelve con getItem justo antes de cada fetch.
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} groups Grupos por ítem STAC
-   * @returns {Array<Object>}
-   */
-  resolveMasiveDownloadTasks(groups) {
-    const tasks = [];
-    for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
-      const group = groups[groupIndex];
-      for (let keyIndex = 0; keyIndex < group.imageKeys.length; keyIndex += 1) {
-        tasks.push({
-          catalogIndex: group.catalogIndex,
-          collectionIndex: group.collectionIndex,
-          itemId: group.itemId,
-          imageKey: group.imageKeys[keyIndex],
-        });
-      }
-    }
-    return tasks;
-  }
-
-  /**
-   * Comprueba si el navegador soporta la API File System Access
-   *
-   * @private
-   * @function
-   * @returns {boolean}
-   */
-  isDirectoryPickerSupported() {
-    return typeof window.showDirectoryPicker === 'function';
-  }
-
-  /**
-   * Comprueba si StreamSaver puede usarse para descargar por streaming
-   *
-   * @private
-   * @function
-   * @returns {boolean}
-   */
-  isStreamSaverSupported() {
-    return 'serviceWorker' in window.navigator && typeof window.WritableStream !== 'undefined';
-  }
-
-  /**
-   * Descarga masivamente empaquetando en ZIP por streaming a una carpeta (Chrome/Edge)
-   *
-   * @private
-   * @function
-   * @param {FileSystemDirectoryHandle} directoryHandle Carpeta destino
-   * @param {Array<Object>} tasks Tareas de descarga
-   * @returns {Promise<void>}
-   */
-  async masiveDownloadToDirectory(directoryHandle, tasks) {
-    this.showMasiveDownloadProgress(0, tasks.length, '', 'zipProgress');
-
-    let zipFilename = MASIVE_DOWNLOAD_ZIP_BASENAME;
-    try {
-      const zipPackage = this.buildMasiveDownloadZipResponse(tasks, (current, total, filename) => {
-        this.showMasiveDownloadProgress(current, total, filename, 'zipProgress');
-      });
-      zipFilename = zipPackage.zipFilename;
-
-      await this.writeStreamToDirectory(directoryHandle, zipFilename, zipPackage.zipResponse.body);
-
-      this.hideMasiveDownloadProgress();
-      this.clearSelection();
-      this.showMasiveDownloadCompleteMessage(tasks.length, 0, [], false, zipFilename);
-    } catch (err) {
-      console.error(err);
-      this.hideMasiveDownloadProgress();
-      this.clearSelection();
-      this.showMasiveDownloadCompleteMessage(0, tasks.length, [{
-        filename: zipFilename,
-        message: err.message || getValue('masiveDownload.error'),
-      }], false);
-    }
-  }
-
-  /**
-   * Descarga masivamente un ZIP por streaming con StreamSaver (Firefox y similares)
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} tasks Tareas de descarga
-   * @returns {Promise<void>}
-   */
-  async masiveDownloadToStreamSaverZip(tasks) {
-    this.configureStreamSaverMitm();
-    this.showMasiveDownloadProgress(0, tasks.length, '', 'zipProgress');
-
-    let zipFilename = MASIVE_DOWNLOAD_ZIP_BASENAME;
-    try {
-      const zipPackage = this.buildMasiveDownloadZipResponse(tasks, (current, total, filename) => {
-        this.showMasiveDownloadProgress(current, total, filename, 'zipProgress');
-      });
-      zipFilename = zipPackage.zipFilename;
-
-      const fileStream = streamSaver.createWriteStream(zipFilename);
-      if (!zipPackage.zipResponse.body) {
-        throw new Error(getValue('masiveDownload.error'));
-      }
-      await zipPackage.zipResponse.body.pipeTo(fileStream);
-
-      this.hideMasiveDownloadProgress();
-      this.clearSelection();
-      this.showMasiveDownloadCompleteMessage(tasks.length, 0, [], true, zipFilename);
-    } catch (err) {
-      console.error(err);
-      this.hideMasiveDownloadProgress();
-      this.clearSelection();
-      this.showMasiveDownloadCompleteMessage(0, tasks.length, [{
-        filename: zipFilename,
-        message: err.message || getValue('masiveDownload.error'),
-      }], true);
-    }
-  }
-
-  /**
-   * Muestra el indicador de progreso de la descarga masiva
-   *
-   * @private
-   * @function
-   * @param {number} current Índice actual (1-based)
-   * @param {number} total Total de ficheros
-   * @param {string} filename Nombre del fichero en curso
-   * @param {string} progressKey Clave i18n de progreso
-   */
-  showMasiveDownloadProgress(current, total, filename, progressKey = 'progress') {
-    let progress = document.querySelector('.m-catalogmanager-download-progress');
-    if (!progress) {
-      progress = document.createElement('div');
-      progress.className = 'm-catalogmanager-download-progress';
-      progress.innerHTML = '<p class="m-catalogmanager-download-progress-text"></p>';
-      document.body.appendChild(progress);
-    }
-    const text = progress.querySelector('.m-catalogmanager-download-progress-text');
-    if (text) {
-      text.textContent = this.formatMasiveDownloadMessage(progressKey, {
-        current,
-        total,
-        filename,
-      });
-    }
-  }
-
-  /**
-   * Sustituye placeholders {{key}} en textos i18n de descarga masiva
-   *
-   * @private
-   * @function
-   * @param {string} key Clave relativa dentro de masiveDownload
-   * @param {Object} params Valores a interpolar
-   * @returns {string}
-   */
-  formatMasiveDownloadMessage(key, params = {}) {
-    let message = getValue(`masiveDownload.${key}`);
-    Object.keys(params).forEach((param) => {
-      message = message.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
-    });
-    return message;
-  }
-
-  /**
-   * Oculta el indicador de progreso de la descarga masiva
-   *
-   * @private
-   * @function
-   */
-  hideMasiveDownloadProgress() {
-    const progress = document.querySelector('.m-catalogmanager-download-progress');
-    if (progress) {
-      progress.remove();
-    }
-  }
-
-  /**
-   * Construye la respuesta ZIP de client-zip para la selección actual
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} tasks Tareas de descarga
-   * @param {Function} onProgress Callback de progreso (current, total, filename)
-   * @returns {{zipFilename: string, zipResponse: Response}}
-   */
-  buildMasiveDownloadZipResponse(tasks, onProgress) {
-    const usedNames = new Set();
-    const zipFilename = this.ensureUniqueDownloadFilename(
-      MASIVE_DOWNLOAD_ZIP_BASENAME,
-      new Set(),
-    );
-    const zipResponse = downloadZip(
-      this.createMasiveDownloadZipEntries(tasks, usedNames, onProgress),
-    );
-    return { zipFilename, zipResponse };
-  }
-
-  /**
-   * Evita colisiones de nombre dentro de una misma descarga masiva
-   *
-   * @private
-   * @function
-   * @param {string} filename Nombre base del fichero
-   * @param {Set<string>} usedNames Nombres ya reservados
-   * @returns {string}
-   */
-  ensureUniqueDownloadFilename(filename, usedNames) {
-    if (!usedNames.has(filename)) {
-      return filename;
-    }
-    const extensionIndex = filename.lastIndexOf('.');
-    const base = extensionIndex > 0 ? filename.slice(0, extensionIndex) : filename;
-    const extension = extensionIndex > 0 ? filename.slice(extensionIndex) : '';
-    let counter = 1;
-    let candidate = `${base} (${counter})${extension}`;
-    while (usedNames.has(candidate)) {
-      counter += 1;
-      candidate = `${base} (${counter})${extension}`;
-    }
-    return candidate;
-  }
-
-  /**
-   * Generador async de entradas para client-zip con URL actualizada por fichero
-   *
-   * @private
-   * @function
-   * @param {Array<Object>} tasks Tareas de descarga
-   * @param {Set<string>} usedNames Nombres ya reservados dentro del ZIP
-   * @param {Function} onProgress Callback de progreso (current, total, filename)
-   * @yields {Object} Entrada compatible con client-zip
-   */
-  async* createMasiveDownloadZipEntries(tasks, usedNames, onProgress) {
-    for (let taskIndex = 0; taskIndex < tasks.length; taskIndex += 1) {
-      const task = tasks[taskIndex];
-      // eslint-disable-next-line no-await-in-loop
-      const asset = await this.resolveMasiveDownloadAsset(task);
-      const filename = this.ensureUniqueDownloadFilename(
-        this.sanitizeDownloadFilename(asset.title),
-        usedNames,
-      );
-      usedNames.add(filename);
-      if (onProgress) {
-        onProgress(taskIndex + 1, tasks.length, filename);
-      }
-      // eslint-disable-next-line no-await-in-loop
-      const response = await fetch(asset.href);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      yield { name: filename, input: response };
-    }
-  }
-
-  /**
-   * Obtiene el asset STAC de una tarea de descarga con URL actualizada
-   *
-   * @private
-   * @function
-   * @param {Object} task Tarea de descarga masiva
-   * @returns {Promise<Object>}
-   */
-  async resolveMasiveDownloadAsset(task) {
-    const catalog = this.catalogs_[task.catalogIndex];
-    const collection = catalog.collections[task.collectionIndex];
-    const item = await catalog.obj.getItem(collection.id, task.itemId);
-    const asset = item.assets[task.imageKey];
-    if (!asset) {
-      throw new Error(getValue('masiveDownload.error'));
-    }
-    return asset;
-  }
-
-  /**
-   * Normaliza el nombre de fichero eliminando caracteres no válidos
-   *
-   * @private
-   * @function
-   * @param {string} filename Nombre original del asset
-   * @returns {string}
-   */
-  sanitizeDownloadFilename(filename) {
-    const sanitized = (filename || 'download').replace(/[/\\?%*:|"<>]/g, '_').trim();
-    return sanitized || 'download.tif';
-  }
-
-  /**
-   * Escribe un stream en un fichero de la carpeta elegida
-   *
-   * @private
-   * @function
-   * @param {FileSystemDirectoryHandle} directoryHandle Carpeta destino
-   * @param {string} filename Nombre del fichero destino
-   * @param {ReadableStream} body Stream de datos
-   * @returns {Promise<void>}
-   */
-  async writeStreamToDirectory(directoryHandle, filename, body) {
-    const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
-    const writable = await fileHandle.createWritable();
-    if (body) {
-      await body.pipeTo(writable);
-      return;
-    }
-    await writable.close();
-  }
-
-  /**
-   * Muestra el resumen final de la descarga masiva
-   *
-   * @private
-   * @function
-   * @param {number} successCount Descargas correctas o iniciadas
-   * @param {number} failedCount Descargas fallidas
-   * @param {Array<Object>} errors Detalle de errores
-   * @param {boolean} useBrowserNote Indica si se añade nota de carpeta de descargas
-   * @param {string|null} zipFilename Nombre del ZIP creado (Chrome/Edge)
-   */
-  showMasiveDownloadCompleteMessage(
-    successCount,
-    failedCount,
-    errors,
-    useBrowserNote = false,
-    zipFilename = null,
-  ) {
-    const summary = zipFilename
-      ? this.formatMasiveDownloadMessage('completeZip', {
-        filename: zipFilename,
-        success: successCount,
-      })
-      : this.formatMasiveDownloadMessage('complete', {
-        success: successCount,
-        failed: failedCount,
-      });
-    const parts = [`<p>${summary}</p>`];
-    if (useBrowserNote) {
-      parts.push(
-        `<p class="m-catalogmanager-download-browser-note">${getValue('masiveDownload.browserDownloads')}</p>`,
-      );
-    }
-    if (errors.length > 0) {
-      const errorsHtml = errors.map((error) => (
-        `<li>${error.filename}: ${error.message}</li>`
-      )).join('');
-      parts.push(`<ul class="m-catalogmanager-download-errors">${errorsHtml}</ul>`);
-    }
-    IDEE.dialog.info(parts.join(''), getValue('masiveDownload.title'), this.order);
-  }
-
-  /**
-   * Configura la URL del mitm de StreamSaver junto al script del plugin
-   *
-   * @private
-   * @function
-   */
-  configureStreamSaverMitm() {
-    // Descomentar para test en local
-    /* if (streamSaver.mitm) {
-      return;
-    } */
-    const scripts = document.getElementsByTagName('script');
-    let mitmBaseUrl = window.location.href;
-    for (let scriptIndex = 0; scriptIndex < scripts.length; scriptIndex += 1) {
-      const scriptSrc = scripts[scriptIndex].src;
-      if (scriptSrc && (scriptSrc.includes('catalogmanager') || scriptSrc.includes('main.js'))) {
-        mitmBaseUrl = scriptSrc;
-        break;
-      }
-    }
-    streamSaver.mitm = new URL('streamsaver/mitm.html', mitmBaseUrl).href;
-  }
-
-  // FIN DESCARGA MASIVA
-  // ----------------------------------------------------------------------------------------------
 }

@@ -23,7 +23,7 @@ div.m-area.m-left .m-plugin-catalogmanager.opened #div-contenedor {
 }
 
 div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
-    right: 10px;
+    right: 0px;
 }
 
 .m-areas>div.m-area>div.m-plugin-catalogmanager.collapsed>button.m-panel-btn {
@@ -44,7 +44,7 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
 .m-areas>div.m-area.m-right>div.m-plugin-catalogmanager.opened>button.m-panel-btn {
     position: absolute;
     top: -10px;
-    right: 33vw;
+    right: calc(33vw - 10px);
     background-color: #71a7d3;
 }
 
@@ -154,6 +154,10 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
     border: none;
     cursor: pointer;
     color: #2ecc71
+}
+
+h3 .action-btn {
+    float: right;
 }
 
 #add-catalog {
@@ -529,6 +533,10 @@ button.m-catalogmanager-download-button {
     width: 95%;
 }
 
+#m-catalogmanager-results-content .m-catalogmanager-section-title {
+    margin-left: 20px;
+}
+
 h3.m-catalogmanager-section-title>span.m-catalogmanager-icon {
     float: right;
 }
@@ -566,7 +574,5 @@ h3.m-catalogmanager-section-title>span.m-catalogmanager-icon {
 }
 
 #m-catalogmanager-advanced-filters {
-    padding-left: 10px;
-    padding-right: 10px;
     max-width: calc(33vw - 20px);
 }
