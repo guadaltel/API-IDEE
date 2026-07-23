@@ -20,6 +20,24 @@ import { getValue } from './i18n/language';
 /** @private @type {string} Selector CSS del botón de cierre del modal informativo */
 const BT_CLOSE_MODAL = 'div.m-dialog.info div.m-button > button';
 
+const INDICES_STYLES = {
+  NDVI: {
+    min: -1,
+    max: 1,
+    ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
+  },
+  NDWI: {
+    min: -1,
+    max: 1,
+    ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
+  },
+  NBR: {
+    min: -1,
+    max: 1,
+    ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+  },
+};
+
 export default class CatalogmanagerControl extends IDEE.Control {
   /**
    * @classdesc
@@ -84,6 +102,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
     this.addCatalogEnabled_ = options.addCatalogEnabled || false;
 
+    this.downloadUrl_ = options.downloadUrl || '';
+
     /**
      * Catálogos STAC cargados en el control
      * @private
@@ -93,6 +113,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
     this.selectedCatalogIndex_ = 0;
     this.selectedCollectionIndex_ = 0;
+    this.selectedItems_ = [];
 
     /**
      * Operadores SQL disponibles en el filtro avanzado
@@ -572,7 +593,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     try {
       queryableFields = await catalog.obj.getQueryableFields(collection.id) || {};
     } catch (err) {
-      console.error(err);
       IDEE.dialog.error(getValue('advancedFilter.loadError'));
       return;
     }
@@ -1100,7 +1120,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     try {
       filterObj = this.turnSqlIntoStacQuery(sqlExpression);
     } catch (err) {
-      console.error(err);
       IDEE.dialog.error(getValue('advancedFilter.invalidQuery'));
       return;
     }
@@ -1128,7 +1147,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     try {
       jsonExpression = JSON.parse(queryExpression);
     } catch (err) {
-      console.error(err);
       IDEE.dialog.error(getValue('advancedFilter.invalidQuery'));
       return;
     }
@@ -1150,6 +1168,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   getFilteredItemsAdvanced() {
     // this.updateBboxFilter();
+    this.selectedItems_ = [];
     const state = this.advancedFilterState_;
     const catalog = this.catalogs_[state.catalogIndex];
     const collection = catalog.collections[state.collectionIndex];
@@ -1165,7 +1184,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
         this.renderCollectionItems(state.catalogIndex, state.collectionIndex, items);
         this.toggleAdvancedFilters();
       }).catch((err) => {
-        console.error(err);
         IDEE.dialog.error(getValue('advancedFilter.applyError'));
       });
   }
@@ -1598,6 +1616,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {number} collectionIndex Índice de la colección
    */
   getItems(catalogIndex, collectionIndex) {
+    this.selectedItems_ = [];
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     let promise = null;
@@ -1669,6 +1688,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         catalogIndex,
         properties: item.properties,
         bbox: item.bbox,
+        selected: this.selectedItems_.includes(item.id),
       };
     });
   }
@@ -1683,13 +1703,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
   itemsEvent(evt) {
     evt.stopPropagation();
     const target = evt.target;
+    if (target.classList.contains('m-catalogmanager-checkbox-item')) {
+      this.changeSelectedItems(target);
+      return;
+    }
     const itemDiv = this.findParentByClass(evt.target, 'm-catalogmanager-title-item');
     const catalogIndex = itemDiv.dataset.catalogIndex;
     const collectionIndex = itemDiv.dataset.collectionIndex;
     const itemId = itemDiv.dataset.itemId;
-    if (target.classList.contains('m-catalogmanager-checkbox-item')) {
-      return;
-    }
     if (target.classList.contains('m-catalogmanager-info-button')) {
       this.openItemInfo(catalogIndex, collectionIndex, itemId);
     } else {
@@ -1832,7 +1853,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       legend: image.title,
     }, {
       convertToRGB: false,
-      normalize: true,
+      normalize: IDEE.utils.isNullOrEmpty(styleSpec.indice),
       style,
     });
     if (catalog.layerGroup === null) {
@@ -1922,20 +1943,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   updateItems() {
-    const itemsElements = this.template_.querySelectorAll('.m-catalogmanager-items');
-    itemsElements.forEach((itemsElement) => {
-      const ie = itemsElement;
-      if (!ie.classList.contains('hidden')) {
-        const catalogIndex = ie.dataset.catalogIndex;
-        const collectionIndex = ie.dataset.collectionIndex;
-        this.updateBboxFilter();
-        this.updateTemporalFilter();
-        this.getItems(catalogIndex, collectionIndex);
-      } else if (!ie.classList.contains('empty')) {
-        ie.classList.add('empty');
-        ie.innerHTML = '';
-      }
-    });
+    this.updateBboxFilter();
+    this.updateTemporalFilter();
+    this.getItems(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
   }
 
   /**
@@ -2147,7 +2157,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {{bands: {r: number, g: number, b: number}}|null} Índices de banda o null
    */
   resolveStyleSpec(asset) {
-    let spec = { bands: [1, 1, 1] };
+    const spec = { bands: [1, 1, 1] };
+    if (asset.title.includes('NDVI')) {
+      spec.indice = 'NDVI';
+    } else if (asset.title.includes('NDWI')) {
+      spec.indice = 'NDWI';
+    } else if (asset.title.includes('NBR')) {
+      spec.indice = 'NBR';
+    }
     const eoBands = this.getAssetBands(asset);
     if (!Array.isArray(eoBands) || eoBands.length === 0) {
       return spec;
@@ -2162,19 +2179,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
         blue: [0, 0, 1],
       };
       if (commonName && rgbChannels[commonName]) {
-        spec = { bands: rgbChannels[commonName] };
+        spec.bands = rgbChannels[commonName];
       } else {
-        spec = { bands: [1, 1, 1] };
+        spec.bands = [1, 1, 1];
       }
     } else {
       // RGB multiBanda
       const rgbBands = this.mapBandsByCommonName(eoBands, ['red', 'green', 'blue']);
       if (rgbBands) {
-        spec = { bands: rgbBands };
+        spec.bands = rgbBands;
       } else if (eoBands.length >= 3) {
-        spec = { bands: [1, 2, 3] };
+        spec.bands = [1, 2, 3];
       } else { // Escala de grises
-        spec = { bands: [1, 1, 1] };
+        spec.bands = [1, 1, 1];
       }
     }
     const bandDisplayOrder = asset.band_display_order;
@@ -2278,11 +2295,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
       return null;
     }
     const bands = spec.bands.length > 3 ? spec.bands.slice(0, 3) : spec.bands;
-    const options = {
-      bands,
-      nodata: 0,
-      gamma: 2,
-    };
+    let options = {};
+    if (spec.indice) {
+      options = INDICES_STYLES[spec.indice];
+    }
+    options.nodata = 0;
+    options.bands = bands;
+    options.gamma = 2;
     return new IDEE.style.Raster(options);
   }
 
@@ -2322,9 +2341,39 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   clearSelection() {
+    this.selectedItems_ = [];
     const checkedInputs = this.tamplate_.querySelectorAll('.m-catalogmanager-checkbox-item:checked');
     for (let i = 0; i < checkedInputs.length; i += 1) {
       checkedInputs[i].checked = false;
+    }
+  }
+
+  changeSelectedItems(checkbox) {
+    if (checkbox.id === 'select-all-items') {
+      const items = this.template_.querySelectorAll('.m-catalogmanager-checkbox-item');
+      for (let i = 0; i < items.length; i += 1) {
+        items[i].checked = checkbox.checked;
+        if (checkbox.checked) {
+          const itemId = items[i].dataset.itemId;
+          if (itemId && !this.selectedItems_.includes(itemId)) {
+            this.selectedItems_.push(itemId);
+          }
+        } else {
+          const itemId = items[i].dataset.itemId;
+          if (itemId) {
+            this.selectedItems_ = this.selectedItems_.filter((id) => id !== itemId);
+          }
+        }
+      }
+    } else {
+      const itemId = checkbox.dataset.itemId;
+      if (itemId) {
+        if (checkbox.checked) {
+          this.selectedItems_.push(itemId);
+        } else {
+          this.selectedItems_ = this.selectedItems_.filter((id) => id !== itemId);
+        }
+      }
     }
   }
 

@@ -6,6 +6,7 @@ import Catalogmanager from 'facade/catalogmanager';
 const map = IDEE.map({
   container: 'mapjs',
   projection: 'EPSG:4326',
+  bbox: [-15.017115565547565, 34.64614470425839, 7.599236393104354, 45.047310735242576],
 });
 window.map = map;
 

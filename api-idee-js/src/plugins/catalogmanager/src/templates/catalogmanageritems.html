@@ -9,6 +9,22 @@
         {{#if downloadable}}<button class="m-catalogmanager-download-button action-btn" title="{{translations.download}}"><span class="icon-download m-catalogmanager-download-button"></span></button>{{/if}}
     </h3>
     <ul class="m-catalogmanager-ulitems">
+        {{#if downloadable}}
+        <li tabindex="0" class="m-catalogmanager-sectionPanel">
+            <div>
+                <div class="m-catalogmanager-visible-typeContent">
+                    <div style="display: flex;gap: 0.5rem;">
+                        <div>
+                            <input type="checkbox" class="m-catalogmanager-checkbox-item" id="select-all-items">
+                        </div>
+                        <div>
+                            <span class="m-catalogmanager-title-box" tabindex="0">Seleccionar todo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {{/if}}
         {{#each items}}
             <li tabindex="0" class="m-catalogmanager-sectionPanel">
                 <div id="item-{{id}}" class="m-catalogmanager-title-item"
@@ -22,7 +38,7 @@
                                     </td>
                                     {{#if ../downloadable}}
                                     <td>
-                                        <input type="checkbox" class="m-catalogmanager-checkbox-item"
+                                        <input type="checkbox" class="m-catalogmanager-checkbox-item" {{#if selected}}checked{{/if}}
                                         data-item-name="{{title}}" data-item-id="{{id}}" data-catalog-index="{{catalogIndex}}" data-collection-index="{{collectionIndex}}">
                                     </td>
                                     {{/if}}
