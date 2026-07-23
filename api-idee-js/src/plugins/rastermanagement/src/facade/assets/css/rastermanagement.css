@@ -154,6 +154,210 @@
     text-align: left;
 }
 
+/*********************
+     SPECTRAL INDICES / COLOR RAMPS
+*********************/
+
+#m-rastermanagement-indices,
+#m-rastermanagement-ramps {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.m-rastermanagement-index {
+    flex: 1;
+    margin: 0;
+    padding: 6px 8px;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 13px;
+    font-weight: bold;
+    color: #404040;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.m-rastermanagement-index:hover {
+    border-color: #71a7d3;
+    color: #71a7d3;
+}
+
+.m-rastermanagement-index.active {
+    background-color: #71a7d3;
+    border-color: #71a7d3;
+    color: #fff;
+}
+
+.m-rastermanagement-index-content > p {
+    margin: 0;
+}
+
+.m-rastermanagement-index-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.m-rastermanagement-index-form label {
+    font-size: 13px;
+    color: #404040;
+}
+
+.m-rastermanagement-index-form select,
+.m-rastermanagement-index-form input[type='number'] {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 13px;
+    color: #404040;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 8px;
+    background-color: #fff;
+}
+
+.m-rastermanagement-bands-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.m-rastermanagement-bands-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.m-rastermanagement-band-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.m-rastermanagement-band-item > input[type='number'] {
+    width: 56px;
+    flex: none;
+}
+
+.m-rastermanagement-band-remove {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #71a7d3;
+    border-radius: 4px;
+    background-color: #71a7d3;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-rastermanagement-band-remove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.m-rastermanagement-band-remove:not(:disabled):hover {
+    background-color: #5a93c2;
+    border-color: #5a93c2;
+}
+
+.m-rastermanagement-ramp-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.m-rastermanagement-ramp-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+}
+
+.m-rastermanagement-ramp-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 8px;
+    align-items: flex-start;
+    padding-top: 4px;
+}
+
+.m-rastermanagement-ramp-item {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.m-rastermanagement-ramp-color {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    display: block;
+}
+
+.m-rastermanagement-ramp-action {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #71a7d3;
+    border-radius: 4px;
+    background-color: #71a7d3;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-rastermanagement-ramp-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #71a7d3;
+    border-radius: 50%;
+    background-color: #71a7d3;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-rastermanagement-ramp-remove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.m-rastermanagement-ramp-action:hover,
+.m-rastermanagement-ramp-remove:not(:disabled):hover {
+    background-color: #5a93c2;
+    border-color: #5a93c2;
+}
+
 .m-rastermanagement-filters {
     margin: 0;
     padding: 12px;

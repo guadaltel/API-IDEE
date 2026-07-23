@@ -3,7 +3,11 @@
     "impl": "The implementation used cannot create RasterManagementControl controls",
     "selectLayer": "Select a GeoTIFF layer",
     "noStyle": "The selected layer has no style",
-    "copyClipboard": "Could not copy the style to the clipboard"
+    "copyClipboard": "Could not copy the style to the clipboard",
+    "invalidIndexBands": "Index bands must be integers greater than or equal to 1",
+    "invalidRampBands": "The band must be an integer greater than or equal to 1",
+    "invalidMeanBands": "Mean requires at least 2 integer bands greater than or equal to 1",
+    "invalidRamp": "The ramp must have at least 2 colors"
   },
   "textHelp": {
     "help1": "Txt 1"
@@ -11,7 +15,16 @@
   "tooltip": "Raster styles management",
   "title": "Raster styles management",
   "colorRamps": "Color ramps",
+  "monoband": "Monoband",
+  "bandsMean": "Mean",
+  "band": "Band",
+  "bands": "Bands",
+  "addBand": "Add band",
+  "removeBand": "Remove band",
   "spectralIndices": "Spectral indices",
+  "ndvi": "NDVI",
+  "ndwi": "NDWI",
+  "nbr": "NBR",
   "filters": "Filters",
   "saturation": "Saturation",
   "gamma": "Gamma",
@@ -24,5 +37,20 @@
   "clearStyle": "Clear style",
   "copyStyle": "Copy serialized style",
   "clipboard": "Style copied to clipboard",
-  "serializedStyle": "Serialized style"
+  "serializedStyle": "Serialized style",
+  "bandNir": "NIR band",
+  "bandRed": "Red band",
+  "bandGreen": "Green band",
+  "bandSwir": "SWIR band",
+  "min": "Minimum",
+  "max": "Maximum",
+  "ramp": "Color ramp",
+  "interpolation": "Interpolation",
+  "interpolationLinear": "Linear",
+  "interpolationExponential": "Exponential",
+  "interpolationBase": "Interpolation base",
+  "nodata": "Nodata",
+  "nodataOptional": "Optional",
+  "addColor": "Add color",
+  "removeColor": "Remove color"
 }

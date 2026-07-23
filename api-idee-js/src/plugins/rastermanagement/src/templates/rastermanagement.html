@@ -15,10 +15,278 @@
     </div>
     <div id="m-rastermanagement-tabs-contents">
         <div id="m-rastermanagement-colorramps-tab-content" class="m-rastermanagement-tab-content" role="tabpanel" aria-labelledby="m-rastermanagement-colorramps-tab">
-            <p>contenido rampas de color</p>
+            <div id="m-rastermanagement-ramps" role="tablist" aria-label="{{colorRamps}}">
+                <button type="button" id="m-rastermanagement-monoband-mode" class="m-rastermanagement-index active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-monoband-mode-content">{{monoband}}</button>
+                <button type="button" id="m-rastermanagement-mean-mode" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-mean-mode-content">{{bandsMean}}</button>
+            </div>
+            <div id="m-rastermanagement-ramps-contents">
+                <div id="m-rastermanagement-monoband-mode-content" class="m-rastermanagement-index-content" role="tabpanel" aria-labelledby="m-rastermanagement-monoband-mode">
+                    <div class="m-rastermanagement-index-form">
+                        <div class="m-rastermanagement-filters-grid">
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-monoband-band">{{band}}</label>
+                                <input type="number" id="m-rastermanagement-monoband-band" name="monoband-band" min="1" step="1" value="{{rampDefaults.band}}" tabindex="0" aria-label="{{band}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-monoband-min">{{min}}</label>
+                                <input type="number" id="m-rastermanagement-monoband-min" name="monoband-min" step="0.01" value="{{rampDefaults.min}}" tabindex="0" aria-label="{{min}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-monoband-max">{{max}}</label>
+                                <input type="number" id="m-rastermanagement-monoband-max" name="monoband-max" step="0.01" value="{{rampDefaults.max}}" tabindex="0" aria-label="{{max}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-monoband-interpolation">{{interpolation}}</label>
+                                <select id="m-rastermanagement-monoband-interpolation" name="monoband-interpolation" tabindex="0" aria-label="{{interpolation}}">
+                                    <option value="linear" selected>{{interpolationLinear}}</option>
+                                    <option value="exponential">{{interpolationExponential}}</option>
+                                </select>
+                            </div>
+                            <div class="m-rastermanagement-filter-control m-rastermanagement-monoband-base-control hidden">
+                                <label for="m-rastermanagement-monoband-interpolation-base">{{interpolationBase}}</label>
+                                <input type="number" id="m-rastermanagement-monoband-interpolation-base" name="monoband-interpolation-base" min="0" step="0.01" value="{{rampDefaults.interpolationBase}}" tabindex="0" aria-label="{{interpolationBase}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-monoband-nodata">{{nodata}}</label>
+                                <input type="number" id="m-rastermanagement-monoband-nodata" name="monoband-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-ramp-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{ramp}}</label>
+                                <button type="button" id="m-rastermanagement-monoband-add-color" class="m-rastermanagement-ramp-action" title="{{addColor}}" aria-label="{{addColor}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-monoband-ramp" class="m-rastermanagement-ramp-colors">
+                                {{#each rampDefaults.ramp}}
+                                <div class="m-rastermanagement-ramp-item">
+                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="m-rastermanagement-mean-mode-content" class="m-rastermanagement-index-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-mean-mode">
+                    <div class="m-rastermanagement-index-form">
+                        <div class="m-rastermanagement-bands-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{bands}}</label>
+                                <button type="button" id="m-rastermanagement-mean-add-band" class="m-rastermanagement-ramp-action" title="{{addBand}}" aria-label="{{addBand}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-mean-bands" class="m-rastermanagement-bands-list">
+                                {{#each rampDefaults.meanBands}}
+                                <div class="m-rastermanagement-band-item">
+                                    <input type="number" class="m-rastermanagement-mean-band" name="mean-band" min="1" step="1" value="{{this}}" tabindex="0" aria-label="{{../band}}">
+                                    <button type="button" class="m-rastermanagement-band-remove" title="{{../removeBand}}" aria-label="{{../removeBand}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-filters-grid">
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-mean-min">{{min}}</label>
+                                <input type="number" id="m-rastermanagement-mean-min" name="mean-min" step="0.01" value="{{rampDefaults.min}}" tabindex="0" aria-label="{{min}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-mean-max">{{max}}</label>
+                                <input type="number" id="m-rastermanagement-mean-max" name="mean-max" step="0.01" value="{{rampDefaults.max}}" tabindex="0" aria-label="{{max}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-mean-interpolation">{{interpolation}}</label>
+                                <select id="m-rastermanagement-mean-interpolation" name="mean-interpolation" tabindex="0" aria-label="{{interpolation}}">
+                                    <option value="linear" selected>{{interpolationLinear}}</option>
+                                    <option value="exponential">{{interpolationExponential}}</option>
+                                </select>
+                            </div>
+                            <div class="m-rastermanagement-filter-control m-rastermanagement-mean-base-control hidden">
+                                <label for="m-rastermanagement-mean-interpolation-base">{{interpolationBase}}</label>
+                                <input type="number" id="m-rastermanagement-mean-interpolation-base" name="mean-interpolation-base" min="0" step="0.01" value="{{rampDefaults.interpolationBase}}" tabindex="0" aria-label="{{interpolationBase}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-mean-nodata">{{nodata}}</label>
+                                <input type="number" id="m-rastermanagement-mean-nodata" name="mean-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-ramp-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{ramp}}</label>
+                                <button type="button" id="m-rastermanagement-mean-add-color" class="m-rastermanagement-ramp-action" title="{{addColor}}" aria-label="{{addColor}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-mean-ramp" class="m-rastermanagement-ramp-colors">
+                                {{#each rampDefaults.ramp}}
+                                <div class="m-rastermanagement-ramp-item">
+                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="m-rastermanagement-spectralindices-tab-content" class="m-rastermanagement-tab-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-spectralindices-tab">
-            <p>contenido indices espectrales</p>
+            <div id="m-rastermanagement-indices" role="tablist" aria-label="{{spectralIndices}}">
+                <button type="button" id="m-rastermanagement-ndvi-index" class="m-rastermanagement-index active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-ndvi-index-content">{{ndvi}}</button>
+                <button type="button" id="m-rastermanagement-ndwi-index" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-ndwi-index-content">{{ndwi}}</button>
+                <button type="button" id="m-rastermanagement-nbr-index" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-nbr-index-content">{{nbr}}</button>
+            </div>
+            <div id="m-rastermanagement-indices-contents">
+                <div id="m-rastermanagement-ndvi-index-content" class="m-rastermanagement-index-content" role="tabpanel" aria-labelledby="m-rastermanagement-ndvi-index">
+                    <div class="m-rastermanagement-index-form">
+                        <div class="m-rastermanagement-filters-grid">
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-nir">{{bandNir}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-nir" name="ndvi-nir" min="1" step="1" value="{{ndviDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-red">{{bandRed}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-red" name="ndvi-red" min="1" step="1" value="{{ndviDefaults.red}}" tabindex="0" aria-label="{{bandRed}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-min">{{min}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-min" name="ndvi-min" step="0.01" value="{{ndviDefaults.min}}" tabindex="0" aria-label="{{min}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-max">{{max}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-max" name="ndvi-max" step="0.01" value="{{ndviDefaults.max}}" tabindex="0" aria-label="{{max}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-interpolation">{{interpolation}}</label>
+                                <select id="m-rastermanagement-ndvi-interpolation" name="ndvi-interpolation" tabindex="0" aria-label="{{interpolation}}">
+                                    <option value="linear" selected>{{interpolationLinear}}</option>
+                                    <option value="exponential">{{interpolationExponential}}</option>
+                                </select>
+                            </div>
+                            <div class="m-rastermanagement-filter-control m-rastermanagement-ndvi-base-control hidden">
+                                <label for="m-rastermanagement-ndvi-interpolation-base">{{interpolationBase}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-interpolation-base" name="ndvi-interpolation-base" min="0" step="0.01" value="{{ndviDefaults.interpolationBase}}" tabindex="0" aria-label="{{interpolationBase}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndvi-nodata">{{nodata}}</label>
+                                <input type="number" id="m-rastermanagement-ndvi-nodata" name="ndvi-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-ramp-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{ramp}}</label>
+                                <button type="button" id="m-rastermanagement-ndvi-add-color" class="m-rastermanagement-ramp-action" title="{{addColor}}" aria-label="{{addColor}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-ndvi-ramp" class="m-rastermanagement-ramp-colors">
+                                {{#each ndviDefaults.ramp}}
+                                <div class="m-rastermanagement-ramp-item">
+                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="m-rastermanagement-ndwi-index-content" class="m-rastermanagement-index-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-ndwi-index">
+                    <div class="m-rastermanagement-index-form">
+                        <div class="m-rastermanagement-filters-grid">
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-green">{{bandGreen}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-green" name="ndwi-green" min="1" step="1" value="{{ndwiDefaults.green}}" tabindex="0" aria-label="{{bandGreen}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-nir">{{bandNir}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-nir" name="ndwi-nir" min="1" step="1" value="{{ndwiDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-min">{{min}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-min" name="ndwi-min" step="0.01" value="{{ndwiDefaults.min}}" tabindex="0" aria-label="{{min}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-max">{{max}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-max" name="ndwi-max" step="0.01" value="{{ndwiDefaults.max}}" tabindex="0" aria-label="{{max}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-interpolation">{{interpolation}}</label>
+                                <select id="m-rastermanagement-ndwi-interpolation" name="ndwi-interpolation" tabindex="0" aria-label="{{interpolation}}">
+                                    <option value="linear" selected>{{interpolationLinear}}</option>
+                                    <option value="exponential">{{interpolationExponential}}</option>
+                                </select>
+                            </div>
+                            <div class="m-rastermanagement-filter-control m-rastermanagement-ndwi-base-control hidden">
+                                <label for="m-rastermanagement-ndwi-interpolation-base">{{interpolationBase}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-interpolation-base" name="ndwi-interpolation-base" min="0" step="0.01" value="{{ndwiDefaults.interpolationBase}}" tabindex="0" aria-label="{{interpolationBase}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-ndwi-nodata">{{nodata}}</label>
+                                <input type="number" id="m-rastermanagement-ndwi-nodata" name="ndwi-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-ramp-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{ramp}}</label>
+                                <button type="button" id="m-rastermanagement-ndwi-add-color" class="m-rastermanagement-ramp-action" title="{{addColor}}" aria-label="{{addColor}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-ndwi-ramp" class="m-rastermanagement-ramp-colors">
+                                {{#each ndwiDefaults.ramp}}
+                                <div class="m-rastermanagement-ramp-item">
+                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="m-rastermanagement-nbr-index-content" class="m-rastermanagement-index-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-nbr-index">
+                    <div class="m-rastermanagement-index-form">
+                        <div class="m-rastermanagement-filters-grid">
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-nir">{{bandNir}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-nir" name="nbr-nir" min="1" step="1" value="{{nbrDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-swir">{{bandSwir}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-swir" name="nbr-swir" min="1" step="1" value="{{nbrDefaults.swir}}" tabindex="0" aria-label="{{bandSwir}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-min">{{min}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-min" name="nbr-min" step="0.01" value="{{nbrDefaults.min}}" tabindex="0" aria-label="{{min}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-max">{{max}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-max" name="nbr-max" step="0.01" value="{{nbrDefaults.max}}" tabindex="0" aria-label="{{max}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-interpolation">{{interpolation}}</label>
+                                <select id="m-rastermanagement-nbr-interpolation" name="nbr-interpolation" tabindex="0" aria-label="{{interpolation}}">
+                                    <option value="linear" selected>{{interpolationLinear}}</option>
+                                    <option value="exponential">{{interpolationExponential}}</option>
+                                </select>
+                            </div>
+                            <div class="m-rastermanagement-filter-control m-rastermanagement-nbr-base-control hidden">
+                                <label for="m-rastermanagement-nbr-interpolation-base">{{interpolationBase}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-interpolation-base" name="nbr-interpolation-base" min="0" step="0.01" value="{{nbrDefaults.interpolationBase}}" tabindex="0" aria-label="{{interpolationBase}}">
+                            </div>
+                            <div class="m-rastermanagement-filter-control">
+                                <label for="m-rastermanagement-nbr-nodata">{{nodata}}</label>
+                                <input type="number" id="m-rastermanagement-nbr-nodata" name="nbr-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                            </div>
+                        </div>
+                        <div class="m-rastermanagement-ramp-control">
+                            <div class="m-rastermanagement-ramp-header">
+                                <label>{{ramp}}</label>
+                                <button type="button" id="m-rastermanagement-nbr-add-color" class="m-rastermanagement-ramp-action" title="{{addColor}}" aria-label="{{addColor}}">+</button>
+                            </div>
+                            <div id="m-rastermanagement-nbr-ramp" class="m-rastermanagement-ramp-colors">
+                                {{#each nbrDefaults.ramp}}
+                                <div class="m-rastermanagement-ramp-item">
+                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="m-rastermanagement-filters">

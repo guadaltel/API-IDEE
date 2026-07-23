@@ -116,7 +116,7 @@ layer.setStyle(new IDEE.style.Raster({
   bands: [8, 12], // [nir, swir] — índices según tu GeoTIFF (p. ej. Sentinel-2)
   min: -1,
   max: 1,
-  ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+  ramp: ['#d73027', '#fdae61', '#ffffbf', '#a6d96a', '#1a9850'],
 }));
 ```
 

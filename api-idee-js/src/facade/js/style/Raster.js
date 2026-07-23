@@ -1048,7 +1048,7 @@ Raster.DEFAULT_NBR = {
   bands: [1, 3],
   min: -1,
   max: 1,
-  ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+  ramp: ['#d73027', '#fdae61', '#ffffbf', '#a6d96a', '#1a9850'],
 };
 
 /**

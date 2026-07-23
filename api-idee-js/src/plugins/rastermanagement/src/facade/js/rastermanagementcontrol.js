@@ -19,6 +19,38 @@ const FILTER_DEFAULTS = {
   exposure: 0,
 };
 
+/**
+ * Identificadores de índices espectrales
+ * @constant
+ * @type {Array<string>}
+ */
+const SPECTRAL_INDICES = ['ndvi', 'ndwi', 'nbr'];
+
+/**
+ * Modos de rampa de color
+ * @constant
+ * @type {Array<string>}
+ */
+const COLOR_RAMP_MODES = ['monoband', 'mean'];
+
+/**
+ * Bandas por defecto para el modo media
+ * @constant
+ * @type {Array<number>}
+ */
+const MEAN_DEFAULT_BANDS = [1, 2, 3];
+
+/**
+ * Identificadores de bandas por índice
+ * @constant
+ * @type {object}
+ */
+const INDEX_BAND_IDS = {
+  ndvi: ['nir', 'red'],
+  ndwi: ['green', 'nir'],
+  nbr: ['nir', 'swir'],
+};
+
 export default class RasterManagementControl extends IDEE.Control {
   /**
    * @classdesc
@@ -78,12 +110,26 @@ export default class RasterManagementControl extends IDEE.Control {
    */
   createView(map) {
     this.map = map;
+    const ndviDefaults = IDEE.style.Raster.DEFAULT_NDVI;
+    const ndwiDefaults = IDEE.style.Raster.DEFAULT_NDWI;
+    const nbrDefaults = IDEE.style.Raster.DEFAULT_NBR;
+    const rasterDefaults = IDEE.style.Raster.DEFAULT_OPTIONS;
+    const interpolationBase = rasterDefaults.interpolationBase;
     return new Promise((success, fail) => {
       const html = IDEE.template.compileSync(template, {
         vars: {
           title: getValue('title'),
           colorRamps: getValue('colorRamps'),
+          monoband: getValue('monoband'),
+          bandsMean: getValue('bandsMean'),
+          band: getValue('band'),
+          bands: getValue('bands'),
+          addBand: getValue('addBand'),
+          removeBand: getValue('removeBand'),
           spectralIndices: getValue('spectralIndices'),
+          ndvi: getValue('ndvi'),
+          ndwi: getValue('ndwi'),
+          nbr: getValue('nbr'),
           filters: getValue('filters'),
           saturation: getValue('saturation'),
           gamma: getValue('gamma'),
@@ -95,14 +141,65 @@ export default class RasterManagementControl extends IDEE.Control {
           apply: getValue('apply'),
           clearStyle: getValue('clearStyle'),
           copyStyle: getValue('copyStyle'),
+          bandNir: getValue('bandNir'),
+          bandRed: getValue('bandRed'),
+          bandGreen: getValue('bandGreen'),
+          bandSwir: getValue('bandSwir'),
+          min: getValue('min'),
+          max: getValue('max'),
+          ramp: getValue('ramp'),
+          interpolation: getValue('interpolation'),
+          interpolationLinear: getValue('interpolationLinear'),
+          interpolationExponential: getValue('interpolationExponential'),
+          interpolationBase: getValue('interpolationBase'),
+          nodata: getValue('nodata'),
+          nodataOptional: getValue('nodataOptional'),
+          addColor: getValue('addColor'),
+          removeColor: getValue('removeColor'),
           defaults: FILTER_DEFAULTS,
+          rampDefaults: {
+            band: rasterDefaults.bands,
+            meanBands: MEAN_DEFAULT_BANDS,
+            min: rasterDefaults.min,
+            max: rasterDefaults.max,
+            ramp: rasterDefaults.ramp,
+            interpolationBase,
+          },
+          ndviDefaults: {
+            nir: ndviDefaults.bands[0],
+            red: ndviDefaults.bands[1],
+            min: ndviDefaults.min,
+            max: ndviDefaults.max,
+            ramp: ndviDefaults.ramp,
+            interpolationBase,
+          },
+          ndwiDefaults: {
+            green: ndwiDefaults.bands[0],
+            nir: ndwiDefaults.bands[1],
+            min: ndwiDefaults.min,
+            max: ndwiDefaults.max,
+            ramp: ndwiDefaults.ramp,
+            interpolationBase,
+          },
+          nbrDefaults: {
+            nir: nbrDefaults.bands[0],
+            swir: nbrDefaults.bands[1],
+            min: nbrDefaults.min,
+            max: nbrDefaults.max,
+            ramp: nbrDefaults.ramp,
+            interpolationBase,
+          },
         },
       });
       this.accessibilityTab(html);
       this.html = html;
       this.addTabEvents(html);
+      this.addIndexEvents(html);
+      this.addRampModeEvents(html);
       this.addLayerSelectorEvents(html);
       this.addFilterEvents(html);
+      this.addSpectralIndexEvents(html);
+      this.addColorRampEvents(html);
       this.refreshLayers();
 
       success(html);
@@ -119,6 +216,510 @@ export default class RasterManagementControl extends IDEE.Control {
   addTabEvents(html) {
     const tabsContainer = html.querySelector('#m-rastermanagement-tabs');
     tabsContainer.addEventListener('click', (evt) => this.toggleTabs(evt));
+  }
+
+  /**
+   * Añade los eventos de selección de índices espectrales
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addIndexEvents(html) {
+    const indicesContainer = html.querySelector('#m-rastermanagement-indices');
+    indicesContainer.addEventListener('click', (evt) => this.toggleIndices(evt));
+  }
+
+  /**
+   * Añade los eventos de selección de modos de rampa
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addRampModeEvents(html) {
+    const rampsContainer = html.querySelector('#m-rastermanagement-ramps');
+    rampsContainer.addEventListener('click', (evt) => this.toggleRampModes(evt));
+  }
+
+  /**
+   * Añade los eventos de los formularios de índices espectrales
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addSpectralIndexEvents(html) {
+    SPECTRAL_INDICES.forEach((index) => {
+      const interpolationSelect = html.querySelector(`#m-rastermanagement-${index}-interpolation`);
+      const addColorBtn = html.querySelector(`#m-rastermanagement-${index}-add-color`);
+      const rampContainer = html.querySelector(`#m-rastermanagement-${index}-ramp`);
+      interpolationSelect.addEventListener('change', () => this.toggleIndexInterpolationBase(index));
+      addColorBtn.addEventListener('click', () => this.addIndexRampColor(index));
+      rampContainer.addEventListener('click', (evt) => this.onIndexRampClick(evt, index));
+      this.updateIndexRampRemoveButtons(index);
+    });
+  }
+
+  /**
+   * Añade los eventos de los formularios de rampas de color
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addColorRampEvents(html) {
+    COLOR_RAMP_MODES.forEach((mode) => {
+      const interpolationSelect = html.querySelector(`#m-rastermanagement-${mode}-interpolation`);
+      const addColorBtn = html.querySelector(`#m-rastermanagement-${mode}-add-color`);
+      const rampContainer = html.querySelector(`#m-rastermanagement-${mode}-ramp`);
+      interpolationSelect.addEventListener('change', () => this.toggleIndexInterpolationBase(mode));
+      addColorBtn.addEventListener('click', () => this.addIndexRampColor(mode));
+      rampContainer.addEventListener('click', (evt) => this.onIndexRampClick(evt, mode));
+      this.updateIndexRampRemoveButtons(mode);
+    });
+
+    const addBandBtn = html.querySelector('#m-rastermanagement-mean-add-band');
+    const bandsContainer = html.querySelector('#m-rastermanagement-mean-bands');
+    addBandBtn.addEventListener('click', () => this.addMeanBand());
+    bandsContainer.addEventListener('click', (evt) => this.onMeanBandsClick(evt));
+    this.updateMeanBandRemoveButtons();
+  }
+
+  /**
+   * Obtiene los valores por defecto del índice indicado
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @returns {object}
+   */
+  getIndexDefaults(index) {
+    if (index === 'ndwi') {
+      return IDEE.style.Raster.DEFAULT_NDWI;
+    }
+    if (index === 'nbr') {
+      return IDEE.style.Raster.DEFAULT_NBR;
+    }
+    return IDEE.style.Raster.DEFAULT_NDVI;
+  }
+
+  /**
+   * Obtiene la fórmula del índice indicado
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @returns {string}
+   */
+  getIndexFormula(index) {
+    if (index === 'ndwi') {
+      return IDEE.style.Raster.FORMULA.NDWI;
+    }
+    if (index === 'nbr') {
+      return IDEE.style.Raster.FORMULA.NBR;
+    }
+    return IDEE.style.Raster.FORMULA.NDVI;
+  }
+
+  /**
+   * Gestiona los clics en la rampa de un índice (eliminar color)
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic
+   * @param {string} index Identificador del índice
+   */
+  onIndexRampClick(evt, index) {
+    const removeBtn = evt.target.closest('.m-rastermanagement-ramp-remove');
+    if (!removeBtn) {
+      return;
+    }
+    this.removeIndexRampColor(index, removeBtn);
+  }
+
+  /**
+   * Añade un color a la rampa de un índice
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   */
+  addIndexRampColor(index) {
+    const rampContainer = this.html.querySelector(`#m-rastermanagement-${index}-ramp`);
+    const colorInputs = rampContainer.querySelectorAll('.m-rastermanagement-ramp-color');
+    let color = '#018571';
+    if (colorInputs.length > 0) {
+      color = colorInputs[colorInputs.length - 1].value;
+    }
+    rampContainer.appendChild(this.createIndexRampItem(color));
+    this.updateIndexRampRemoveButtons(index);
+    this.accessibilityTab(this.html);
+  }
+
+  /**
+   * Elimina un color de la rampa de un índice
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @param {HTMLElement} removeBtn Botón de eliminar
+   */
+  removeIndexRampColor(index, removeBtn) {
+    const rampContainer = this.html.querySelector(`#m-rastermanagement-${index}-ramp`);
+    const items = rampContainer.querySelectorAll('.m-rastermanagement-ramp-item');
+    if (items.length <= 2) {
+      IDEE.toast.warning(getValue('exception.invalidRamp'), null, 6000);
+      return;
+    }
+    const item = removeBtn.closest('.m-rastermanagement-ramp-item');
+    if (item) {
+      item.remove();
+    }
+    this.updateIndexRampRemoveButtons(index);
+  }
+
+  /**
+   * Crea un elemento de color de rampa
+   *
+   * @private
+   * @function
+   * @param {string} color Color hexadecimal
+   * @returns {HTMLElement}
+   */
+  createIndexRampItem(color) {
+    const item = document.createElement('div');
+    item.className = 'm-rastermanagement-ramp-item';
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'm-rastermanagement-ramp-color';
+    colorInput.value = color;
+    colorInput.setAttribute('tabindex', '0');
+    colorInput.setAttribute('aria-label', getValue('ramp'));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'm-rastermanagement-ramp-remove';
+    removeBtn.title = getValue('removeColor');
+    removeBtn.setAttribute('aria-label', getValue('removeColor'));
+    removeBtn.setAttribute('tabindex', '0');
+    removeBtn.textContent = '−';
+
+    item.appendChild(colorInput);
+    item.appendChild(removeBtn);
+    return item;
+  }
+
+  /**
+   * Actualiza el estado de los botones de eliminar color de la rampa
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   */
+  updateIndexRampRemoveButtons(index) {
+    const rampContainer = this.html.querySelector(`#m-rastermanagement-${index}-ramp`);
+    const items = rampContainer.querySelectorAll('.m-rastermanagement-ramp-item');
+    const canRemove = items.length > 2;
+    items.forEach((item) => {
+      const removeBtn = item.querySelector('.m-rastermanagement-ramp-remove');
+      removeBtn.disabled = !canRemove;
+    });
+  }
+
+  /**
+   * Reconstruye la rampa de un índice con los colores indicados
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @param {Array<string>} colors Colores de la rampa
+   */
+  renderIndexRamp(index, colors) {
+    const rampContainer = this.html.querySelector(`#m-rastermanagement-${index}-ramp`);
+    rampContainer.innerHTML = '';
+    colors.forEach((color) => {
+      rampContainer.appendChild(this.createIndexRampItem(color));
+    });
+    this.updateIndexRampRemoveButtons(index);
+    this.accessibilityTab(this.html);
+  }
+
+  /**
+   * Muestra u oculta la base de interpolación de un índice
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   */
+  toggleIndexInterpolationBase(index) {
+    const interpolationSelect = this.html.querySelector(`#m-rastermanagement-${index}-interpolation`);
+    const baseControl = this.html.querySelector(`.m-rastermanagement-${index}-base-control`);
+    if (interpolationSelect.value === 'exponential') {
+      baseControl.classList.remove('hidden');
+    } else {
+      baseControl.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Indica si la pestaña de índices espectrales está activa
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isSpectralIndicesTabActive() {
+    const tab = this.html.querySelector('#m-rastermanagement-spectralindices-tab');
+    return tab.classList.contains('active');
+  }
+
+  /**
+   * Devuelve el índice espectral activo
+   *
+   * @private
+   * @function
+   * @returns {string|null}
+   */
+  getActiveSpectralIndex() {
+    for (let i = 0; i < SPECTRAL_INDICES.length; i += 1) {
+      const index = SPECTRAL_INDICES[i];
+      const button = this.html.querySelector(`#m-rastermanagement-${index}-index`);
+      if (button.classList.contains('active')) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Cambia el índice espectral activo
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en un índice
+   */
+  toggleIndices(evt) {
+    evt.stopPropagation();
+    let index = evt.target;
+    if (!index.classList.contains('m-rastermanagement-index')) {
+      index = index.closest('.m-rastermanagement-index');
+    }
+    if (!index) {
+      return;
+    }
+
+    const indices = index.parentNode.children;
+    for (let i = 0; i < indices.length; i += 1) {
+      const child = indices.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    index.classList.add('active');
+    index.setAttribute('aria-selected', 'true');
+
+    const indicesContent = this.html.querySelector('#m-rastermanagement-indices-contents').children;
+    for (let i = 0; i < indicesContent.length; i += 1) {
+      const child = indicesContent.item(i);
+      if (child.id !== `${index.id}-content`) {
+        child.classList.add('hidden');
+      } else if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
+  }
+
+  /**
+   * Cambia el modo de rampa de color activo
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en un modo
+   */
+  toggleRampModes(evt) {
+    evt.stopPropagation();
+    let mode = evt.target;
+    if (!mode.classList.contains('m-rastermanagement-index')) {
+      mode = mode.closest('.m-rastermanagement-index');
+    }
+    if (!mode) {
+      return;
+    }
+
+    const modes = mode.parentNode.children;
+    for (let i = 0; i < modes.length; i += 1) {
+      const child = modes.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    mode.classList.add('active');
+    mode.setAttribute('aria-selected', 'true');
+
+    const modesContent = this.html.querySelector('#m-rastermanagement-ramps-contents').children;
+    for (let i = 0; i < modesContent.length; i += 1) {
+      const child = modesContent.item(i);
+      if (child.id !== `${mode.id}-content`) {
+        child.classList.add('hidden');
+      } else if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
+  }
+
+  /**
+   * Indica si la pestaña de rampas de color está activa
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isColorRampsTabActive() {
+    const tab = this.html.querySelector('#m-rastermanagement-colorramps-tab');
+    return tab.classList.contains('active');
+  }
+
+  /**
+   * Devuelve el modo de rampa de color activo
+   *
+   * @private
+   * @function
+   * @returns {string|null}
+   */
+  getActiveColorRampMode() {
+    for (let i = 0; i < COLOR_RAMP_MODES.length; i += 1) {
+      const mode = COLOR_RAMP_MODES[i];
+      const button = this.html.querySelector(`#m-rastermanagement-${mode}-mode`);
+      if (button.classList.contains('active')) {
+        return mode;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Gestiona los clics en la lista de bandas del modo media
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic
+   */
+  onMeanBandsClick(evt) {
+    const removeBtn = evt.target.closest('.m-rastermanagement-band-remove');
+    if (!removeBtn) {
+      return;
+    }
+    this.removeMeanBand(removeBtn);
+  }
+
+  /**
+   * Añade una banda al modo media
+   *
+   * @private
+   * @function
+   */
+  addMeanBand() {
+    const bandsContainer = this.html.querySelector('#m-rastermanagement-mean-bands');
+    const bandInputs = bandsContainer.querySelectorAll('.m-rastermanagement-mean-band');
+    let bandValue = 1;
+    if (bandInputs.length > 0) {
+      const lastValue = parseInt(bandInputs[bandInputs.length - 1].value, 10);
+      if (!Number.isNaN(lastValue) && lastValue >= 1) {
+        bandValue = lastValue + 1;
+      }
+    }
+    bandsContainer.appendChild(this.createMeanBandItem(bandValue));
+    this.updateMeanBandRemoveButtons();
+    this.accessibilityTab(this.html);
+  }
+
+  /**
+   * Elimina una banda del modo media
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} removeBtn Botón de eliminar
+   */
+  removeMeanBand(removeBtn) {
+    const bandsContainer = this.html.querySelector('#m-rastermanagement-mean-bands');
+    const items = bandsContainer.querySelectorAll('.m-rastermanagement-band-item');
+    if (items.length <= 2) {
+      IDEE.toast.warning(getValue('exception.invalidMeanBands'), null, 6000);
+      return;
+    }
+    const item = removeBtn.closest('.m-rastermanagement-band-item');
+    if (item) {
+      item.remove();
+    }
+    this.updateMeanBandRemoveButtons();
+  }
+
+  /**
+   * Crea un elemento de banda para el modo media
+   *
+   * @private
+   * @function
+   * @param {number} bandValue Número de banda
+   * @returns {HTMLElement}
+   */
+  createMeanBandItem(bandValue) {
+    const item = document.createElement('div');
+    item.className = 'm-rastermanagement-band-item';
+
+    const bandInput = document.createElement('input');
+    bandInput.type = 'number';
+    bandInput.className = 'm-rastermanagement-mean-band';
+    bandInput.name = 'mean-band';
+    bandInput.min = '1';
+    bandInput.step = '1';
+    bandInput.value = bandValue;
+    bandInput.setAttribute('tabindex', '0');
+    bandInput.setAttribute('aria-label', getValue('band'));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'm-rastermanagement-band-remove';
+    removeBtn.title = getValue('removeBand');
+    removeBtn.setAttribute('aria-label', getValue('removeBand'));
+    removeBtn.setAttribute('tabindex', '0');
+    removeBtn.textContent = '−';
+
+    item.appendChild(bandInput);
+    item.appendChild(removeBtn);
+    return item;
+  }
+
+  /**
+   * Actualiza el estado de los botones de eliminar banda del modo media
+   *
+   * @private
+   * @function
+   */
+  updateMeanBandRemoveButtons() {
+    const bandsContainer = this.html.querySelector('#m-rastermanagement-mean-bands');
+    const items = bandsContainer.querySelectorAll('.m-rastermanagement-band-item');
+    const canRemove = items.length > 2;
+    items.forEach((item) => {
+      const removeBtn = item.querySelector('.m-rastermanagement-band-remove');
+      removeBtn.disabled = !canRemove;
+    });
+  }
+
+  /**
+   * Reconstruye las bandas del modo media
+   *
+   * @private
+   * @function
+   * @param {Array<number>} bands Números de banda
+   */
+  renderMeanBands(bands) {
+    const bandsContainer = this.html.querySelector('#m-rastermanagement-mean-bands');
+    bandsContainer.innerHTML = '';
+    bands.forEach((band) => {
+      bandsContainer.appendChild(this.createMeanBandItem(band));
+    });
+    this.updateMeanBandRemoveButtons();
+    this.accessibilityTab(this.html);
   }
 
   /**
@@ -331,7 +932,225 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
-   * Aplica el estilo Raster con los filtros a la capa seleccionada
+   * Obtiene las opciones de un índice espectral desde el formulario
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @returns {object|null}
+   */
+  getIndexOptions(index) {
+    const defaults = this.getIndexDefaults(index);
+    const bandIds = INDEX_BAND_IDS[index];
+    const band1 = parseInt(this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[0]}`).value, 10);
+    const band2 = parseInt(this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[1]}`).value, 10);
+
+    if (Number.isNaN(band1) || Number.isNaN(band2) || band1 < 1 || band2 < 1) {
+      IDEE.toast.warning(getValue('exception.invalidIndexBands'), null, 6000);
+      return null;
+    }
+
+    let min = parseFloat(this.html.querySelector(`#m-rastermanagement-${index}-min`).value);
+    let max = parseFloat(this.html.querySelector(`#m-rastermanagement-${index}-max`).value);
+    if (Number.isNaN(min)) {
+      min = defaults.min;
+    }
+    if (Number.isNaN(max)) {
+      max = defaults.max;
+    }
+
+    const interpolation = this.html.querySelector(`#m-rastermanagement-${index}-interpolation`).value;
+    const rampInputs = this.html.querySelectorAll(`#m-rastermanagement-${index}-ramp .m-rastermanagement-ramp-color`);
+    const ramp = [];
+    rampInputs.forEach((input) => {
+      ramp.push(input.value);
+    });
+
+    if (ramp.length < 2) {
+      IDEE.toast.warning(getValue('exception.invalidRamp'), null, 6000);
+      return null;
+    }
+
+    const options = {
+      formula: this.getIndexFormula(index),
+      bands: [band1, band2],
+      min,
+      max,
+      ramp,
+      interpolation,
+    };
+
+    if (interpolation === 'exponential') {
+      let interpolationBase = parseFloat(this.html.querySelector(`#m-rastermanagement-${index}-interpolation-base`).value);
+      if (Number.isNaN(interpolationBase)) {
+        interpolationBase = IDEE.style.Raster.DEFAULT_OPTIONS.interpolationBase;
+      }
+      options.interpolationBase = interpolationBase;
+    }
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${index}-nodata`).value;
+    if (nodataInput !== '') {
+      const nodata = parseFloat(nodataInput);
+      if (!Number.isNaN(nodata)) {
+        options.nodata = nodata;
+      }
+    }
+
+    return options;
+  }
+
+  /**
+   * Obtiene las opciones de rampa de color desde el formulario activo
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo de rampa (monoband | mean)
+   * @returns {object|null}
+   */
+  getColorRampOptions(mode) {
+    const defaults = IDEE.style.Raster.DEFAULT_OPTIONS;
+    let bands = null;
+
+    if (mode === 'monoband') {
+      const band = parseInt(this.html.querySelector('#m-rastermanagement-monoband-band').value, 10);
+      if (Number.isNaN(band) || band < 1) {
+        IDEE.toast.warning(getValue('exception.invalidRampBands'), null, 6000);
+        return null;
+      }
+      bands = band;
+    } else {
+      const bandInputs = this.html.querySelectorAll('#m-rastermanagement-mean-bands .m-rastermanagement-mean-band');
+      const meanBands = [];
+      let hasInvalidBand = false;
+      bandInputs.forEach((input) => {
+        const band = parseInt(input.value, 10);
+        if (Number.isNaN(band) || band < 1) {
+          hasInvalidBand = true;
+          return;
+        }
+        meanBands.push(band);
+      });
+      if (hasInvalidBand || meanBands.length < 2) {
+        IDEE.toast.warning(getValue('exception.invalidMeanBands'), null, 6000);
+        return null;
+      }
+      bands = meanBands;
+    }
+
+    let min = parseFloat(this.html.querySelector(`#m-rastermanagement-${mode}-min`).value);
+    let max = parseFloat(this.html.querySelector(`#m-rastermanagement-${mode}-max`).value);
+    if (Number.isNaN(min)) {
+      min = defaults.min;
+    }
+    if (Number.isNaN(max)) {
+      max = defaults.max;
+    }
+
+    const interpolation = this.html.querySelector(`#m-rastermanagement-${mode}-interpolation`).value;
+    const rampInputs = this.html.querySelectorAll(`#m-rastermanagement-${mode}-ramp .m-rastermanagement-ramp-color`);
+    const ramp = [];
+    rampInputs.forEach((input) => {
+      ramp.push(input.value);
+    });
+
+    if (ramp.length < 2) {
+      IDEE.toast.warning(getValue('exception.invalidRamp'), null, 6000);
+      return null;
+    }
+
+    const options = {
+      bands,
+      min,
+      max,
+      ramp,
+      interpolation,
+    };
+
+    if (interpolation === 'exponential') {
+      let interpolationBase = parseFloat(this.html.querySelector(`#m-rastermanagement-${mode}-interpolation-base`).value);
+      if (Number.isNaN(interpolationBase)) {
+        interpolationBase = defaults.interpolationBase;
+      }
+      options.interpolationBase = interpolationBase;
+    }
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${mode}-nodata`).value;
+    if (nodataInput !== '') {
+      const nodata = parseFloat(nodataInput);
+      if (!Number.isNaN(nodata)) {
+        options.nodata = nodata;
+      }
+    }
+
+    return options;
+  }
+
+  /**
+   * Restaura el formulario de un índice a los valores por defecto
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   */
+  resetIndexForm(index) {
+    const defaults = this.getIndexDefaults(index);
+    const bandIds = INDEX_BAND_IDS[index];
+    this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[0]}`).value = defaults.bands[0];
+    this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[1]}`).value = defaults.bands[1];
+    this.html.querySelector(`#m-rastermanagement-${index}-min`).value = defaults.min;
+    this.html.querySelector(`#m-rastermanagement-${index}-max`).value = defaults.max;
+    this.html.querySelector(`#m-rastermanagement-${index}-interpolation`).value = 'linear';
+    this.html.querySelector(`#m-rastermanagement-${index}-interpolation-base`).value = IDEE.style.Raster.DEFAULT_OPTIONS.interpolationBase;
+    this.html.querySelector(`#m-rastermanagement-${index}-nodata`).value = '';
+    this.toggleIndexInterpolationBase(index);
+    this.renderIndexRamp(index, defaults.ramp);
+  }
+
+  /**
+   * Restaura todos los formularios de índices espectrales
+   *
+   * @private
+   * @function
+   */
+  resetAllIndexForms() {
+    SPECTRAL_INDICES.forEach((index) => this.resetIndexForm(index));
+  }
+
+  /**
+   * Restaura el formulario de un modo de rampa a los valores por defecto
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo de rampa
+   */
+  resetColorRampForm(mode) {
+    const defaults = IDEE.style.Raster.DEFAULT_OPTIONS;
+    if (mode === 'monoband') {
+      this.html.querySelector('#m-rastermanagement-monoband-band').value = defaults.bands;
+    } else {
+      this.renderMeanBands(MEAN_DEFAULT_BANDS);
+    }
+    this.html.querySelector(`#m-rastermanagement-${mode}-min`).value = defaults.min;
+    this.html.querySelector(`#m-rastermanagement-${mode}-max`).value = defaults.max;
+    this.html.querySelector(`#m-rastermanagement-${mode}-interpolation`).value = 'linear';
+    this.html.querySelector(`#m-rastermanagement-${mode}-interpolation-base`).value = defaults.interpolationBase;
+    this.html.querySelector(`#m-rastermanagement-${mode}-nodata`).value = '';
+    this.toggleIndexInterpolationBase(mode);
+    this.renderIndexRamp(mode, defaults.ramp);
+  }
+
+  /**
+   * Restaura todos los formularios de rampas de color
+   *
+   * @private
+   * @function
+   */
+  resetAllColorRampForms() {
+    COLOR_RAMP_MODES.forEach((mode) => this.resetColorRampForm(mode));
+  }
+
+  /**
+   * Aplica el estilo Raster a la capa seleccionada
    *
    * @public
    * @function
@@ -344,6 +1163,33 @@ export default class RasterManagementControl extends IDEE.Control {
     }
 
     const filters = this.getFilterValues();
+    const activeIndex = this.getActiveSpectralIndex();
+    const activeRampMode = this.getActiveColorRampMode();
+
+    if (this.isSpectralIndicesTabActive() && activeIndex) {
+      const indexOptions = this.getIndexOptions(activeIndex);
+      if (!indexOptions) {
+        return;
+      }
+      this.selectedLayer.setStyle(new IDEE.style.Raster({
+        ...indexOptions,
+        ...filters,
+      }));
+      return;
+    }
+
+    if (this.isColorRampsTabActive() && activeRampMode) {
+      const rampOptions = this.getColorRampOptions(activeRampMode);
+      if (!rampOptions) {
+        return;
+      }
+      this.selectedLayer.setStyle(new IDEE.style.Raster({
+        ...rampOptions,
+        ...filters,
+      }));
+      return;
+    }
+
     const currentStyle = this.selectedLayer.getStyle();
     let options = { ...filters };
 
@@ -377,6 +1223,8 @@ export default class RasterManagementControl extends IDEE.Control {
     this.html.querySelector('#m-rastermanagement-contrast').value = FILTER_DEFAULTS.contrast;
     this.html.querySelector('#m-rastermanagement-exposure').value = FILTER_DEFAULTS.exposure;
     this.updateAllFilterValues();
+    this.resetAllIndexForms();
+    this.resetAllColorRampForms();
   }
 
   /**

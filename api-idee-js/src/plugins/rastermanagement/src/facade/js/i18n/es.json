@@ -3,7 +3,11 @@
     "impl": "La implementación usada no puede crear controles RasterManagementControl",
     "selectLayer": "Seleccione una capa GeoTIFF",
     "noStyle": "La capa seleccionada no tiene estilo",
-    "copyClipboard": "No se ha podido copiar el estilo al portapapeles"
+    "copyClipboard": "No se ha podido copiar el estilo al portapapeles",
+    "invalidIndexBands": "Las bandas del índice deben ser enteros mayores o iguales que 1",
+    "invalidRampBands": "La banda debe ser un entero mayor o igual que 1",
+    "invalidMeanBands": "La media requiere al menos 2 bandas enteras mayores o iguales que 1",
+    "invalidRamp": "La rampa debe tener al menos 2 colores"
   },
   "textHelp": {
     "help1": "Txt 1"
@@ -11,7 +15,16 @@
   "tooltip": "Gestor de estilos ráster",
   "title": "Gestor de estilos ráster",
   "colorRamps": "Rampas de color",
+  "monoband": "Monobanda",
+  "bandsMean": "Media",
+  "band": "Banda",
+  "bands": "Bandas",
+  "addBand": "Añadir banda",
+  "removeBand": "Eliminar banda",
   "spectralIndices": "Índices espectrales",
+  "ndvi": "NDVI",
+  "ndwi": "NDWI",
+  "nbr": "NBR",
   "filters": "Filtros",
   "saturation": "Saturación",
   "gamma": "Gamma",
@@ -24,5 +37,20 @@
   "clearStyle": "Quitar estilo",
   "copyStyle": "Copiar estilo serializado",
   "clipboard": "Estilo copiado al portapapeles",
-  "serializedStyle": "Estilo serializado"
+  "serializedStyle": "Estilo serializado",
+  "bandNir": "Banda NIR",
+  "bandRed": "Banda Red",
+  "bandGreen": "Banda Green",
+  "bandSwir": "Banda SWIR",
+  "min": "Mínimo",
+  "max": "Máximo",
+  "ramp": "Rampa de color",
+  "interpolation": "Interpolación",
+  "interpolationLinear": "Lineal",
+  "interpolationExponential": "Exponencial",
+  "interpolationBase": "Base de interpolación",
+  "nodata": "Nodata",
+  "nodataOptional": "Opcional",
+  "addColor": "Añadir color",
+  "removeColor": "Eliminar color"
 }
