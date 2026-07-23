@@ -98,6 +98,13 @@ export default class RasterManagementControl extends IDEE.Control {
      * @type { IDEE.layer.GeoTIFF|null }
      */
     this.selectedLayer = null;
+
+    /**
+     * Identificador de la última petición de roles de banda
+     * @private
+     * @type {number}
+     */
+    this.bandRolesRequestId_ = 0;
   }
 
   /**
@@ -907,6 +914,81 @@ export default class RasterManagementControl extends IDEE.Control {
         break;
       }
     }
+    this.suggestBandsFromSelectedLayer();
+  }
+
+  /**
+   * Sugiere bandas de índices a partir de metadatos GDAL de la capa
+   *
+   * @private
+   * @function
+   */
+  suggestBandsFromSelectedLayer() {
+    this.bandRolesRequestId_ += 1;
+    const requestId = this.bandRolesRequestId_;
+    const layer = this.selectedLayer;
+
+    if (!layer || typeof layer.getBandRoles !== 'function') {
+      return;
+    }
+
+    const applyRoles = (roles) => {
+      if (requestId !== this.bandRolesRequestId_) {
+        return;
+      }
+      if (this.selectedLayer !== layer) {
+        return;
+      }
+      if (!roles) {
+        return;
+      }
+      this.applySuggestedBandRoles(roles);
+    };
+
+    layer.getBandRoles().then((roles) => {
+      if (roles) {
+        applyRoles(roles);
+        return;
+      }
+      // La capa puede no estar lista aún: reintentar al LOAD
+      if (typeof layer.once === 'function') {
+        layer.once(IDEE.evt.LOAD, () => {
+          if (requestId !== this.bandRolesRequestId_) {
+            return;
+          }
+          layer.getBandRoles().then(applyRoles).catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(err);
+          });
+        });
+      }
+    }).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    });
+  }
+
+  /**
+   * Rellena los formularios de índices con los roles detectados
+   *
+   * @private
+   * @function
+   * @param {Object<string, number>} roles Mapa rol → banda (1-based)
+   */
+  applySuggestedBandRoles(roles) {
+    SPECTRAL_INDICES.forEach((index) => {
+      const bandIds = INDEX_BAND_IDS[index];
+      bandIds.forEach((role) => {
+        const bandNumber = roles[role];
+        if (!bandNumber) {
+          return;
+        }
+        const input = this.html.querySelector(`#m-rastermanagement-${index}-${role}`);
+        if (input) {
+          input.value = bandNumber;
+        }
+      });
+    });
   }
 
   /**
@@ -1225,6 +1307,7 @@ export default class RasterManagementControl extends IDEE.Control {
     this.updateAllFilterValues();
     this.resetAllIndexForms();
     this.resetAllColorRampForms();
+    this.suggestBandsFromSelectedLayer();
   }
 
   /**

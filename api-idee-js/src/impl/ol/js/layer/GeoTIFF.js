@@ -15,6 +15,59 @@ import LayerBase from './Layer';
 import ImplUtils from '../util/Utils';
 
 /**
+ * Valores habituales de COMMON_NAME (STAC) → rol canónico usado por la API.
+ * @constant
+ * @type {Object<string, string>}
+ */
+const COMMON_NAME_ROLES = {
+  red: 'red',
+  green: 'green',
+  blue: 'blue',
+  nir: 'nir',
+  nir08: 'nir',
+  nir09: 'nir',
+  swir: 'swir',
+  swir16: 'swir',
+  swir22: 'swir',
+};
+
+/**
+ * Resuelve el rol canónico a partir de COMMON_NAME.
+ *
+ * @param {Object|null} metadata Metadatos GDAL de la muestra
+ * @returns {string|null}
+ */
+function roleFromCommonName(metadata) {
+  if (!metadata || !metadata.COMMON_NAME) {
+    return null;
+  }
+  const key = String(metadata.COMMON_NAME).trim().toLowerCase();
+  if (COMMON_NAME_ROLES[key]) {
+    return COMMON_NAME_ROLES[key];
+  }
+  return null;
+}
+
+/**
+ * Obtiene la imagen GeoTIFF de mayor resolución disponible en la source OL
+ *
+ * @param {ol.source.GeoTIFF} source Fuente OpenLayers
+ * @returns {Object|null} GeoTIFFImage
+ */
+function getFullResolutionImage(source) {
+  if (!source || !source.sourceImagery_ || !source.sourceImagery_[0]) {
+    return null;
+  }
+  const images = source.sourceImagery_[0];
+  for (let i = images.length - 1; i >= 0; i -= 1) {
+    if (images[i]) {
+      return images[i];
+    }
+  }
+  return null;
+}
+
+/**
  * @classdesc
  * El formato ráster GeoTIFF aprovecha un formato de archivo independiente de plataforma (TIFF)
  * maduro añadiendo metadatos necesarios para describir y utilizar datos de imágenes geográficas.
@@ -312,6 +365,62 @@ class GeoTIFF extends LayerBase {
   }
 
   /**
+   * Obtiene roles espectrales solo desde COMMON_NAME de metadatos GDAL.
+   * Si el GeoTIFF no declara COMMON_NAME, devuelve null.
+   * Ejemplo: `{ red: 1, green: 2, blue: 3, nir: 4, swir: 5 }`.
+   *
+   * @public
+   * @function
+   * @returns {Promise<Object<string, number>|null>}
+   * @api stable
+   */
+  getBandRoles() {
+    if (this.bandRoles_) {
+      return Promise.resolve(this.bandRoles_);
+    }
+
+    if (!this.olLayer || !this.olLayer.getSource) {
+      return Promise.resolve(null);
+    }
+
+    const source = this.olLayer.getSource();
+    if (!source || !source.getView) {
+      return Promise.resolve(null);
+    }
+
+    return source.getView()
+      .then(() => {
+        const image = getFullResolutionImage(source);
+        if (!image || typeof image.getSamplesPerPixel !== 'function'
+          || typeof image.getGDALMetadata !== 'function') {
+          return null;
+        }
+
+        const sampleCount = image.getSamplesPerPixel();
+        const roles = {};
+
+        for (let sample = 0; sample < sampleCount; sample += 1) {
+          const role = roleFromCommonName(image.getGDALMetadata(sample));
+          if (role && roles[role] === undefined) {
+            roles[role] = sample + 1;
+          }
+        }
+
+        if (Object.keys(roles).length === 0) {
+          return null;
+        }
+
+        this.bandRoles_ = roles;
+        return roles;
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        return null;
+      });
+  }
+
+  /**
    * Este método crea la fuente ol para esta instancia.
    * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
    * @public
@@ -500,6 +609,7 @@ class GeoTIFF extends LayerBase {
       olMap.removeLayer(this.olLayer);
       this.olLayer = null;
     }
+    this.bandRoles_ = null;
     this.map = null;
   }
 

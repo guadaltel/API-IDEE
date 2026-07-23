@@ -276,6 +276,24 @@ class GeoTIFF extends LayerBase {
   }
 
   /**
+   * Obtiene roles espectrales solo desde COMMON_NAME de metadatos GDAL.
+   * Si el GeoTIFF no declara COMMON_NAME, devuelve null.
+   * Ejemplo: `{ red: 1, green: 2, blue: 3, nir: 4, swir: 5 }`.
+   *
+   * @function
+   * @public
+   * @returns {Promise<Object<string, number>|null>}
+   * @api
+   */
+  getBandRoles() {
+    const impl = this.getImpl();
+    if (!impl || typeof impl.getBandRoles !== 'function') {
+      return Promise.resolve(null);
+    }
+    return impl.getBandRoles();
+  }
+
+  /**
    * Devuelve las opciones de la capa.
    *
    * @function
