@@ -1,10 +1,28 @@
 {
   "exception": {
-    "impl": "La implementación usada no puede crear controles RasterManagementControl"
+    "impl": "La implementación usada no puede crear controles RasterManagementControl",
+    "selectLayer": "Seleccione una capa GeoTIFF",
+    "noStyle": "La capa seleccionada no tiene estilo",
+    "copyClipboard": "No se ha podido copiar el estilo al portapapeles"
   },
   "textHelp": {
     "help1": "Txt 1"
   },
   "tooltip": "Gestor de estilos ráster",
-  "title": "Gestor de estilos ráster"
+  "title": "Gestor de estilos ráster",
+  "colorRamps": "Rampas de color",
+  "spectralIndices": "Índices espectrales",
+  "filters": "Filtros",
+  "saturation": "Saturación",
+  "gamma": "Gamma",
+  "brightness": "Brillo",
+  "contrast": "Contraste",
+  "exposure": "Exposición",
+  "selectLayer": "Capa GeoTIFF",
+  "selectLayerDefault": "Seleccione una capa",
+  "apply": "Aplicar",
+  "clearStyle": "Quitar estilo",
+  "copyStyle": "Copiar estilo serializado",
+  "clipboard": "Estilo copiado al portapapeles",
+  "serializedStyle": "Estilo serializado"
 }

@@ -1,10 +1,28 @@
 {
   "exception": {
-    "impl": "The implementation used cannot create RasterManagementControl controls"
+    "impl": "The implementation used cannot create RasterManagementControl controls",
+    "selectLayer": "Select a GeoTIFF layer",
+    "noStyle": "The selected layer has no style",
+    "copyClipboard": "Could not copy the style to the clipboard"
   },
   "textHelp": {
     "help1": "Txt 1"
   },
   "tooltip": "Raster styles management",
-  "title": "Raster styles management"
+  "title": "Raster styles management",
+  "colorRamps": "Color ramps",
+  "spectralIndices": "Spectral indices",
+  "filters": "Filters",
+  "saturation": "Saturation",
+  "gamma": "Gamma",
+  "brightness": "Brightness",
+  "contrast": "Contrast",
+  "exposure": "Exposure",
+  "selectLayer": "GeoTIFF layer",
+  "selectLayerDefault": "Select a layer",
+  "apply": "Apply",
+  "clearStyle": "Clear style",
+  "copyStyle": "Copy serialized style",
+  "clipboard": "Style copied to clipboard",
+  "serializedStyle": "Serialized style"
 }
