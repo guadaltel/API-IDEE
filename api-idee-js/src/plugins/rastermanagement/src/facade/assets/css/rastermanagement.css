@@ -32,7 +32,7 @@
 
 #div-contenedor-m-rastermanagement {
     display: block;
-    width: 380px;
+    width: 460px;
     box-sizing: border-box;
 }
 
@@ -62,20 +62,25 @@
 
 #m-rastermanagement-tabs {
     display: flex;
+    flex-wrap: nowrap;
 }
 
 .m-rastermanagement-tab {
-    padding: 0 10px;
+    padding: 0 6px;
     cursor: pointer;
     font-weight: bold;
-    width: 50%;
+    flex: 1 1 0;
+    min-width: 0;
     text-align: center;
     font-family: 'Muli', 'sans-serif';
-    font-size: 13px;
+    font-size: 12px;
     line-height: 36px;
     color: #404040;
     background-color: #f5f5f5;
     border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .m-rastermanagement-tab.active {
@@ -159,16 +164,17 @@
 *********************/
 
 #m-rastermanagement-indices,
-#m-rastermanagement-ramps {
+#m-rastermanagement-ramps,
+#m-rastermanagement-rgb-modes {
     display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .m-rastermanagement-index {
     flex: 1;
     margin: 0;
-    padding: 6px 8px;
+    padding: 8px 10px;
     font-family: 'Muli', 'sans-serif';
     font-size: 13px;
     font-weight: bold;
@@ -197,7 +203,14 @@
 .m-rastermanagement-index-form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+}
+
+.m-rastermanagement-rgb-hint {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
 }
 
 .m-rastermanagement-index-form label {
@@ -378,13 +391,13 @@
 .m-rastermanagement-filters-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px 12px;
+    gap: 14px 20px;
 }
 
 .m-rastermanagement-filter-control {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     margin-bottom: 0;
     min-width: 0;
 }
@@ -410,10 +423,65 @@
 }
 
 .m-rastermanagement-filter-control > input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
+    height: 14px;
     margin: 0;
     cursor: pointer;
-    accent-color: #71a7d3;
+    background: transparent;
+    --range-progress: 50%;
+}
+
+.m-rastermanagement-filter-control > input[type='range']::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    background: linear-gradient(
+        to right,
+        #71a7d3 0%,
+        #71a7d3 var(--range-progress),
+        #d0d0d0 var(--range-progress),
+        #d0d0d0 100%
+    );
+}
+
+.m-rastermanagement-filter-control > input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border: none;
+    border-radius: 50%;
+    background-color: #71a7d3;
+    cursor: pointer;
+}
+
+.m-rastermanagement-filter-control > input[type='range']::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+    background-color: #d0d0d0;
+    cursor: pointer;
+}
+
+.m-rastermanagement-filter-control > input[type='range']::-moz-range-progress {
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+    background-color: #71a7d3;
+}
+
+.m-rastermanagement-filter-control > input[type='range']::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background-color: #71a7d3;
+    cursor: pointer;
 }
 
 .m-rastermanagement-filter-control > input[type='number'] {

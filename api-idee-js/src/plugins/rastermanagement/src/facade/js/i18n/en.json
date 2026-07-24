@@ -7,7 +7,8 @@
     "invalidIndexBands": "Index bands must be integers greater than or equal to 1",
     "invalidRampBands": "The band must be an integer greater than or equal to 1",
     "invalidMeanBands": "Mean requires at least 2 integer bands greater than or equal to 1",
-    "invalidRamp": "The ramp must have at least 2 colors"
+    "invalidRamp": "The ramp must have at least 2 colors",
+    "invalidRgbBands": "RGB bands must be integers greater than or equal to 1"
   },
   "textHelp": {
     "help1": "Txt 1"
@@ -22,6 +23,11 @@
   "addBand": "Add band",
   "removeBand": "Remove band",
   "spectralIndices": "Spectral indices",
+  "rgbCombinations": "RGB combinations",
+  "falseColorInfrared": "False color IR",
+  "trueColor": "True color",
+  "falseColorInfraredHint": "R = NIR, G = Red, B = Green",
+  "trueColorHint": "R = Red, G = Green, B = Blue",
   "ndvi": "NDVI",
   "ndwi": "NDWI",
   "nbr": "NBR",
@@ -41,6 +47,7 @@
   "bandNir": "NIR band",
   "bandRed": "Red band",
   "bandGreen": "Green band",
+  "bandBlue": "Blue band",
   "bandSwir": "SWIR band",
   "min": "Minimum",
   "max": "Maximum",

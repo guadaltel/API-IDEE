@@ -7,7 +7,8 @@
     "invalidIndexBands": "Las bandas del índice deben ser enteros mayores o iguales que 1",
     "invalidRampBands": "La banda debe ser un entero mayor o igual que 1",
     "invalidMeanBands": "La media requiere al menos 2 bandas enteras mayores o iguales que 1",
-    "invalidRamp": "La rampa debe tener al menos 2 colores"
+    "invalidRamp": "La rampa debe tener al menos 2 colores",
+    "invalidRgbBands": "Las bandas RGB deben ser enteros mayores o iguales que 1"
   },
   "textHelp": {
     "help1": "Txt 1"
@@ -22,6 +23,11 @@
   "addBand": "Añadir banda",
   "removeBand": "Eliminar banda",
   "spectralIndices": "Índices espectrales",
+  "rgbCombinations": "Combinaciones RGB",
+  "falseColorInfrared": "Falso color IR",
+  "trueColor": "Color verdadero",
+  "falseColorInfraredHint": "R = NIR, G = Rojo, B = Verde",
+  "trueColorHint": "R = Rojo, G = Verde, B = Azul",
   "ndvi": "NDVI",
   "ndwi": "NDWI",
   "nbr": "NBR",
@@ -41,6 +47,7 @@
   "bandNir": "Banda NIR",
   "bandRed": "Banda Red",
   "bandGreen": "Banda Green",
+  "bandBlue": "Banda Blue",
   "bandSwir": "Banda SWIR",
   "min": "Mínimo",
   "max": "Máximo",

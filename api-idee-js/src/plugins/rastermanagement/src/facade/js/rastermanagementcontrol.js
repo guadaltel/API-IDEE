@@ -51,6 +51,39 @@ const INDEX_BAND_IDS = {
   nbr: ['nir', 'swir'],
 };
 
+/**
+ * Modos de combinaciones RGB
+ * @constant
+ * @type {Array<string>}
+ */
+const RGB_COMBINATION_MODES = ['falsecolorir', 'truecolor'];
+
+/**
+ * Identificadores de bandas por combinación RGB (orden R, G, B)
+ * @constant
+ * @type {object}
+ */
+const RGB_BAND_IDS = {
+  falsecolorir: ['nir', 'red', 'green'],
+  truecolor: ['red', 'green', 'blue'],
+};
+
+/**
+ * Valores por defecto de combinaciones RGB
+ * @constant
+ * @type {object}
+ */
+const RGB_DEFAULTS = {
+  falsecolorir: {
+    bands: [4, 1, 2],
+    nodata: 0,
+  },
+  truecolor: {
+    bands: [1, 2, 3],
+    nodata: 0,
+  },
+};
+
 export default class RasterManagementControl extends IDEE.Control {
   /**
    * @classdesc
@@ -134,6 +167,11 @@ export default class RasterManagementControl extends IDEE.Control {
           addBand: getValue('addBand'),
           removeBand: getValue('removeBand'),
           spectralIndices: getValue('spectralIndices'),
+          rgbCombinations: getValue('rgbCombinations'),
+          falseColorInfrared: getValue('falseColorInfrared'),
+          trueColor: getValue('trueColor'),
+          falseColorInfraredHint: getValue('falseColorInfraredHint'),
+          trueColorHint: getValue('trueColorHint'),
           ndvi: getValue('ndvi'),
           ndwi: getValue('ndwi'),
           nbr: getValue('nbr'),
@@ -151,6 +189,7 @@ export default class RasterManagementControl extends IDEE.Control {
           bandNir: getValue('bandNir'),
           bandRed: getValue('bandRed'),
           bandGreen: getValue('bandGreen'),
+          bandBlue: getValue('bandBlue'),
           bandSwir: getValue('bandSwir'),
           min: getValue('min'),
           max: getValue('max'),
@@ -196,6 +235,18 @@ export default class RasterManagementControl extends IDEE.Control {
             ramp: nbrDefaults.ramp,
             interpolationBase,
           },
+          falseColorIrDefaults: {
+            nir: RGB_DEFAULTS.falsecolorir.bands[0],
+            red: RGB_DEFAULTS.falsecolorir.bands[1],
+            green: RGB_DEFAULTS.falsecolorir.bands[2],
+            nodata: RGB_DEFAULTS.falsecolorir.nodata,
+          },
+          trueColorDefaults: {
+            red: RGB_DEFAULTS.truecolor.bands[0],
+            green: RGB_DEFAULTS.truecolor.bands[1],
+            blue: RGB_DEFAULTS.truecolor.bands[2],
+            nodata: RGB_DEFAULTS.truecolor.nodata,
+          },
         },
       });
       this.accessibilityTab(html);
@@ -203,6 +254,7 @@ export default class RasterManagementControl extends IDEE.Control {
       this.addTabEvents(html);
       this.addIndexEvents(html);
       this.addRampModeEvents(html);
+      this.addRgbModeEvents(html);
       this.addLayerSelectorEvents(html);
       this.addFilterEvents(html);
       this.addSpectralIndexEvents(html);
@@ -247,6 +299,18 @@ export default class RasterManagementControl extends IDEE.Control {
   addRampModeEvents(html) {
     const rampsContainer = html.querySelector('#m-rastermanagement-ramps');
     rampsContainer.addEventListener('click', (evt) => this.toggleRampModes(evt));
+  }
+
+  /**
+   * Añade los eventos de selección de modos RGB
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addRgbModeEvents(html) {
+    const rgbContainer = html.querySelector('#m-rastermanagement-rgb-modes');
+    rgbContainer.addEventListener('click', (evt) => this.toggleRgbModes(evt));
   }
 
   /**
@@ -605,6 +669,73 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
+   * Indica si la pestaña de combinaciones RGB está activa
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isRgbCombinationsTabActive() {
+    const tab = this.html.querySelector('#m-rastermanagement-rgbcombinations-tab');
+    return tab.classList.contains('active');
+  }
+
+  /**
+   * Devuelve el modo de combinación RGB activo
+   *
+   * @private
+   * @function
+   * @returns {string|null}
+   */
+  getActiveRgbMode() {
+    for (let i = 0; i < RGB_COMBINATION_MODES.length; i += 1) {
+      const mode = RGB_COMBINATION_MODES[i];
+      const button = this.html.querySelector(`#m-rastermanagement-${mode}-mode`);
+      if (button.classList.contains('active')) {
+        return mode;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Cambia el modo de combinación RGB activo
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en un modo
+   */
+  toggleRgbModes(evt) {
+    evt.stopPropagation();
+    let mode = evt.target;
+    if (!mode.classList.contains('m-rastermanagement-index')) {
+      mode = mode.closest('.m-rastermanagement-index');
+    }
+    if (!mode) {
+      return;
+    }
+
+    const modes = mode.parentNode.children;
+    for (let i = 0; i < modes.length; i += 1) {
+      const child = modes.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    mode.classList.add('active');
+    mode.setAttribute('aria-selected', 'true');
+
+    const modesContent = this.html.querySelector('#m-rastermanagement-rgb-modes-contents').children;
+    for (let i = 0; i < modesContent.length; i += 1) {
+      const child = modesContent.item(i);
+      if (child.id !== `${mode.id}-content`) {
+        child.classList.add('hidden');
+      } else if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
+  }
+
+  /**
    * Gestiona los clics en la lista de bandas del modo media
    *
    * @private
@@ -766,6 +897,7 @@ export default class RasterManagementControl extends IDEE.Control {
     const gammaInput = html.querySelector('#m-rastermanagement-gamma');
     gammaInput.addEventListener('input', () => this.clampGammaInput());
     gammaInput.addEventListener('change', () => this.validateGammaInput());
+    this.updateAllFilterValues();
   }
 
   /**
@@ -813,10 +945,32 @@ export default class RasterManagementControl extends IDEE.Control {
   updateFilterValue(id) {
     const input = this.html.querySelector(`#m-rastermanagement-${id}`);
     const valueLabel = this.html.querySelector(`#m-rastermanagement-${id}-value`);
-    if (!valueLabel) {
+    if (valueLabel) {
+      valueLabel.textContent = input.value;
+    }
+    this.updateRangeProgress(input);
+  }
+
+  /**
+   * Sincroniza el relleno azul del range con el valor actual (Chrome/WebKit)
+   *
+   * @private
+   * @function
+   * @param {HTMLInputElement} input Input de tipo range
+   */
+  updateRangeProgress(input) {
+    if (!input || input.type !== 'range') {
       return;
     }
-    valueLabel.textContent = input.value;
+    const min = parseFloat(input.min);
+    const max = parseFloat(input.max);
+    const value = parseFloat(input.value);
+    const range = max - min;
+    let percent = 0;
+    if (range !== 0) {
+      percent = ((value - min) / range) * 100;
+    }
+    input.style.setProperty('--range-progress', `${percent}%`);
   }
 
   /**
@@ -984,6 +1138,20 @@ export default class RasterManagementControl extends IDEE.Control {
           return;
         }
         const input = this.html.querySelector(`#m-rastermanagement-${index}-${role}`);
+        if (input) {
+          input.value = bandNumber;
+        }
+      });
+    });
+
+    RGB_COMBINATION_MODES.forEach((mode) => {
+      const bandIds = RGB_BAND_IDS[mode];
+      bandIds.forEach((role) => {
+        const bandNumber = roles[role];
+        if (!bandNumber) {
+          return;
+        }
+        const input = this.html.querySelector(`#m-rastermanagement-${mode}-${role}`);
         if (input) {
           input.value = bandNumber;
         }
@@ -1232,6 +1400,77 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
+   * Obtiene las opciones de una combinación RGB desde el formulario
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo RGB (falsecolorir | truecolor)
+   * @returns {object|null}
+   */
+  getRgbCombinationOptions(mode) {
+    const defaults = RGB_DEFAULTS[mode];
+    const bandIds = RGB_BAND_IDS[mode];
+    const bands = [];
+    let hasInvalidBand = false;
+
+    bandIds.forEach((role) => {
+      const band = parseInt(this.html.querySelector(`#m-rastermanagement-${mode}-${role}`).value, 10);
+      if (Number.isNaN(band) || band < 1) {
+        hasInvalidBand = true;
+        return;
+      }
+      bands.push(band);
+    });
+
+    if (hasInvalidBand || bands.length !== 3) {
+      IDEE.toast.warning(getValue('exception.invalidRgbBands'), null, 6000);
+      return null;
+    }
+
+    const options = {
+      bands,
+    };
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${mode}-nodata`).value;
+    if (nodataInput !== '') {
+      const nodata = parseFloat(nodataInput);
+      if (!Number.isNaN(nodata)) {
+        options.nodata = nodata;
+      }
+    } else {
+      options.nodata = defaults.nodata;
+    }
+
+    return options;
+  }
+
+  /**
+   * Restaura el formulario de una combinación RGB a los valores por defecto
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo RGB
+   */
+  resetRgbCombinationForm(mode) {
+    const defaults = RGB_DEFAULTS[mode];
+    const bandIds = RGB_BAND_IDS[mode];
+    bandIds.forEach((role, index) => {
+      this.html.querySelector(`#m-rastermanagement-${mode}-${role}`).value = defaults.bands[index];
+    });
+    this.html.querySelector(`#m-rastermanagement-${mode}-nodata`).value = defaults.nodata;
+  }
+
+  /**
+   * Restaura todos los formularios de combinaciones RGB
+   *
+   * @private
+   * @function
+   */
+  resetAllRgbCombinationForms() {
+    RGB_COMBINATION_MODES.forEach((mode) => this.resetRgbCombinationForm(mode));
+  }
+
+  /**
    * Aplica el estilo Raster a la capa seleccionada
    *
    * @public
@@ -1247,6 +1486,7 @@ export default class RasterManagementControl extends IDEE.Control {
     const filters = this.getFilterValues();
     const activeIndex = this.getActiveSpectralIndex();
     const activeRampMode = this.getActiveColorRampMode();
+    const activeRgbMode = this.getActiveRgbMode();
 
     if (this.isSpectralIndicesTabActive() && activeIndex) {
       const indexOptions = this.getIndexOptions(activeIndex);
@@ -1267,6 +1507,18 @@ export default class RasterManagementControl extends IDEE.Control {
       }
       this.selectedLayer.setStyle(new IDEE.style.Raster({
         ...rampOptions,
+        ...filters,
+      }));
+      return;
+    }
+
+    if (this.isRgbCombinationsTabActive() && activeRgbMode) {
+      const rgbOptions = this.getRgbCombinationOptions(activeRgbMode);
+      if (!rgbOptions) {
+        return;
+      }
+      this.selectedLayer.setStyle(new IDEE.style.Raster({
+        ...rgbOptions,
         ...filters,
       }));
       return;
@@ -1307,6 +1559,7 @@ export default class RasterManagementControl extends IDEE.Control {
     this.updateAllFilterValues();
     this.resetAllIndexForms();
     this.resetAllColorRampForms();
+    this.resetAllRgbCombinationForms();
     this.suggestBandsFromSelectedLayer();
   }
 
