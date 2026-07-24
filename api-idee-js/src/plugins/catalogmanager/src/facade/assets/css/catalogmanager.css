@@ -81,6 +81,10 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
     display: none !important;
 }
 
+.form-container .form-row.flex-reverse {
+    flex-direction: row-reverse;
+}
+
 .form-container .form-row {
     display: flex;
     flex-wrap: wrap;
@@ -575,4 +579,11 @@ h3.m-catalogmanager-section-title>span.m-catalogmanager-icon {
 
 #m-catalogmanager-advanced-filters {
     max-width: calc(33vw - 20px);
+}
+
+.dialog-btn {
+    background-color: #71a7d3 !important;
+    color: white !important;
+    padding: 0.3rem;
+    border: none;
 }

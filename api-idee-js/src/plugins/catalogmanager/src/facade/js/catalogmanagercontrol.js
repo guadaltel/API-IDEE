@@ -5,6 +5,7 @@
 import CatalogmanagerImplControl from 'impl/catalogmanagercontrol';
 import template from 'templates/catalogmanager';
 import addCatalogTemplate from 'templates/addcatalog';
+import loginTemplate from 'templates/login';
 import contentTemplate from 'templates/catalogmanagercontent';
 import collectionsTemplate from 'templates/catalogmanagercollections';
 import itemsTemplate from 'templates/catalogmanageritems';
@@ -22,19 +23,22 @@ const BT_CLOSE_MODAL = 'div.m-dialog.info div.m-button > button';
 
 const INDICES_STYLES = {
   NDVI: {
-    min: -1,
+    min: 0,
     max: 1,
     ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
+    interpolation: 'linear',
   },
   NDWI: {
-    min: -1,
+    min: 0,
     max: 1,
     ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
+    interpolation: 'linear',
   },
   NBR: {
-    min: -1,
+    min: 0,
     max: 1,
-    ramp: ['#1a9850', '#a6d96a', '#ffffbf', '#fdae61', '#d73027'],
+    ramp: ['#d73027', '#fdae61', '#ffffbf', '#a6d96a', '#1a9850'],
+    interpolation: 'linear',
   },
 };
 
@@ -219,7 +223,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const authenticatePromises = [];
     this.predefinedCatalogs_.forEach((predCatalog) => {
       const catalog = new IDEE.stac.Catalog(predCatalog);
-      if (!predCatalog.public) {
+      if (!predCatalog.public && !IDEE.utils.isNullOrEmpty(predCatalog.user)
+          && !IDEE.utils.isNullOrEmpty(predCatalog.password)) {
         authenticatePromises.push(catalog.authenticate(predCatalog.user, predCatalog.password));
       }
       this.catalogs_.push(this.getJsonCatalog(catalog));
@@ -278,6 +283,43 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.changeCloseButtonModal();
     document.querySelector('#add-catalog').addEventListener('click', this.addCatalog.bind(this));
     document.querySelector('.m-catalogmanager-add-panel #cat-public').addEventListener('change', this.togglePublic.bind(this));
+  }
+
+  openLogin(callback) {
+    const html = IDEE.template.compileSync(loginTemplate, {
+      jsonp: true,
+      parseToHtml: false,
+      vars: {
+        translations: {
+          cat_user: getValue('cat_user'),
+          cat_password: getValue('cat_password'),
+          login: getValue('login'),
+          publicUser: getValue('publicUser'),
+        },
+      },
+    });
+    IDEE.dialog.info(html, `${getValue('loginCatalog')} ${this.catalogs_[this.selectedCatalogIndex_].title}`, this.order);
+    this.hideCloseButtonModal();
+    document.querySelector('#m-catalogmanager-login-catalog').addEventListener('click', this.loginCatalog.bind(this, false, callback));
+    document.querySelector('#m-catalogmanager-login-public').addEventListener('click', this.loginCatalog.bind(this, true, callback));
+  }
+
+  loginCatalog(isPublic, callback) {
+    const catalogObj = this.catalogs_[this.selectedCatalogIndex_].obj;
+    if (isPublic) {
+      catalogObj.public = true;
+      this.closeDialog();
+      callback();
+    } else {
+      const user = document.querySelector('#m-catalogmanager-user').value;
+      const password = document.querySelector('#m-catalogmanager-password').value;
+      catalogObj.authenticate(user, password).then((resp) => {
+        if (resp === true) {
+          this.closeDialog();
+          callback();
+        }
+      });
+    }
   }
 
   /**
@@ -1224,10 +1266,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const container = this.template_.querySelector('#m-catalogmanager-results-content');
     const itemsJson = this.getJsonItems(items.features, catalogIndex, collectionIndex);
     collection.items = itemsJson;
+    const downloadable = !catalog.obj.public;
     const html = IDEE.template.compileSync(itemsTemplate, {
       vars: {
         items: itemsJson,
-        downloadable: !catalog.obj.public,
+        downloadable,
         hasNotPrev: !this.linksHaveRel(items.links, 'previous'),
         hasNotNext: !this.linksHaveRel(items.links, 'next'),
         collectionTitle: collection.title,
@@ -1241,6 +1284,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
     container.innerHTML = html.outerHTML;
     container.classList.remove('empty', 'hidden');
+    const extraActionsContent = this.template_.querySelector('#m-catalogmanager-extra-actions-content');
+    if (!downloadable && !extraActionsContent.classList.contains('hidden')) {
+      extraActionsContent.classList.add('hidden');
+    } else if (downloadable) {
+      extraActionsContent.classList.remove('hidden');
+    }
     container.querySelector('.m-catalogmanager-ulitems').addEventListener('click', (evt) => this.itemsEvent(evt));
     container.querySelector('.m-catalogmanager-next-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'next'));
     container.querySelector('.m-catalogmanager-prev-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'previous'));
@@ -1308,10 +1357,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   changeCloseButtonModal() {
-    // Elements
     const button = document.querySelector(BT_CLOSE_MODAL);
-
     button.innerHTML = getValue('close');
+  }
+
+  hideCloseButtonModal() {
+    const button = document.querySelector(BT_CLOSE_MODAL);
+    button.classList.add('hidden');
   }
 
   /**
@@ -1451,7 +1503,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
       title: catalog.title,
       public: catalog.public,
       obj: catalog,
-      layerGroup: null,
       collections: [],
     };
   }
@@ -1471,8 +1522,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
   catalogEvent(evt) {
     evt.stopPropagation();
     const catalogIndex = evt.target.value;
+    this.selectedCatalogIndex_ = catalogIndex;
     const collectionsElement = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
     this.getCollections(catalogIndex, collectionsElement);
+    this.template_.querySelector('#m-catalogmanager-filters-advanced').innerHTML = '';
+    this.template_.querySelector('#m-catalogmanager-results-content').innerHTML = '';
   }
 
   /**
@@ -1485,9 +1539,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   getCollections(catalogIndex, collectionsElement) {
     const catalog = this.catalogs_[catalogIndex];
+    if (!catalog.obj.public && IDEE.utils.isNullOrEmpty(catalog.obj.token)) {
+      const callback = () => this.requestCollections(collectionsElement);
+      this.openLogin(callback);
+    } else {
+      this.requestCollections(collectionsElement);
+    }
+  }
+
+  requestCollections(collectionsElement) {
     const container = collectionsElement;
+    const catalog = this.catalogs_[this.selectedCatalogIndex_];
     catalog.obj.getCollections().then((collections) => {
-      const collectionsJson = this.getJsonCollections(collections, catalogIndex);
+      const collectionsJson = this.getJsonCollections(collections, this.selectedCatalogIndex_);
       catalog.collections = collectionsJson;
       const html = IDEE.template.compileSync(collectionsTemplate, {
         vars: {
@@ -1572,15 +1636,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
-    /* const collectionId = target.dataset.collectionId;
-    if (target.classList.contains('m-catalogmanager-footprint-button')) {
-      this.previewItems(catalogIndex, collectionIndex);
-      return;
-    }
-    if (target.classList.contains('m-catalogmanager-filter-button')) {
-      this.openAdvancedFilters(catalogIndex, collectionIndex);
-      return;
-    } */
     if (target.classList.contains('no-event')) {
       return;
     }
@@ -1856,7 +1911,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       normalize: IDEE.utils.isNullOrEmpty(styleSpec.indice),
       style,
     });
-    if (catalog.layerGroup === null) {
+    if (!catalog.layerGroup) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
         name: catalog.title,
         legend: catalog.title,
@@ -1883,7 +1938,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   previewItems(catalogIndex, collectionIndex, items) {
     const catalog = this.catalogs_[catalogIndex];
-    if (catalog.layerGroup === null) {
+    if (!catalog.layerGroup) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
         name: catalog.title,
         legend: catalog.title,

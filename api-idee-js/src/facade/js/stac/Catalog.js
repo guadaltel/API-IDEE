@@ -67,6 +67,7 @@ class Catalog extends Base {
     this.collectionsUrl = userParameters.collectionsUrl;
     this.title = userParameters.title || new URL(url).hostname;
     this.token = null;
+    this.refreshToken = null;
   }
 
   /**
@@ -98,6 +99,33 @@ class Catalog extends Base {
           const data = JSON.parse(response.text);
           if (data.access_token) {
             this.token = data.access_token;
+            this.refreshToken = data.refresh_token;
+            success(true);
+          }
+        } else {
+          const data = JSON.parse(response.text || '{}');
+          throw new Error(data.error);
+        }
+      }).catch((error) => {
+        fail(new Error(`${getValue('exception').catalog_token_error}: ${error.message}`));
+      });
+    });
+  }
+
+  refreshTokenAuth() {
+    const url = `${this.authUrl.substring(0, this.authUrl.lastIndexOf('/'))}/refresh-token`;
+    return new Promise((success, fail) => {
+      post(url, {
+        refreshToken: this.refreshToken,
+      }, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
+        if (response.code === 401 || response.code === 403) {
+          showError(getValue('exception').invalid_user_password);
+          throw new Error(getValue('exception').invalid_user_password);
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          if (data.access_token) {
+            this.token = data.access_token;
+            this.refreshToken = data.refresh_token;
             success(true);
           }
         } else {
@@ -137,12 +165,18 @@ class Catalog extends Base {
     return new Promise((success, fail) => {
       const body = this.token ? { accessToken: this.token } : null;
       post(`${this.collectionsUrl}`, body, { headers: { 'Content-Type': 'application/json' } }).then((response) => {
-        if (response.code !== 200) {
+        if (response.code === 401 || response.code === 403) {
+          this.refreshTokenAuth().then(() => {
+            this.getCollections().then((collections) => success(collections));
+          }).catch((error) => {
+            fail(new Error(`${getValue('exception').catalog_collections_error}: ${error.message}`));
+          });
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          success(data.collections);
+        } else {
           fail(new Error(getValue('exception').catalog_collections_error));
-          return;
         }
-        const data = JSON.parse(response.text);
-        success(data.collections);
       });
     });
   }
@@ -167,12 +201,18 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/queryables`, null, { headers }).then((response) => {
-        if (response.code !== 200) {
+        if (response.code === 401 || response.code === 403 || response.code === 503) {
+          this.refreshTokenAuth().then(() => {
+            this.getQueryableFields(collectionId).then((fields) => success(fields));
+          }).catch((error) => {
+            fail(new Error(`${getValue('exception').catalog_queryable_fields_error}: ${error.message}`));
+          });
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          success(data.properties || {});
+        } else {
           fail(new Error(getValue('exception').catalog_queryable_fields_error));
-          return;
         }
-        const data = JSON.parse(response.text);
-        success(data.properties || {});
       });
     });
   }
@@ -245,16 +285,18 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(url, params, { headers }).then((response) => {
-        if (response.code === 401 || response.code === 403) {
-          fail(new Error(getValue('exception').unauthorized_collection));
-          return;
-        }
-        if (response.code !== 200) {
+        if (response.code === 401 || response.code === 403 || response.code === 503) {
+          this.refreshTokenAuth().then(() => {
+            this.getItemsByUrl(url, params, errorMessage).then((data) => success(data));
+          }).catch((error) => {
+            fail(new Error(`${getValue('exception').catalog_items_error}: ${error.message}`));
+          });
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          success(data);
+        } else {
           fail(new Error(errorMessage));
-          return;
         }
-        const data = JSON.parse(response.text);
-        success(data);
       });
     });
   }
@@ -280,12 +322,18 @@ class Catalog extends Base {
     const headers = this.public || !this.token ? {} : { 'Authorization': `Bearer ${this.token}` };
     return new Promise((success, fail) => {
       get(`${this.url}/collections/${collectionId}/items/${itemId}`, null, { headers }).then((response) => {
-        if (response.code !== 200) {
+        if (response.code === 401 || response.code === 403 || response.code === 503) {
+          this.refreshTokenAuth().then(() => {
+            this.getItem(collectionId, itemId).then((data) => success(data));
+          }).catch((error) => {
+            fail(new Error(`${getValue('exception').catalog_item_error}: ${error.message}`));
+          });
+        } else if (response.code === 200) {
+          const data = JSON.parse(response.text);
+          success(data);
+        } else {
           fail(new Error(getValue('exception').catalog_item_error));
-          return;
         }
-        const data = JSON.parse(response.text);
-        success(data);
       });
     });
   }
@@ -394,12 +442,19 @@ class Catalog extends Base {
     }
     return new Promise((success, fail) => {
       post(url, body, { headers }).then((response) => {
-        if (response.code !== 200) {
+        if (response.code === 401 || response.code === 403 || response.code === 503) {
+          this.refreshTokenAuth().then(() => {
+            this.getFilteredItemsAdvancedByUrl(url, body, errorMessage)
+              .then((data) => success(data));
+          }).catch((error) => {
+            fail(new Error(`${errorMessage}: ${error.message}`));
+          });
+        } else if (response.code === 200) {
+          const responseData = JSON.parse(response.text);
+          success(responseData);
+        } else {
           fail(new Error(errorMessage));
-          return;
         }
-        const responseData = JSON.parse(response.text);
-        success(responseData);
       });
     });
   }
