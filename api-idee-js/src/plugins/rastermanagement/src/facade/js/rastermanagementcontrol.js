@@ -168,6 +168,8 @@ export default class RasterManagementControl extends IDEE.Control {
           removeBand: getValue('removeBand'),
           spectralIndices: getValue('spectralIndices'),
           rgbCombinations: getValue('rgbCombinations'),
+          basic: getValue('basic'),
+          basicHint: getValue('basicHint'),
           falseColorInfrared: getValue('falseColorInfrared'),
           trueColor: getValue('trueColor'),
           falseColorInfraredHint: getValue('falseColorInfraredHint'),
@@ -203,6 +205,9 @@ export default class RasterManagementControl extends IDEE.Control {
           addColor: getValue('addColor'),
           removeColor: getValue('removeColor'),
           defaults: FILTER_DEFAULTS,
+          basicDefaults: {
+            band: rasterDefaults.bands,
+          },
           rampDefaults: {
             band: rasterDefaults.bands,
             meanBands: MEAN_DEFAULT_BANDS,
@@ -681,6 +686,18 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
+   * Indica si la pestaña básica está activa
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isBasicTabActive() {
+    const tab = this.html.querySelector('#m-rastermanagement-basic-tab');
+    return tab.classList.contains('active');
+  }
+
+  /**
    * Devuelve el modo de combinación RGB activo
    *
    * @private
@@ -1068,7 +1085,394 @@ export default class RasterManagementControl extends IDEE.Control {
         break;
       }
     }
+    this.loadSelectedLayerStyle();
+  }
+
+  /**
+   * Carga en el formulario el estilo Raster de la capa seleccionada,
+   * o restaura valores por defecto y sugiere bandas si no hay estilo.
+   *
+   * @private
+   * @function
+   */
+  loadSelectedLayerStyle() {
+    if (!this.selectedLayer) {
+      return;
+    }
+
+    const style = this.selectedLayer.getStyle();
+    if (style instanceof IDEE.style.Raster) {
+      this.populateFormFromStyle(style);
+      return;
+    }
+
+    this.resetFormToDefaults();
     this.suggestBandsFromSelectedLayer();
+  }
+
+  /**
+   * Restaura filtros y formularios a los valores por defecto
+   *
+   * @private
+   * @function
+   */
+  resetFormToDefaults() {
+    this.html.querySelector('#m-rastermanagement-saturation').value = FILTER_DEFAULTS.saturation;
+    this.html.querySelector('#m-rastermanagement-gamma').value = FILTER_DEFAULTS.gamma;
+    this.html.querySelector('#m-rastermanagement-brightness').value = FILTER_DEFAULTS.brightness;
+    this.html.querySelector('#m-rastermanagement-contrast').value = FILTER_DEFAULTS.contrast;
+    this.html.querySelector('#m-rastermanagement-exposure').value = FILTER_DEFAULTS.exposure;
+    this.updateAllFilterValues();
+    this.resetAllIndexForms();
+    this.resetAllColorRampForms();
+    this.resetAllRgbCombinationForms();
+    this.resetBasicForm();
+    this.activatePanelSelection(
+      this.html.querySelector('#m-rastermanagement-colorramps-tab'),
+    );
+    this.activatePanelSelection(
+      this.html.querySelector('#m-rastermanagement-monoband-mode'),
+    );
+    this.activatePanelSelection(
+      this.html.querySelector('#m-rastermanagement-ndvi-index'),
+    );
+    this.activatePanelSelection(
+      this.html.querySelector('#m-rastermanagement-falsecolorir-mode'),
+    );
+  }
+
+  /**
+   * Rellena el formulario a partir de un estilo Raster
+   *
+   * @private
+   * @function
+   * @param {IDEE.style.Raster} style Estilo Raster
+   */
+  populateFormFromStyle(style) {
+    const options = style.getOptions();
+    this.resetFormToDefaults();
+    this.populateFiltersFromOptions(options);
+
+    if (!IDEE.utils.isNullOrEmpty(options.formula)
+      && SPECTRAL_INDICES.indexOf(options.formula) !== -1) {
+      this.activatePanelSelection(
+        this.html.querySelector('#m-rastermanagement-spectralindices-tab'),
+      );
+      this.activatePanelSelection(
+        this.html.querySelector(`#m-rastermanagement-${options.formula}-index`),
+      );
+      this.populateIndexFormFromOptions(options.formula, options);
+      return;
+    }
+
+    if (IDEE.style.Raster.hasRamp(options, true)) {
+      this.activatePanelSelection(
+        this.html.querySelector('#m-rastermanagement-colorramps-tab'),
+      );
+      const bands = options.bands;
+      if (IDEE.utils.isArray(bands) && bands.length >= 2) {
+        this.activatePanelSelection(
+          this.html.querySelector('#m-rastermanagement-mean-mode'),
+        );
+        this.populateColorRampFormFromOptions('mean', options);
+      } else {
+        this.activatePanelSelection(
+          this.html.querySelector('#m-rastermanagement-monoband-mode'),
+        );
+        this.populateColorRampFormFromOptions('monoband', options);
+      }
+      return;
+    }
+
+    if (IDEE.utils.isArray(options.bands) && options.bands.length === 3) {
+      this.activatePanelSelection(
+        this.html.querySelector('#m-rastermanagement-rgbcombinations-tab'),
+      );
+      const rgbMode = this.detectRgbMode(options.bands);
+      this.activatePanelSelection(
+        this.html.querySelector(`#m-rastermanagement-${rgbMode}-mode`),
+      );
+      this.populateRgbFormFromOptions(rgbMode, options);
+      return;
+    }
+
+    this.activatePanelSelection(
+      this.html.querySelector('#m-rastermanagement-basic-tab'),
+    );
+    this.populateBasicFormFromOptions(options);
+  }
+
+  /**
+   * Activa un botón/pestaña y muestra su contenido asociado
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} activeElement Elemento a activar
+   */
+  activatePanelSelection(activeElement) {
+    if (!activeElement || !activeElement.parentNode) {
+      return;
+    }
+
+    const siblings = activeElement.parentNode.children;
+    for (let i = 0; i < siblings.length; i += 1) {
+      const child = siblings.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    activeElement.classList.add('active');
+    activeElement.setAttribute('aria-selected', 'true');
+
+    const contentsContainer = activeElement.parentNode.nextElementSibling;
+    if (!contentsContainer) {
+      return;
+    }
+
+    const contentId = `${activeElement.id}-content`;
+    const contents = contentsContainer.children;
+    for (let i = 0; i < contents.length; i += 1) {
+      const child = contents.item(i);
+      if (child.id !== contentId) {
+        child.classList.add('hidden');
+      } else {
+        child.classList.remove('hidden');
+      }
+    }
+  }
+
+  /**
+   * Detecta el modo RGB más adecuado para las bandas dadas
+   *
+   * @private
+   * @function
+   * @param {Array<number>} bands Bandas R, G, B
+   * @returns {string}
+   */
+  detectRgbMode(bands) {
+    const trueColor = RGB_DEFAULTS.truecolor.bands;
+    if (bands[0] === trueColor[0]
+      && bands[1] === trueColor[1]
+      && bands[2] === trueColor[2]) {
+      return 'truecolor';
+    }
+    return 'falsecolorir';
+  }
+
+  /**
+   * Rellena los filtros desde opciones de estilo
+   *
+   * @private
+   * @function
+   * @param {object} options Opciones del estilo Raster
+   */
+  populateFiltersFromOptions(options) {
+    let saturation = FILTER_DEFAULTS.saturation;
+    if (!IDEE.utils.isNullOrEmpty(options.saturation) || options.saturation === 0) {
+      saturation = options.saturation;
+    }
+    let gamma = FILTER_DEFAULTS.gamma;
+    if (!IDEE.utils.isNullOrEmpty(options.gamma) || options.gamma === 0) {
+      gamma = options.gamma;
+    }
+    let brightness = FILTER_DEFAULTS.brightness;
+    if (!IDEE.utils.isNullOrEmpty(options.brightness) || options.brightness === 0) {
+      brightness = options.brightness;
+    }
+    let contrast = FILTER_DEFAULTS.contrast;
+    if (!IDEE.utils.isNullOrEmpty(options.contrast) || options.contrast === 0) {
+      contrast = options.contrast;
+    }
+    let exposure = FILTER_DEFAULTS.exposure;
+    if (!IDEE.utils.isNullOrEmpty(options.exposure) || options.exposure === 0) {
+      exposure = options.exposure;
+    }
+
+    this.html.querySelector('#m-rastermanagement-saturation').value = saturation;
+    this.html.querySelector('#m-rastermanagement-gamma').value = gamma;
+    this.html.querySelector('#m-rastermanagement-brightness').value = brightness;
+    this.html.querySelector('#m-rastermanagement-contrast').value = contrast;
+    this.html.querySelector('#m-rastermanagement-exposure').value = exposure;
+    this.updateAllFilterValues();
+  }
+
+  /**
+   * Rellena el formulario de un índice espectral desde opciones de estilo
+   *
+   * @private
+   * @function
+   * @param {string} index Identificador del índice
+   * @param {object} options Opciones del estilo Raster
+   */
+  populateIndexFormFromOptions(index, options) {
+    const defaults = this.getIndexDefaults(index);
+    const bandIds = INDEX_BAND_IDS[index];
+    let band1 = defaults.bands[0];
+    let band2 = defaults.bands[1];
+    if (IDEE.utils.isArray(options.bands) && options.bands.length === 2) {
+      band1 = options.bands[0];
+      band2 = options.bands[1];
+    }
+    this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[0]}`).value = band1;
+    this.html.querySelector(`#m-rastermanagement-${index}-${bandIds[1]}`).value = band2;
+
+    let min = defaults.min;
+    if (!IDEE.utils.isNullOrEmpty(options.min) || options.min === 0) {
+      min = options.min;
+    }
+    let max = defaults.max;
+    if (!IDEE.utils.isNullOrEmpty(options.max) || options.max === 0) {
+      max = options.max;
+    }
+    this.html.querySelector(`#m-rastermanagement-${index}-min`).value = min;
+    this.html.querySelector(`#m-rastermanagement-${index}-max`).value = max;
+
+    let interpolation = IDEE.style.Raster.DEFAULT_OPTIONS.interpolation;
+    if (!IDEE.utils.isNullOrEmpty(options.interpolation)) {
+      interpolation = options.interpolation;
+    }
+    this.html.querySelector(`#m-rastermanagement-${index}-interpolation`).value = interpolation;
+
+    let interpolationBase = IDEE.style.Raster.DEFAULT_OPTIONS.interpolationBase;
+    if (!IDEE.utils.isNullOrEmpty(options.interpolationBase)
+      || options.interpolationBase === 0) {
+      interpolationBase = options.interpolationBase;
+    }
+    this.html.querySelector(`#m-rastermanagement-${index}-interpolation-base`).value = interpolationBase;
+    this.toggleIndexInterpolationBase(index);
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${index}-nodata`);
+    if (!IDEE.utils.isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      nodataInput.value = options.nodata;
+    } else {
+      nodataInput.value = '';
+    }
+
+    let ramp = defaults.ramp;
+    if (IDEE.utils.isArray(options.ramp) && options.ramp.length >= 2) {
+      ramp = options.ramp;
+    }
+    this.renderIndexRamp(index, ramp);
+  }
+
+  /**
+   * Rellena el formulario de rampa de color desde opciones de estilo
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo de rampa (monoband | mean)
+   * @param {object} options Opciones del estilo Raster
+   */
+  populateColorRampFormFromOptions(mode, options) {
+    const defaults = IDEE.style.Raster.DEFAULT_OPTIONS;
+
+    if (mode === 'monoband') {
+      let band = defaults.bands;
+      if (!IDEE.utils.isNullOrEmpty(options.bands) || options.bands === 0) {
+        if (IDEE.utils.isArray(options.bands)) {
+          band = options.bands[0];
+        } else {
+          band = options.bands;
+        }
+      }
+      this.html.querySelector('#m-rastermanagement-monoband-band').value = band;
+    } else {
+      let meanBands = MEAN_DEFAULT_BANDS;
+      if (IDEE.utils.isArray(options.bands) && options.bands.length >= 2) {
+        meanBands = options.bands;
+      }
+      this.renderMeanBands(meanBands);
+    }
+
+    let min = defaults.min;
+    if (!IDEE.utils.isNullOrEmpty(options.min) || options.min === 0) {
+      min = options.min;
+    }
+    let max = defaults.max;
+    if (!IDEE.utils.isNullOrEmpty(options.max) || options.max === 0) {
+      max = options.max;
+    }
+    this.html.querySelector(`#m-rastermanagement-${mode}-min`).value = min;
+    this.html.querySelector(`#m-rastermanagement-${mode}-max`).value = max;
+
+    let interpolation = defaults.interpolation;
+    if (!IDEE.utils.isNullOrEmpty(options.interpolation)) {
+      interpolation = options.interpolation;
+    }
+    this.html.querySelector(`#m-rastermanagement-${mode}-interpolation`).value = interpolation;
+
+    let interpolationBase = defaults.interpolationBase;
+    if (!IDEE.utils.isNullOrEmpty(options.interpolationBase)
+      || options.interpolationBase === 0) {
+      interpolationBase = options.interpolationBase;
+    }
+    this.html.querySelector(`#m-rastermanagement-${mode}-interpolation-base`).value = interpolationBase;
+    this.toggleIndexInterpolationBase(mode);
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${mode}-nodata`);
+    if (!IDEE.utils.isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      nodataInput.value = options.nodata;
+    } else {
+      nodataInput.value = '';
+    }
+
+    let ramp = defaults.ramp;
+    if (IDEE.utils.isArray(options.ramp) && options.ramp.length >= 2) {
+      ramp = options.ramp;
+    }
+    this.renderIndexRamp(mode, ramp);
+  }
+
+  /**
+   * Rellena el formulario de combinación RGB desde opciones de estilo
+   *
+   * @private
+   * @function
+   * @param {string} mode Modo RGB (falsecolorir | truecolor)
+   * @param {object} options Opciones del estilo Raster
+   */
+  populateRgbFormFromOptions(mode, options) {
+    const defaults = RGB_DEFAULTS[mode];
+    const bandIds = RGB_BAND_IDS[mode];
+    let bands = defaults.bands;
+    if (IDEE.utils.isArray(options.bands) && options.bands.length === 3) {
+      bands = options.bands;
+    }
+    bandIds.forEach((role, index) => {
+      this.html.querySelector(`#m-rastermanagement-${mode}-${role}`).value = bands[index];
+    });
+
+    const nodataInput = this.html.querySelector(`#m-rastermanagement-${mode}-nodata`);
+    if (!IDEE.utils.isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      nodataInput.value = options.nodata;
+    } else {
+      nodataInput.value = defaults.nodata;
+    }
+  }
+
+  /**
+   * Rellena el formulario básico desde opciones de estilo
+   *
+   * @private
+   * @function
+   * @param {object} options Opciones del estilo Raster
+   */
+  populateBasicFormFromOptions(options) {
+    let band = IDEE.style.Raster.DEFAULT_OPTIONS.bands;
+    if (!IDEE.utils.isNullOrEmpty(options.bands) || options.bands === 0) {
+      if (IDEE.utils.isArray(options.bands)) {
+        band = options.bands[0];
+      } else {
+        band = options.bands;
+      }
+    }
+    this.html.querySelector('#m-rastermanagement-basic-band').value = band;
+
+    const nodataInput = this.html.querySelector('#m-rastermanagement-basic-nodata');
+    if (!IDEE.utils.isNullOrEmpty(options.nodata) || options.nodata === 0) {
+      nodataInput.value = options.nodata;
+    } else {
+      nodataInput.value = '';
+    }
   }
 
   /**
@@ -1471,6 +1875,51 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
+   * Obtiene las opciones del modo básico (filtros / nodata sin rampa)
+   *
+   * @private
+   * @function
+   * @returns {object|null}
+   */
+  getBasicOptions() {
+    const options = {};
+    const nodataInput = this.html.querySelector('#m-rastermanagement-basic-nodata').value;
+    const bandInput = this.html.querySelector('#m-rastermanagement-basic-band').value;
+
+    if (nodataInput !== '') {
+      const nodata = parseFloat(nodataInput);
+      if (Number.isNaN(nodata)) {
+        IDEE.toast.warning(getValue('exception.invalidBasicOptions'), null, 6000);
+        return null;
+      }
+      options.nodata = nodata;
+
+      let band = IDEE.style.Raster.DEFAULT_OPTIONS.bands;
+      if (bandInput !== '') {
+        band = parseInt(bandInput, 10);
+        if (Number.isNaN(band) || band < 1) {
+          IDEE.toast.warning(getValue('exception.invalidBasicBand'), null, 6000);
+          return null;
+        }
+      }
+      options.bands = band;
+    }
+
+    return options;
+  }
+
+  /**
+   * Restaura el formulario del modo básico
+   *
+   * @private
+   * @function
+   */
+  resetBasicForm() {
+    this.html.querySelector('#m-rastermanagement-basic-band').value = IDEE.style.Raster.DEFAULT_OPTIONS.bands;
+    this.html.querySelector('#m-rastermanagement-basic-nodata').value = '';
+  }
+
+  /**
    * Aplica el estilo Raster a la capa seleccionada
    *
    * @public
@@ -1524,6 +1973,23 @@ export default class RasterManagementControl extends IDEE.Control {
       return;
     }
 
+    if (this.isBasicTabActive()) {
+      const basicOptions = this.getBasicOptions();
+      if (!basicOptions) {
+        return;
+      }
+      const options = {
+        ...basicOptions,
+        ...filters,
+      };
+      if (!IDEE.style.Raster.optionsHaveEffect(options)) {
+        IDEE.toast.warning(getValue('exception.invalidBasicOptions'), null, 6000);
+        return;
+      }
+      this.selectedLayer.setStyle(new IDEE.style.Raster(options));
+      return;
+    }
+
     const currentStyle = this.selectedLayer.getStyle();
     let options = { ...filters };
 
@@ -1551,15 +2017,7 @@ export default class RasterManagementControl extends IDEE.Control {
     }
 
     this.selectedLayer.clearStyle();
-    this.html.querySelector('#m-rastermanagement-saturation').value = FILTER_DEFAULTS.saturation;
-    this.html.querySelector('#m-rastermanagement-gamma').value = FILTER_DEFAULTS.gamma;
-    this.html.querySelector('#m-rastermanagement-brightness').value = FILTER_DEFAULTS.brightness;
-    this.html.querySelector('#m-rastermanagement-contrast').value = FILTER_DEFAULTS.contrast;
-    this.html.querySelector('#m-rastermanagement-exposure').value = FILTER_DEFAULTS.exposure;
-    this.updateAllFilterValues();
-    this.resetAllIndexForms();
-    this.resetAllColorRampForms();
-    this.resetAllRgbCombinationForms();
+    this.resetFormToDefaults();
     this.suggestBandsFromSelectedLayer();
   }
 

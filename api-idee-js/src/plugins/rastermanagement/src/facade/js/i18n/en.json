@@ -8,7 +8,9 @@
     "invalidRampBands": "The band must be an integer greater than or equal to 1",
     "invalidMeanBands": "Mean requires at least 2 integer bands greater than or equal to 1",
     "invalidRamp": "The ramp must have at least 2 colors",
-    "invalidRgbBands": "RGB bands must be integers greater than or equal to 1"
+    "invalidRgbBands": "RGB bands must be integers greater than or equal to 1",
+    "invalidBasicBand": "The band must be an integer greater than or equal to 1",
+    "invalidBasicOptions": "Set nodata and/or change a filter from its default value"
   },
   "textHelp": {
     "help1": "Txt 1"
@@ -24,6 +26,8 @@
   "removeBand": "Remove band",
   "spectralIndices": "Spectral indices",
   "rgbCombinations": "RGB combinations",
+  "basic": "Basic",
+  "basicHint": "The filters below are applied without a color ramp or RGB combination. Nodata is optional.",
   "falseColorInfrared": "False color IR",
   "trueColor": "True color",
   "falseColorInfraredHint": "R = NIR, G = Red, B = Green",

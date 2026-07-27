@@ -13,6 +13,7 @@
         <div id="m-rastermanagement-colorramps-tab" class="m-rastermanagement-tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-colorramps-tab-content">{{colorRamps}}</div>
         <div id="m-rastermanagement-spectralindices-tab" class="m-rastermanagement-tab" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-spectralindices-tab-content">{{spectralIndices}}</div>
         <div id="m-rastermanagement-rgbcombinations-tab" class="m-rastermanagement-tab" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-rgbcombinations-tab-content">{{rgbCombinations}}</div>
+        <div id="m-rastermanagement-basic-tab" class="m-rastermanagement-tab" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-basic-tab-content">{{basic}}</div>
     </div>
     <div id="m-rastermanagement-tabs-contents">
         <div id="m-rastermanagement-colorramps-tab-content" class="m-rastermanagement-tab-content" role="tabpanel" aria-labelledby="m-rastermanagement-colorramps-tab">
@@ -341,6 +342,21 @@
                         <p class="m-rastermanagement-rgb-hint">{{trueColorHint}}</p>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div id="m-rastermanagement-basic-tab-content" class="m-rastermanagement-tab-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-basic-tab">
+            <div class="m-rastermanagement-index-form">
+                <div class="m-rastermanagement-filters-grid">
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-basic-band">{{band}}</label>
+                        <input type="number" id="m-rastermanagement-basic-band" name="basic-band" min="1" step="1" value="{{basicDefaults.band}}" tabindex="0" aria-label="{{band}}">
+                    </div>
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-basic-nodata">{{nodata}}</label>
+                        <input type="number" id="m-rastermanagement-basic-nodata" name="basic-nodata" step="any" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
+                    </div>
+                </div>
+                <p class="m-rastermanagement-rgb-hint">{{basicHint}}</p>
             </div>
         </div>
     </div>
