@@ -5,10 +5,11 @@
         <select tabindex="0" role="select" id="m-rastermanagement-selectionlayer" title="{{selectLayer}}" aria-label="{{selectLayer}}">
             <option value="" selected disabled>{{selectLayerDefault}}...</option>
         </select>
-        <button type="button" tabindex="0" id="m-rastermanagement-apply" class="g-cartografia-raster-apply" title="{{apply}}" aria-label="{{apply}}"></button>
-        <button type="button" tabindex="0" id="m-rastermanagement-clear" class="g-cartografia-raster-reset" title="{{clearStyle}}" aria-label="{{clearStyle}}"></button>
-        <button type="button" tabindex="0" id="m-rastermanagement-copy" class="g-cartografia-raster-copy" title="{{copyStyle}}" aria-label="{{copyStyle}}"></button>
+        <button type="button" tabindex="0" id="m-rastermanagement-apply" class="g-cartografia-raster-apply hidden" title="{{apply}}" aria-label="{{apply}}"></button>
+        <button type="button" tabindex="0" id="m-rastermanagement-clear" class="g-cartografia-raster-reset hidden" title="{{clearStyle}}" aria-label="{{clearStyle}}"></button>
+        <button type="button" tabindex="0" id="m-rastermanagement-copy" class="g-cartografia-raster-copy hidden" title="{{copyStyle}}" aria-label="{{copyStyle}}"></button>
     </div>
+    <div id="m-rastermanagement-editor" class="hidden">
     <div id="m-rastermanagement-tabs" role="tablist">
         <div id="m-rastermanagement-colorramps-tab" class="m-rastermanagement-tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-colorramps-tab-content">{{colorRamps}}</div>
         <div id="m-rastermanagement-spectralindices-tab" class="m-rastermanagement-tab" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-spectralindices-tab-content">{{spectralIndices}}</div>
@@ -61,8 +62,11 @@
                             <div id="m-rastermanagement-monoband-ramp" class="m-rastermanagement-ramp-colors">
                                 {{#each rampDefaults.ramp}}
                                 <div class="m-rastermanagement-ramp-item">
-                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
-                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    <div class="m-rastermanagement-ramp-swatch">
+                                        <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                        <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    </div>
+                                    <input type="number" class="m-rastermanagement-ramp-value" step="any" tabindex="0" aria-label="{{../rampStop}}">
                                 </div>
                                 {{/each}}
                             </div>
@@ -118,8 +122,11 @@
                             <div id="m-rastermanagement-mean-ramp" class="m-rastermanagement-ramp-colors">
                                 {{#each rampDefaults.ramp}}
                                 <div class="m-rastermanagement-ramp-item">
-                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
-                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    <div class="m-rastermanagement-ramp-swatch">
+                                        <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                        <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    </div>
+                                    <input type="number" class="m-rastermanagement-ramp-value" step="any" tabindex="0" aria-label="{{../rampStop}}">
                                 </div>
                                 {{/each}}
                             </div>
@@ -178,8 +185,11 @@
                             <div id="m-rastermanagement-ndvi-ramp" class="m-rastermanagement-ramp-colors">
                                 {{#each ndviDefaults.ramp}}
                                 <div class="m-rastermanagement-ramp-item">
-                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
-                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    <div class="m-rastermanagement-ramp-swatch">
+                                        <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                        <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    </div>
+                                    <input type="number" class="m-rastermanagement-ramp-value" step="any" tabindex="0" aria-label="{{../rampStop}}">
                                 </div>
                                 {{/each}}
                             </div>
@@ -229,8 +239,11 @@
                             <div id="m-rastermanagement-ndwi-ramp" class="m-rastermanagement-ramp-colors">
                                 {{#each ndwiDefaults.ramp}}
                                 <div class="m-rastermanagement-ramp-item">
-                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
-                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    <div class="m-rastermanagement-ramp-swatch">
+                                        <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                        <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    </div>
+                                    <input type="number" class="m-rastermanagement-ramp-value" step="any" tabindex="0" aria-label="{{../rampStop}}">
                                 </div>
                                 {{/each}}
                             </div>
@@ -280,8 +293,11 @@
                             <div id="m-rastermanagement-nbr-ramp" class="m-rastermanagement-ramp-colors">
                                 {{#each nbrDefaults.ramp}}
                                 <div class="m-rastermanagement-ramp-item">
-                                    <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
-                                    <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    <div class="m-rastermanagement-ramp-swatch">
+                                        <input type="color" class="m-rastermanagement-ramp-color" value="{{this}}" tabindex="0" aria-label="{{../ramp}}">
+                                        <button type="button" class="m-rastermanagement-ramp-remove" title="{{../removeColor}}" aria-label="{{../removeColor}}">−</button>
+                                    </div>
+                                    <input type="number" class="m-rastermanagement-ramp-value" step="any" tabindex="0" aria-label="{{../rampStop}}">
                                 </div>
                                 {{/each}}
                             </div>
@@ -291,57 +307,27 @@
             </div>
         </div>
         <div id="m-rastermanagement-rgbcombinations-tab-content" class="m-rastermanagement-tab-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-rgbcombinations-tab">
-            <div id="m-rastermanagement-rgb-modes" role="tablist" aria-label="{{rgbCombinations}}">
-                <button type="button" id="m-rastermanagement-falsecolorir-mode" class="m-rastermanagement-index active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-falsecolorir-mode-content">{{falseColorInfrared}}</button>
-                <button type="button" id="m-rastermanagement-truecolor-mode" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-truecolor-mode-content">{{trueColor}}</button>
-            </div>
-            <div id="m-rastermanagement-rgb-modes-contents">
-                <div id="m-rastermanagement-falsecolorir-mode-content" class="m-rastermanagement-index-content" role="tabpanel" aria-labelledby="m-rastermanagement-falsecolorir-mode">
-                    <div class="m-rastermanagement-index-form">
-                        <div class="m-rastermanagement-filters-grid">
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-falsecolorir-nir">{{bandNir}}</label>
-                                <input type="number" id="m-rastermanagement-falsecolorir-nir" name="falsecolorir-nir" min="1" step="1" value="{{falseColorIrDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-falsecolorir-red">{{bandRed}}</label>
-                                <input type="number" id="m-rastermanagement-falsecolorir-red" name="falsecolorir-red" min="1" step="1" value="{{falseColorIrDefaults.red}}" tabindex="0" aria-label="{{bandRed}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-falsecolorir-green">{{bandGreen}}</label>
-                                <input type="number" id="m-rastermanagement-falsecolorir-green" name="falsecolorir-green" min="1" step="1" value="{{falseColorIrDefaults.green}}" tabindex="0" aria-label="{{bandGreen}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-falsecolorir-nodata">{{nodata}}</label>
-                                <input type="number" id="m-rastermanagement-falsecolorir-nodata" name="falsecolorir-nodata" step="any" value="{{falseColorIrDefaults.nodata}}" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
-                            </div>
-                        </div>
-                        <p class="m-rastermanagement-rgb-hint">{{falseColorInfraredHint}}</p>
+            <div class="m-rastermanagement-index-form">
+                <h3 class="m-rastermanagement-section-title">{{rgbSubtitle}}</h3>
+                <div class="m-rastermanagement-filters-grid">
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-rgb-r">{{bandChannelR}}</label>
+                        <input type="number" id="m-rastermanagement-rgb-r" name="rgb-r" min="0" step="1" value="{{rgbDefaults.r}}" tabindex="0" aria-label="{{bandChannelR}}">
+                    </div>
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-rgb-g">{{bandChannelG}}</label>
+                        <input type="number" id="m-rastermanagement-rgb-g" name="rgb-g" min="0" step="1" value="{{rgbDefaults.g}}" tabindex="0" aria-label="{{bandChannelG}}">
+                    </div>
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-rgb-b">{{bandChannelB}}</label>
+                        <input type="number" id="m-rastermanagement-rgb-b" name="rgb-b" min="0" step="1" value="{{rgbDefaults.b}}" tabindex="0" aria-label="{{bandChannelB}}">
+                    </div>
+                    <div class="m-rastermanagement-filter-control">
+                        <label for="m-rastermanagement-rgb-nodata">{{nodata}}</label>
+                        <input type="number" id="m-rastermanagement-rgb-nodata" name="rgb-nodata" step="any" value="{{rgbDefaults.nodata}}" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
                     </div>
                 </div>
-                <div id="m-rastermanagement-truecolor-mode-content" class="m-rastermanagement-index-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-truecolor-mode">
-                    <div class="m-rastermanagement-index-form">
-                        <div class="m-rastermanagement-filters-grid">
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-truecolor-red">{{bandRed}}</label>
-                                <input type="number" id="m-rastermanagement-truecolor-red" name="truecolor-red" min="1" step="1" value="{{trueColorDefaults.red}}" tabindex="0" aria-label="{{bandRed}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-truecolor-green">{{bandGreen}}</label>
-                                <input type="number" id="m-rastermanagement-truecolor-green" name="truecolor-green" min="1" step="1" value="{{trueColorDefaults.green}}" tabindex="0" aria-label="{{bandGreen}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-truecolor-blue">{{bandBlue}}</label>
-                                <input type="number" id="m-rastermanagement-truecolor-blue" name="truecolor-blue" min="1" step="1" value="{{trueColorDefaults.blue}}" tabindex="0" aria-label="{{bandBlue}}">
-                            </div>
-                            <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-truecolor-nodata">{{nodata}}</label>
-                                <input type="number" id="m-rastermanagement-truecolor-nodata" name="truecolor-nodata" step="any" value="{{trueColorDefaults.nodata}}" tabindex="0" aria-label="{{nodata}}" placeholder="{{nodataOptional}}">
-                            </div>
-                        </div>
-                        <p class="m-rastermanagement-rgb-hint">{{trueColorHint}}</p>
-                    </div>
-                </div>
+                <p class="m-rastermanagement-rgb-hint">{{rgbHint}}</p>
             </div>
         </div>
         <div id="m-rastermanagement-basic-tab-content" class="m-rastermanagement-tab-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-basic-tab">
@@ -398,5 +384,6 @@
                 <input type="number" id="m-rastermanagement-gamma" name="gamma" min="0" value="{{defaults.gamma}}" step="0.01" tabindex="0" aria-label="{{gamma}}">
             </div>
         </div>
+    </div>
     </div>
 </div>

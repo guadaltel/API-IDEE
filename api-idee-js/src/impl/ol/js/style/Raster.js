@@ -118,24 +118,76 @@ class Raster extends Style {
   }
 
   /**
-   * Canales RGB del passthrough según bands.
+   * Expresión de un canal RGB: banda (>0) o literal 0 (canal apagado).
    *
    * @function
    * @private
-   * @returns {Array<Array>} Expresiones ['band', i] para R, G y B.
+   * @param {number} bandIndex Índice de banda (1-based) o 0.
+   * @returns {number|Array} Literal 0 o expresión ['band', i].
+   */
+  getChannelExpression_(bandIndex) {
+    const band = parseInt(bandIndex, 10);
+    if (Number.isNaN(band) || band <= 0) {
+      return 0;
+    }
+    return ['band', band];
+  }
+
+  /**
+   * Canales RGB del passthrough según bands.
+   * El valor 0 apaga el canal (literal 0), como en catalogmanager.
+   *
+   * @function
+   * @private
+   * @returns {Array<number|Array>} Expresiones de canal para R, G y B.
    */
   getPassthroughChannels_() {
     const { bands } = this.options_;
     if (!isArray(bands)) {
-      return [['band', bands], ['band', bands], ['band', bands]];
+      const channel = this.getChannelExpression_(bands);
+      return [channel, channel, channel];
     }
     if (bands.length >= 3) {
-      return [['band', bands[0]], ['band', bands[1]], ['band', bands[2]]];
+      return [
+        this.getChannelExpression_(bands[0]),
+        this.getChannelExpression_(bands[1]),
+        this.getChannelExpression_(bands[2]),
+      ];
     }
     if (bands.length === 2) {
-      return [['band', bands[0]], ['band', bands[1]], ['band', bands[1]]];
+      return [
+        this.getChannelExpression_(bands[0]),
+        this.getChannelExpression_(bands[1]),
+        this.getChannelExpression_(bands[1]),
+      ];
     }
-    return [['band', bands[0]], ['band', bands[0]], ['band', bands[0]]];
+    const channel = this.getChannelExpression_(bands[0]);
+    return [channel, channel, channel];
+  }
+
+  /**
+   * Primera banda > 0 de options.bands (para nodata en passthrough).
+   *
+   * @function
+   * @private
+   * @returns {number} Índice de banda o 1 por defecto.
+   */
+  getFirstPositiveBand_() {
+    const { bands } = this.options_;
+    if (!isArray(bands)) {
+      const band = parseInt(bands, 10);
+      if (!Number.isNaN(band) && band > 0) {
+        return band;
+      }
+      return 1;
+    }
+    for (let i = 0; i < bands.length; i += 1) {
+      const band = parseInt(bands[i], 10);
+      if (!Number.isNaN(band) && band > 0) {
+        return band;
+      }
+    }
+    return 1;
   }
 
   /**
@@ -158,7 +210,7 @@ class Raster extends Style {
 
   /**
    * Envuelve un color con transparencia para nodata.
-   * Sin rampa (passthrough RGB) compara siempre la banda 1, como catalogmanager.
+   * Sin rampa (passthrough RGB) usa la primera banda > 0.
    * Con rampa usa la primera banda de options.bands.
    *
    * @function
@@ -171,7 +223,7 @@ class Raster extends Style {
     if (!isNullOrEmpty(nodata) || nodata === 0) {
       let nodataBand = this.getNodataBand_();
       if (!this.hasRamp_()) {
-        nodataBand = 1;
+        nodataBand = this.getFirstPositiveBand_();
       }
       return [
         'case',
@@ -192,7 +244,7 @@ class Raster extends Style {
    */
   buildColorExpression_() {
     const {
-      min, max, ramp, nodata, interpolation,
+      min, max, ramp, nodata, interpolation, stops: customStops,
     } = this.options_;
 
     if (this.hasRamp_()) {
@@ -206,7 +258,16 @@ class Raster extends Style {
         rangeMax = 1;
       }
 
-      const stops = generateIntervals([rangeMin, rangeMax], ramp.length);
+      let stops = generateIntervals([rangeMin, rangeMax], ramp.length);
+      if (isArray(customStops) && customStops.length === ramp.length) {
+        if (rangeMin === min && rangeMax === max) {
+          stops = [...customStops];
+        } else if (max !== min) {
+          stops = customStops.map((stop) => {
+            return rangeMin + (((stop - min) / (max - min)) * (rangeMax - rangeMin));
+          });
+        }
+      }
       let interpolateMode = ['linear'];
       if (interpolation === 'exponential') {
         let exponentialBase = this.options_.interpolationBase;
@@ -226,7 +287,9 @@ class Raster extends Style {
       return this.wrapNodataCase_(colorExpression);
     }
 
-    if (!isNullOrEmpty(nodata) || nodata === 0) {
+    const hasNodata = !isNullOrEmpty(nodata) || nodata === 0;
+    const hasBands = !isNullOrEmpty(this.options_.bands) || this.options_.bands === 0;
+    if (hasNodata || hasBands) {
       const passthroughColor = this.getPassthroughColorExpression_();
       return this.wrapNodataCase_(passthroughColor);
     }

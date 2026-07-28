@@ -164,8 +164,7 @@
 *********************/
 
 #m-rastermanagement-indices,
-#m-rastermanagement-ramps,
-#m-rastermanagement-rgb-modes {
+#m-rastermanagement-ramps {
     display: flex;
     gap: 10px;
     margin-bottom: 16px;
@@ -305,6 +304,15 @@
 }
 
 .m-rastermanagement-ramp-item {
+    width: 64px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.m-rastermanagement-ramp-swatch {
     position: relative;
     width: 32px;
     height: 32px;
@@ -320,6 +328,29 @@
     background: transparent;
     cursor: pointer;
     display: block;
+}
+
+.m-rastermanagement-index-form input.m-rastermanagement-ramp-value[type='number'] {
+    display: block;
+    width: 100%;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 10px;
+    line-height: 22px;
+    color: #404040;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #fff;
+}
+
+.m-rastermanagement-index-form input.m-rastermanagement-ramp-value[type='number']:focus {
+    outline: 2px solid #71a7d3;
+    outline-offset: 1px;
+    border-color: #71a7d3;
 }
 
 .m-rastermanagement-ramp-action {

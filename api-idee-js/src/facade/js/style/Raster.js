@@ -23,14 +23,16 @@ class Raster extends Style {
    *
    * @constructor
    * @param {Mx.RasterStyleOptions} optionsParam Opciones del estilo.
-   * - bands: Banda o bandas. Solo con rampa o nodata (incl. índices).
+   * - bands: Banda o bandas. Con rampa, nodata o passthrough RGB (array).
    *   Con formula 'ndvi': array [nir, red] (exactamente 2 bandas).
    *   Con formula 'ndwi': array [green, nir] (exactamente 2 bandas).
    *   Con formula 'nbr': array [nir, swir] (exactamente 2 bandas).
+   *   Sin rampa (passthrough RGB): array [r, g, b]; 0 apaga el canal.
    * - formula: Fórmula del valor para la rampa ('ndvi', 'ndwi', 'nbr' o sin fórmula).
    * - min: Valor mínimo de la rampa (por defecto 0; con índices -1).
    * - max: Valor máximo de la rampa (por defecto 1).
    * - ramp: Rampa de colores (opcional).
+   * - stops: Valores de parada de la rampa (opcional, misma longitud que ramp).
    * - nodata: Valor nodata para transparencia.
    * - interpolation: Tipo de interpolación ('linear' o 'exponential').
    * - interpolationBase: Base para interpolación exponencial (por defecto 2).
@@ -259,11 +261,6 @@ class Raster extends Style {
    * @api
    */
   setBands(bands) {
-    const hasNoRamp = !Raster.hasRamp(this.options_, true);
-    const hasNoNodata = isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0;
-    if (hasNoRamp && hasNoNodata) {
-      return;
-    }
     this.options_.bands = Raster.normalizeBands({
       bands,
       formula: this.options_.formula,
@@ -336,7 +333,8 @@ class Raster extends Style {
   setNodata(nodata) {
     if (isNullOrEmpty(nodata) && nodata !== 0) {
       delete this.options_.nodata;
-      if (!Raster.hasRamp(this.options_, true)) {
+      if (!Raster.hasRamp(this.options_, true)
+        && !Raster.hasMultiBandPassthrough(this.options_)) {
         delete this.options_.bands;
       }
     } else {
@@ -408,6 +406,9 @@ class Raster extends Style {
       return;
     }
     this.options_.min = parseFloat(min);
+    if (isArray(this.options_.stops) && this.options_.stops.length > 0) {
+      this.options_.stops[0] = this.options_.min;
+    }
     this.update_();
   }
 
@@ -436,6 +437,53 @@ class Raster extends Style {
       return;
     }
     this.options_.max = parseFloat(max);
+    if (isArray(this.options_.stops) && this.options_.stops.length > 0) {
+      this.options_.stops[this.options_.stops.length - 1] = this.options_.max;
+    }
+    this.update_();
+  }
+
+  /**
+   * Este método devuelve los valores de parada de la rampa.
+   *
+   * @function
+   * @public
+   * @return {Array<number>|null} Valores de parada o null.
+   * @api
+   */
+  getStops() {
+    if (isArray(this.options_.stops) && this.options_.stops.length > 0) {
+      return [...this.options_.stops];
+    }
+    return null;
+  }
+
+  /**
+   * Este método establece los valores de parada de la rampa.
+   * Deben tener la misma longitud que la rampa y ser crecientes.
+   * Actualiza min y max con el primer y último valor.
+   *
+   * @function
+   * @public
+   * @param {Array<number>|null} stopsParam Valores de parada o null para eliminarlos.
+   * @api
+   */
+  setStops(stopsParam) {
+    if (!Raster.hasRamp(this.options_, true)) {
+      return;
+    }
+    if (isNullOrEmpty(stopsParam)) {
+      delete this.options_.stops;
+      this.update_();
+      return;
+    }
+    const stops = Raster.normalizeStops(stopsParam, this.options_.ramp.length);
+    if (isNullOrEmpty(stops)) {
+      return;
+    }
+    this.options_.stops = stops;
+    this.options_.min = stops[0];
+    this.options_.max = stops[stops.length - 1];
     this.update_();
   }
 
@@ -466,10 +514,12 @@ class Raster extends Style {
       delete nextOptions.ramp;
       delete nextOptions.min;
       delete nextOptions.max;
+      delete nextOptions.stops;
       delete nextOptions.interpolation;
       delete nextOptions.interpolationBase;
       delete nextOptions.formula;
-      if (isNullOrEmpty(nextOptions.nodata) && nextOptions.nodata !== 0) {
+      if (isNullOrEmpty(nextOptions.nodata) && nextOptions.nodata !== 0
+        && !Raster.hasMultiBandPassthrough(nextOptions)) {
         delete nextOptions.bands;
       }
       if (!Raster.optionsHaveEffect(nextOptions, true)) {
@@ -478,10 +528,12 @@ class Raster extends Style {
       delete this.options_.ramp;
       delete this.options_.min;
       delete this.options_.max;
+      delete this.options_.stops;
       delete this.options_.interpolation;
       delete this.options_.interpolationBase;
       delete this.options_.formula;
-      if (isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0) {
+      if (isNullOrEmpty(this.options_.nodata) && this.options_.nodata !== 0
+        && !Raster.hasMultiBandPassthrough(this.options_)) {
         delete this.options_.bands;
       }
       this.update_();
@@ -496,6 +548,9 @@ class Raster extends Style {
       ramp.push(inverseColorParam);
     }
     this.options_.ramp = ramp;
+    if (isArray(this.options_.stops) && this.options_.stops.length !== ramp.length) {
+      delete this.options_.stops;
+    }
     if (isNullOrEmpty(this.options_.bands)) {
       this.options_.bands = Raster.DEFAULT_OPTIONS.bands;
     }
@@ -589,18 +644,33 @@ class Raster extends Style {
           ? Raster.DEFAULT_OPTIONS.max
           : parseFloat(normalized.max);
       }
+      const stops = Raster.normalizeStops(normalized.stops, normalized.ramp.length);
+      if (!isNullOrEmpty(stops)) {
+        normalized.stops = stops;
+        normalized.min = stops[0];
+        normalized.max = stops[stops.length - 1];
+      } else {
+        delete normalized.stops;
+      }
       normalized.interpolation = normalized.interpolation || Raster.DEFAULT_OPTIONS.interpolation;
       normalized.interpolationBase = Number.isNaN(parseFloat(normalized.interpolationBase))
         ? Raster.DEFAULT_OPTIONS.interpolationBase
         : parseFloat(normalized.interpolationBase);
-    } else if (!isNullOrEmpty(normalized.nodata) || normalized.nodata === 0) {
+    } else if ((!isNullOrEmpty(normalized.nodata) || normalized.nodata === 0)
+      || Raster.hasExplicitBands(normalized)) {
       delete normalized.formula;
+      delete normalized.stops;
+      delete normalized.min;
+      delete normalized.max;
+      delete normalized.interpolation;
+      delete normalized.interpolationBase;
       normalized.bands = Raster.normalizeBands(normalized);
     } else {
       delete normalized.formula;
       delete normalized.bands;
       delete normalized.min;
       delete normalized.max;
+      delete normalized.stops;
       delete normalized.interpolation;
       delete normalized.interpolationBase;
     }
@@ -638,6 +708,36 @@ class Raster extends Style {
     }
     Exception(getValue('exception').invalid_raster_formula);
     return undefined;
+  }
+
+  /**
+   * Normaliza los valores de parada de la rampa.
+   *
+   * @function
+   * @private
+   * @param {Array<number>|undefined} stopsParam Valores de parada.
+   * @param {number} rampLength Longitud de la rampa.
+   * @return {Array<number>|undefined} Paradas normalizadas o undefined.
+   */
+  static normalizeStops(stopsParam, rampLength) {
+    if (isNullOrEmpty(stopsParam) || !isArray(stopsParam)) {
+      return undefined;
+    }
+    if (stopsParam.length !== rampLength || rampLength < 2) {
+      return undefined;
+    }
+    const stops = [];
+    for (let i = 0; i < stopsParam.length; i += 1) {
+      const value = parseFloat(stopsParam[i]);
+      if (Number.isNaN(value)) {
+        return undefined;
+      }
+      if (i > 0 && value < stops[i - 1]) {
+        return undefined;
+      }
+      stops.push(value);
+    }
+    return stops;
   }
 
   /**
@@ -780,7 +880,8 @@ class Raster extends Style {
   }
 
   /**
-   * Indica si las opciones definen algún efecto aplicable (rampa, nodata o filtros).
+   * Indica si las opciones definen algún efecto aplicable
+   * (rampa, nodata, passthrough de bandas o filtros).
    *
    * @function
    * @public
@@ -800,11 +901,68 @@ class Raster extends Style {
     if (!isNullOrEmpty(options.nodata) || options.nodata === 0) {
       return true;
     }
+    if (Raster.hasPassthroughBands(options, true)) {
+      return true;
+    }
     const filterKeys = ['gamma', 'saturation', 'exposure', 'contrast', 'brightness'];
     return filterKeys.some((key) => {
       return !isNullOrEmpty(options[key])
         && options[key] !== Raster.DEFAULT_OPTIONS[key];
     });
+  }
+
+  /**
+   * Indica si las opciones incluyen bandas explícitas.
+   *
+   * @function
+   * @private
+   * @param {Object} options Opciones del estilo.
+   * @return {boolean} Verdadero si bands viene informado.
+   */
+  static hasExplicitBands(options = {}) {
+    const { bands } = options;
+    if (isNullOrEmpty(bands) && bands !== 0) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Indica si hay passthrough multi-banda (p. ej. RGB [r,g,b]).
+   *
+   * @function
+   * @private
+   * @param {Object} options Opciones del estilo.
+   * @return {boolean} Verdadero si bands es un array de al menos 2 elementos.
+   */
+  static hasMultiBandPassthrough(options = {}) {
+    return isArray(options.bands) && options.bands.length >= 2;
+  }
+
+  /**
+   * Indica si las opciones definen passthrough por bandas (sin rampa).
+   *
+   * @function
+   * @public
+   * @param {Object} optionsParam Opciones del estilo.
+   * @param {boolean} alreadyNormalized Si es true, optionsParam ya está normalizado.
+   * @return {boolean} Verdadero si hay bandas de passthrough.
+   * @api
+   */
+  static hasPassthroughBands(optionsParam = {}, alreadyNormalized = false) {
+    let options = optionsParam;
+    if (!alreadyNormalized) {
+      if (!Raster.hasExplicitBands(optionsParam)
+        && isNullOrEmpty(optionsParam.nodata)
+        && optionsParam.nodata !== 0) {
+        return false;
+      }
+      options = Raster.normalizeOptions({ ...optionsParam }, false);
+    }
+    if (Raster.hasRamp(options, true)) {
+      return false;
+    }
+    return Raster.hasExplicitBands(options);
   }
 
   /**
@@ -896,7 +1054,16 @@ class Raster extends Style {
     const barX = paddingX;
     const barY = paddingTop;
     const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
-    const intervals = generateIntervals([0, 1], this.options_.ramp.length);
+    const rampLength = this.options_.ramp.length;
+    let intervals = generateIntervals([0, 1], rampLength);
+    const customStops = this.options_.stops;
+    if (isArray(customStops) && customStops.length === rampLength) {
+      const stopMin = customStops[0];
+      const stopMax = customStops[customStops.length - 1];
+      if (stopMax !== stopMin) {
+        intervals = customStops.map((stop) => (stop - stopMin) / (stopMax - stopMin));
+      }
+    }
     this.options_.ramp.forEach((color, index) => {
       gradient.addColorStop(intervals[index], color);
     });
@@ -956,6 +1123,9 @@ class Raster extends Style {
       serializedOptions.min = options.min;
       serializedOptions.max = options.max;
       serializedOptions.ramp = [...options.ramp];
+      if (isArray(options.stops) && options.stops.length === options.ramp.length) {
+        serializedOptions.stops = [...options.stops];
+      }
       serializedOptions.interpolation = options.interpolation;
       serializedOptions.interpolationBase = options.interpolationBase;
       if (!isNullOrEmpty(options.formula)) {
