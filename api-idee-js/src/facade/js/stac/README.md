@@ -54,6 +54,7 @@ Tras la construcción, la instancia expone:
 | `collectionsUrl` | `string` | URL del servicio de colecciones (si se indicó en el constructor). |
 | `title` | `string` | Título descriptivo del catálogo (si se indicó en el constructor). |
 | `token` | `string\|null` | Token de acceso obtenido tras `authenticate()`. Inicialmente `null`. |
+| `refreshToken` | `string\|null` | Token de refresco obtenido tras `authenticate()`. Se usa en `refreshTokenAuth()` para renovar el acceso. Inicialmente `null`. |
 
 ---
 
@@ -71,9 +72,10 @@ Cuando `public: true`:
 
 Cuando `public: false`:
 
-1. Llamar primero a `authenticate(username, password)` para obtener el token.
+1. Llamar primero a `authenticate(username, password)` para obtener el token de acceso y el token de refresco.
 2. Las peticiones posteriores incluyen `Authorization: Bearer {token}` cuando corresponda.
 3. `getCollections()` consulta `POST {collectionsUrl}` con `{ accessToken: token }`, devolviendo las colecciones autorizadas para el usuario.
+4. Si una petición recibe `401`, `403` o `503` (según el método), se llama a `refreshTokenAuth()` y se reintenta la petición original de forma automática.
 
 ---
 
@@ -83,11 +85,12 @@ Todos los métodos asíncronos devuelven `Promise` y deben usarse con `async/awa
 
 ### `authenticate(username, password)`
 
-Autentica al usuario y almacena el token en la instancia.
+Autentica al usuario y almacena el token de acceso (`token`) y el token de refresco (`refreshToken`) en la instancia.
 
 ```javascript
 await catalog.authenticate('usuario', 'contraseña');
 // catalog.token contiene el access_token
+// catalog.refreshToken contiene el refresh_token
 ```
 
 | Parámetro | Tipo | Descripción |
@@ -101,9 +104,30 @@ await catalog.authenticate('usuario', 'contraseña');
 
 ---
 
+### `refreshTokenAuth()`
+
+Renueva el token de acceso utilizando el `refreshToken` almacenado en la instancia. Actualiza `token` y `refreshToken` si la respuesta es correcta.
+
+Se invoca automáticamente desde los métodos de consulta cuando la respuesta HTTP indica que el token ha expirado o no es válido (`401`, `403` o `503`, según el método). Tras renovar el token, se reintenta la petición original.
+
+```javascript
+await catalog.refreshTokenAuth();
+// catalog.token y catalog.refreshToken quedan actualizados
+```
+
+**Retorno:** `Promise<boolean>` — `true` si la renovación del token fue correcta.
+
+**Endpoint:** `POST {authUrl sin el último segmento}/refresh-token` con cuerpo `{ refreshToken }`.
+
+Por ejemplo, si `authUrl` es `https://mi-servidor-auth.example.com/o/custom-auth/token`, el endpoint de refresco será `https://mi-servidor-auth.example.com/o/custom-auth/refresh-token`.
+
+---
+
 ### `getCollections()`
 
 Obtiene el listado de colecciones disponibles.
+
+En modo con `collectionsUrl` (público con URL propia o privado), si la respuesta es `401` o `403`, renueva el token con `refreshTokenAuth()` y reintenta la petición.
 
 ```javascript
 const collections = await catalog.getCollections();
@@ -121,6 +145,8 @@ const collections = await catalog.getCollections();
 ### `getQueryableFields(collectionId)`
 
 Obtiene los campos consultables de una colección para construir filtros.
+
+Si la respuesta es `401`, `403` o `503`, renueva el token con `refreshTokenAuth()` y reintenta la petición.
 
 ```javascript
 const fields = await catalog.getQueryableFields('ccm-optical');
@@ -140,6 +166,8 @@ const fields = await catalog.getQueryableFields('ccm-optical');
 
 Obtiene ítems de una colección con un límite de resultados.
 
+Genera la `url` de consulta y delega la petición en `getItemsByUrl()` (incluye renovación de token y reintento si procede).
+
 ```javascript
 const items = await catalog.getItems('ccm-optical', 10);
 ```
@@ -151,13 +179,13 @@ const items = await catalog.getItems('ccm-optical', 10);
 
 **Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
 
-Genera la `url` de consulta y delega la petición en `getItemsByUrl()`.
-
 ---
 
 ### `getItem(collectionId, itemId)`
 
 Obtiene un ítem concreto.
+
+Si la respuesta es `401`, `403` o `503`, renueva el token con `refreshTokenAuth()` y reintenta la petición.
 
 ```javascript
 const item = await catalog.getItem('ccm-optical', 'PH1B_PHR_MS___3_20241115T141727_20241115T141750_TOU_000324_e7a7_COG');
@@ -178,7 +206,7 @@ const item = await catalog.getItem('ccm-optical', 'PH1B_PHR_MS___3_20241115T1417
 
 Filtra ítems de una o varias colecciones mediante el endpoint `/search` con parámetros GET.
 
-El identificador de colección se añade automáticamente al parámetro `collections` del filtro.
+El identificador de colección se añade automáticamente al parámetro `collections` del filtro. Delega la petición en `getItemsByUrl()` (incluye renovación de token y reintento si procede).
 
 ```javascript
 const result = await catalog.getFilteredItems('ccm-optical', {
@@ -232,13 +260,13 @@ await catalog.getFilteredItems('ccm-optical', {
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
 
-Genera la `url` de consulta y delega en `getItemsByUrl()`.
-
 ---
 
 ### `getFilteredItemsAdvanced(collectionId, filter, bbox, datetime)`
 
 Filtra ítems mediante el endpoint `/search` con filtros avanzados (POST).
+
+Genera la `url` y el `body` de consulta y delega en `getFilteredItemsAdvancedByUrl()` (incluye renovación de token y reintento si procede).
 
 | Parámetro | Tipo | Por defecto | Descripción |
 |-----------|------|-------------|-------------|
@@ -256,8 +284,6 @@ Filtra ítems mediante el endpoint `/search` con filtros avanzados (POST).
 | `limit` | `number` | `10` | Número máximo de ítems. |
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
-
-Genera la `url` y el `body` de consulta y delega en `getFilteredItemsAdvancedByUrl()`.
 
 #### Ejemplos por formato de filtro
 
@@ -319,6 +345,8 @@ const result = await catalog.getFilteredItemsAdvanced('ccm-optical', {
 
 Obtiene ítems filtrados avanzados siguiendo un enlace de paginación de una respuesta `/search` anterior.
 
+Utiliza el `href` y el `body` del enlace y delega en `getFilteredItemsAdvancedByUrl()` (incluye renovación de token y reintento si procede).
+
 ```javascript
 const nextPage = await catalog.getFilteredItemsAdvancedByLinks(result.links, 'next');
 ```
@@ -330,13 +358,13 @@ const nextPage = await catalog.getFilteredItemsAdvancedByLinks(result.links, 'ne
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
 
-Utiliza el `href` y el `body` del enlace y delega en `getFilteredItemsAdvancedByUrl()`.
-
 ---
 
 ### `getFilteredItemsAdvancedByUrl(url, body, errorMessage)`
 
 Realiza una petición POST genérica al endpoint `/search` con un cuerpo de filtro.
+
+Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token. Si la respuesta es `401`, `403` o `503`, renueva el token con `refreshTokenAuth()` y reintenta la petición.
 
 ```javascript
 const result = await catalog.getFilteredItemsAdvancedByUrl(
@@ -353,8 +381,6 @@ const result = await catalog.getFilteredItemsAdvancedByUrl(
 | `errorMessage` | `string` | Mensaje de error si la petición falla. |
 
 **Retorno:** `Promise<Object>` — Respuesta STAC filtrada (`FeatureCollection`).
-
-Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
 
 ---
 
@@ -431,6 +457,8 @@ result.features.forEach((feature) => {
 
 Realiza una petición GET genérica para obtener ítems desde una URL STAC.
 
+Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token. Si la respuesta es `401`, `403` o `503`, renueva el token con `refreshTokenAuth()` y reintenta la petición.
+
 ```javascript
 const items = await catalog.getItemsByUrl(
   'https://stac.example.com/v1/collections/mi-coleccion/items',
@@ -447,15 +475,13 @@ const items = await catalog.getItemsByUrl(
 
 **Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`).
 
-Añade la cabecera `Authorization: Bearer {token}` cuando el catálogo es privado y existe token.
-
----
-
 ---
 
 ### `getItemsByLinks(links, rel)`
 
 Obtiene ítems siguiendo un enlace de paginación de una respuesta STAC anterior.
+
+Delega la petición en `getItemsByUrl()` (incluye renovación de token y reintento si procede).
 
 ```javascript
 const nextPage = await catalog.getItemsByLinks(items.links, 'next');
@@ -467,5 +493,3 @@ const nextPage = await catalog.getItemsByLinks(items.links, 'next');
 | `rel` | `string` | Relación del enlace: `self`, `next` o `previous`. |
 
 **Retorno:** `Promise<Object>` — Respuesta STAC (`FeatureCollection`). Devuelve `undefined` si los parámetros no son válidos.
-
-Delega la petición en `getItemsByUrl()`.

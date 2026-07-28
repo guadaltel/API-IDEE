@@ -40,6 +40,7 @@ const mp = new Catalogmanager({
   isDraggable: true,
   predefinedCatalogs: PREDEFINED_CATALOGS,
   addCatalogEnabled: false,
+  downloadUrl: 'https://gneissd.desarrollo.guadaltel.es/serviciodescarga/v1/download-jobs',
 });
 window.mp = mp;
 

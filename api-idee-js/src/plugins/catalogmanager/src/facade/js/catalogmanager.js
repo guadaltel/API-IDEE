@@ -100,7 +100,7 @@ export default class Catalogmanager extends IDEE.Plugin {
 
     this.addCatalogEnabled = options.addCatalogEnabled || false;
 
-    this.downloadUrl = options.downloadUrl || 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/download-jobs';
+    this.downloadUrl = options.downloadUrl || 'https://gneissd.desarrollo.guadaltel.es/serviciodescarga/v1/download-jobs';
 
     /**
      * Parámetros del plugin

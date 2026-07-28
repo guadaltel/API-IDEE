@@ -21,21 +21,28 @@ import { getValue } from './i18n/language';
 /** @private @type {string} Selector CSS del botón de cierre del modal informativo */
 const BT_CLOSE_MODAL = 'div.m-dialog.info div.m-button > button';
 
+/**
+ * Estilos ráster por defecto para índices espectrales (NDVI, NDWI, NBR).
+ *
+ * @constant
+ * @private
+ * @type {Object<string, Object>}
+ */
 const INDICES_STYLES = {
   NDVI: {
-    min: 0,
+    min: -1,
     max: 1,
     ramp: ['#a6611a', '#dfc27d', '#f5f5f5', '#80cdc1', '#018571'],
     interpolation: 'linear',
   },
   NDWI: {
-    min: 0,
+    min: -1,
     max: 1,
     ramp: ['#8c510a', '#d8b365', '#f5f5f5', '#5ab4ac', '#01665e'],
     interpolation: 'linear',
   },
   NBR: {
-    min: 0,
+    min: -1,
     max: 1,
     ramp: ['#d73027', '#fdae61', '#ffffbf', '#a6d96a', '#1a9850'],
     interpolation: 'linear',
@@ -56,6 +63,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {boolean} [options.isDraggable=false] Indica si el panel puede arrastrarse
    * @param {number} [options.order] Orden de tabulación y prioridad en modales
    * @param {Array<Object>} [options.predefinedCatalogs=[]] Catálogos STAC precargados
+   * @param {boolean} [options.addCatalogEnabled=false] Permite añadir catálogos desde la UI
+   * @param {string} [options.downloadUrl=''] URL del servicio de descarga masiva
    * @api stable
    */
   constructor(options = {}) {
@@ -104,8 +113,18 @@ export default class CatalogmanagerControl extends IDEE.Control {
      */
     this.predefinedCatalogs_ = options.predefinedCatalogs || [];
 
+    /**
+     * Indica si se puede añadir un catálogo desde la interfaz
+     * @private
+     * @type {boolean}
+     */
     this.addCatalogEnabled_ = options.addCatalogEnabled || false;
 
+    /**
+     * URL del servicio de descarga masiva de imágenes
+     * @private
+     * @type {string}
+     */
     this.downloadUrl_ = options.downloadUrl || '';
 
     /**
@@ -115,8 +134,25 @@ export default class CatalogmanagerControl extends IDEE.Control {
      */
     this.catalogs_ = [];
 
+    /**
+     * Índice del catálogo seleccionado en la interfaz
+     * @private
+     * @type {number}
+     */
     this.selectedCatalogIndex_ = 0;
+
+    /**
+     * Índice de la colección seleccionada en la interfaz
+     * @private
+     * @type {number}
+     */
     this.selectedCollectionIndex_ = 0;
+
+    /**
+     * Identificadores de ítems seleccionados para descarga masiva
+     * @private
+     * @type {Array<string>}
+     */
     this.selectedItems_ = [];
 
     /**
@@ -154,6 +190,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
      */
     this.advancedFilterState_ = null;
 
+    /**
+     * Estilo aplicado a la huella del ítem enfocado en el mapa
+     * @private
+     * @type {IDEE.style.Generic}
+     */
     this.focusStyle_ = new IDEE.style.Generic({
       polygon: {
         stroke: {
@@ -285,6 +326,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     document.querySelector('.m-catalogmanager-add-panel #cat-public').addEventListener('change', this.togglePublic.bind(this));
   }
 
+  /**
+   * Abre el modal de autenticación para un catálogo privado
+   *
+   * @private
+   * @function
+   * @param {Function} callback Función a ejecutar tras autenticarse o elegir acceso público
+   */
   openLogin(callback) {
     const html = IDEE.template.compileSync(loginTemplate, {
       jsonp: true,
@@ -304,6 +352,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     document.querySelector('#m-catalogmanager-login-public').addEventListener('click', this.loginCatalog.bind(this, true, callback));
   }
 
+  /**
+   * Autentica el catálogo seleccionado o lo marca como público y ejecuta el callback
+   *
+   * @private
+   * @function
+   * @param {boolean} isPublic Indica si se accede al catálogo en modo público
+   * @param {Function} callback Función a ejecutar tras el login o el acceso público
+   */
   loginCatalog(isPublic, callback) {
     const catalogObj = this.catalogs_[this.selectedCatalogIndex_].obj;
     if (isPublic) {
@@ -337,6 +393,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Alterna el icono de expansión/contracción de una sección
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} elem Elemento que contiene el icono a alternar
+   */
   toggleIcon(elem) {
     const iconElement = elem.querySelector('.m-catalogmanager-icon');
     if (iconElement.classList.contains('icon-down-open')) {
@@ -348,6 +411,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Expande o contrae una sección de filtros al hacer clic en su título o icono
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en el título o icono de la sección
+   */
   toggleFilterSection(evt) {
     evt.stopPropagation();
     const target = evt.target;
@@ -369,6 +439,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Cambia la pestaña activa del panel (filtros, configuración, etc.)
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en una pestaña
+   */
   toggleTabs(evt) {
     evt.stopPropagation();
     const tab = evt.target;
@@ -515,6 +592,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Añade o actualiza el filtro temporal común y sincroniza los campos del formulario
+   *
+   * @private
+   * @function
+   * @param {string} startDate Fecha de inicio (YYYY-MM-DD)
+   * @param {string} [startTime] Hora de inicio (HH:mm:ss)
+   * @param {string} endDate Fecha de fin (YYYY-MM-DD)
+   * @param {string} [endTime] Hora de fin (HH:mm:ss)
+   */
   addTemporalCommonFilter(startDate, startTime, endDate, endTime) {
     const startDateInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-start');
     const startTimeInput = this.template_.querySelector('#m-catalogmanager-filters-temporal-start-time');
@@ -1361,6 +1448,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     button.innerHTML = getValue('close');
   }
 
+  /**
+   * Oculta el botón de cierre del modal informativo activo
+   *
+   * @private
+   * @function
+   */
   hideCloseButtonModal() {
     const button = document.querySelector(BT_CLOSE_MODAL);
     button.classList.add('hidden');
@@ -1435,6 +1528,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.changeCloseButtonModal();
   }
 
+  /**
+   * Abre un modal con los metadatos de una colección STAC
+   *
+   * @private
+   * @function
+   * @param {number} catalogIndex Índice del catálogo
+   * @param {number} collectionIndex Índice de la colección
+   */
   openCollectionInfo(catalogIndex, collectionIndex) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
@@ -1507,6 +1608,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  /**
+   * Inicializa las colecciones del catálogo seleccionado en el contenedor de la UI
+   *
+   * @private
+   * @function
+   */
   initCollections() {
     const collectionsElement = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
     this.getCollections(this.selectedCatalogIndex_, collectionsElement);
@@ -1547,6 +1654,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Solicita las colecciones del catálogo seleccionado y las renderiza en el contenedor
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} collectionsElement Contenedor DOM donde se pintan las colecciones
+   */
   requestCollections(collectionsElement) {
     const container = collectionsElement;
     const catalog = this.catalogs_[this.selectedCatalogIndex_];
@@ -1935,6 +2049,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @param {number} catalogIndex Índice del catálogo
    * @param {number} collectionIndex Índice de la colección
+   * @param {Array<Object>} items Ítems STAC (Features) cuyas huellas se visualizan
    */
   previewItems(catalogIndex, collectionIndex, items) {
     const catalog = this.catalogs_[catalogIndex];
@@ -2345,6 +2460,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  /**
+   * Construye un estilo ráster a partir de la especificación de bandas e índice
+   *
+   * @private
+   * @function
+   * @param {{bands: Array<number>, indice?: string}|null} spec Especificación de bandas e índice espectral
+   * @returns {IDEE.style.Raster|null} Estilo ráster o nulo si no hay especificación
+   */
   buildRasterStyle(spec) {
     if (!spec) {
       return null;
@@ -2353,10 +2476,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
     let options = {};
     if (spec.indice) {
       options = INDICES_STYLES[spec.indice];
+    } else {
+      options.gamma = 2;
     }
     options.nodata = 0;
     options.bands = bands;
-    options.gamma = 2;
     return new IDEE.style.Raster(options);
   }
 
@@ -2403,6 +2527,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Actualiza la selección de ítems según el estado del checkbox indicado
+   *
+   * @private
+   * @function
+   * @param {HTMLInputElement} checkbox Checkbox de ítem individual o de selección total
+   */
   changeSelectedItems(checkbox) {
     if (checkbox.id === 'select-all-items') {
       const items = this.template_.querySelectorAll('.m-catalogmanager-checkbox-item');
@@ -2432,6 +2563,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Lanza la descarga masiva de todos los assets de una colección
+   *
+   * @private
+   * @function
+   * @param {number} catalogIndex Índice del catálogo
+   * @param {number} collectionIndex Índice de la colección
+   */
   collectionDownload(catalogIndex, collectionIndex) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
@@ -2464,7 +2603,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const downloadData = {
       selection,
       options: {
-        assests: ['data', 'json'],
+        assests: ['data'],
         includeStacJson: true,
       },
     };
@@ -2498,17 +2637,64 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return selection;
   }
 
+  /**
+   * Envía la petición de descarga masiva al servicio configurado en `downloadUrl_`
+   *
+   * @private
+   * @function
+   * @param {Object} downloadData Cuerpo de la petición con la selección y opciones de descarga
+   */
   downloadRequest(downloadData) {
-    console.log(downloadData);
-    /* const token = this.catalogs_[this.selectedCatalogIndex_].obj.token;
+    // console.log(downloadData);
+    const catalog = this.catalogs_[this.selectedCatalogIndex_];
+    const collection = catalog.collections[this.selectedCollectionIndex_];
+    const token = catalog.obj.token;
+    let message = '';
+    if (downloadData.selection.type === 'items') {
+      message = getValue('masiveDownload.itemsDownloadMsg')
+        .replace('{{numItems}}', downloadData.selection.itemIds.length)
+        .replace('{{collectionName}}', collection.title);
+    } else {
+      message = getValue('masiveDownload.collectionDownloadMsg')
+        .replace('{{collectionName}}', collection.title);
+    }
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     };
     IDEE.remote.post(this.downloadUrl_, downloadData, { headers }).then((response) => {
+      if (response.code === 200 || response.code === 202) {
+        this.notifyDownload(catalog.obj, message);
+      } else {
+        console.error(response.text);
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  /**
+   * Notifica al servicio de autenticación que se ha solicitado una descarga
+   *
+   * @private
+   * @function
+   * @param {IDEE.stac.Catalog} catalog Catálogo STAC autenticado
+   * @param {string} message Mensaje de notificación de la descarga
+   */
+  notifyDownload(catalog, message) {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    const body = {
+      accessToken: catalog.token,
+      notificationMessage: message,
+      entryURL: '/descargas',
+    };
+    const url = `${catalog.authUrl.substring(0, catalog.authUrl.lastIndexOf('/'))}/test-download-notification`;
+    IDEE.remote.post(url, body, { headers }).then((response) => {
       console.log(response);
     }).catch((error) => {
       console.error(error);
-    }); */
+    });
   }
 }

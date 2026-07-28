@@ -6,12 +6,30 @@ import Base from '../Base';
 import { getValue } from '../i18n/language';
 import { error as showError } from '../dialog';
 
+/**
+ * Lenguajes de filtrado soportados por el endpoint STAC `/search`.
+ *
+ * @constant
+ * @type {Object}
+ * @property {string} STAC_QUERY Formato de consulta `stac-query`.
+ * @property {string} CQL_JSON Formato de filtro `cql-json`.
+ * @property {string} CQL2_JSON Formato de filtro `cql2-json`.
+ * @private
+ */
 const STAC_FILTER_LANG = {
   STAC_QUERY: 'stac-query',
   CQL_JSON: 'cql-json',
   CQL2_JSON: 'cql2-json',
 };
 
+/**
+ * Relaciones de enlace de paginación STAC admitidas
+ * (`self`, `next` y `previous`).
+ *
+ * @constant
+ * @type {Array<string>}
+ * @private
+ */
 const SUPPORTED_LINKS = ['self', 'next', 'previous'];
 
 /**
@@ -29,6 +47,8 @@ const SUPPORTED_LINKS = ['self', 'next', 'previous'];
  * (requerida para catálogos privados o cuando se requiera un endpoint distinto del STAC).
  * @property {string} title Título descriptivo del catálogo.
  * @property {string|null} token Token de acceso obtenido tras autenticarse.
+ * @property {string|null} refreshToken Token de refresco utilizado para renovar
+ * el token de acceso cuando expira.
  * @api
  */
 class Catalog extends Base {
@@ -44,6 +64,8 @@ class Catalog extends Base {
    * - collectionsUrl: URL del servicio de colecciones autorizadas (opcional; si se
    *   omite en catálogos públicos, se consulta `{url}/collections`).
    * - title: Título descriptivo del catálogo (opcional).
+   * @throws {Error} Si no se indica la URL del catálogo, o si el catálogo es
+   * privado y no se indica `authUrl`.
    * @api
    */
   constructor(userParameters) {
@@ -61,20 +83,63 @@ class Catalog extends Base {
       showError(noAuthUrlMsg);
       throw new Error(noAuthUrlMsg);
     }
+    /**
+     * URL del catálogo STAC.
+     * @type {string}
+     * @public
+     * @api
+     */
     this.url = url;
+    /**
+     * Indica si el catálogo es público (sin autenticación).
+     * @type {boolean}
+     * @public
+     * @api
+     */
     this.public = publicValue;
+    /**
+     * URL del servicio de autenticación y autorización.
+     * @type {string}
+     * @public
+     * @api
+     */
     this.authUrl = userParameters.authUrl;
+    /**
+     * URL del servicio de obtención colecciones autorizadas.
+     * @type {string}
+     * @public
+     * @api
+     */
     this.collectionsUrl = userParameters.collectionsUrl;
+    /**
+     * Título descriptivo del catálogo.
+     * @type {string}
+     * @public
+     * @api
+     */
     this.title = userParameters.title || new URL(url).hostname;
+    /**
+     * Token de acceso obtenido tras autenticarse.
+     * @type {string|null}
+     * @public
+     * @api
+     */
     this.token = null;
+    /**
+     * Token de refresco utilizado para renovar el token de acceso.
+     * @type {string|null}
+     * @public
+     * @api
+     */
     this.refreshToken = null;
   }
 
   /**
    * Autentica al usuario contra el servicio de autenticación y almacena
-   * el token de acceso para las peticiones posteriores.
+   * el token de acceso y el token de refresco para las peticiones posteriores.
    *
    * @function
+   * @public
    * @param {string} username Nombre de usuario.
    * @param {string} password Contraseña del usuario.
    * @returns {Promise<boolean>|undefined} Promesa que se resuelve con verdadero si la
@@ -112,6 +177,18 @@ class Catalog extends Base {
     });
   }
 
+  /**
+   * Renueva el token de acceso utilizando el token de refresco almacenado.
+   *
+   * Construye la URL del endpoint `/refresh-token` a partir de `authUrl` y
+   * actualiza `token` y `refreshToken` si la respuesta es correcta.
+   *
+   * @function
+   * @public
+   * @returns {Promise<boolean>} Promesa que se resuelve con verdadero si la
+   * renovación del token fue correcta.
+   * @api
+   */
   refreshTokenAuth() {
     const url = `${this.authUrl.substring(0, this.authUrl.lastIndexOf('/'))}/refresh-token`;
     return new Promise((success, fail) => {
@@ -144,8 +221,10 @@ class Catalog extends Base {
    * Si el catálogo es público y no se indica `collectionsUrl`, consulta directamente
    * el endpoint `{url}/collections`. En caso contrario, obtiene las colecciones
    * autorizadas para el usuario autenticado a través del servicio de roles.
+   * Si la respuesta es 401 o 403, intenta renovar el token y reintentar la petición.
    *
    * @function
+   * @public
    * @returns {Promise<Array<Object>>} Promesa con el listado de colecciones.
    * @api
    */
@@ -186,11 +265,14 @@ class Catalog extends Base {
    *
    * Consulta el endpoint `/collections/{collectionId}/queryables` y devuelve
    * las propiedades disponibles para filtrar ítems.
+   * Si la respuesta es 401, 403 o 503, intenta renovar el token y reintentar.
    *
    * @function
+   * @public
    * @param {string} collectionId Identificador de la colección.
-   * @returns {Promise<Object>} Promesa con el esquema de propiedades consultables
-   * (`properties` del endpoint queryables).
+   * @returns {Promise<Object>|undefined} Promesa con el esquema de propiedades
+   * consultables (`properties` del endpoint queryables), o indefinido si no
+   * se indica el identificador de colección.
    * @api
    */
   getQueryableFields(collectionId) {
@@ -224,9 +306,11 @@ class Catalog extends Base {
    * con el límite de resultados indicado.
    *
    * @function
+   * @public
    * @param {string} collectionId Identificador de la colección.
    * @param {number} [limit=10] Número máximo de ítems a devolver.
-   * @returns {Promise<Object>} Promesa con la respuesta STAC (FeatureCollection).
+   * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC
+   * (FeatureCollection), o indefinido si los parámetros no son válidos.
    * @api
    */
   getItems(collectionId, limit = 10) {
@@ -246,9 +330,11 @@ class Catalog extends Base {
    * Obtiene ítems a partir de los enlaces de paginación de una respuesta STAC.
    *
    * Busca en el array de enlaces el href correspondiente a la relación indicada
-   * (`self`, `next` o `previous`) y delega la petición en {@link getItemsByUrl}.
+   * (`self`, `next` o `previous`) y delega la petición en
+   * {@link IDEE.stac.Catalog#getItemsByUrl}.
    *
    * @function
+   * @public
    * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
    * @param {string} rel Relación del enlace a seguir (`self`, `next` o `previous`).
    * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC
@@ -273,8 +359,10 @@ class Catalog extends Base {
    *
    * Añade la cabecera `Authorization` con el token Bearer cuando el catálogo
    * es privado y existe un token de acceso.
+   * Si la respuesta es 401, 403 o 503, intenta renovar el token y reintentar.
    *
    * @function
+   * @public
    * @param {string} url URL del endpoint STAC.
    * @param {Object|null} params Parámetros de consulta de la petición GET.
    * @param {string} errorMessage Mensaje de error a utilizar si la petición falla.
@@ -304,10 +392,14 @@ class Catalog extends Base {
   /**
    * Obtiene un ítem concreto de una colección STAC.
    *
+   * Si la respuesta es 401, 403 o 503, intenta renovar el token y reintentar.
+   *
    * @function
+   * @public
    * @param {string} collectionId Identificador de la colección.
    * @param {string} itemId Identificador del ítem.
-   * @returns {Promise<Object>} Promesa con el ítem STAC (Feature).
+   * @returns {Promise<Object>|undefined} Promesa con el ítem STAC (Feature),
+   * o indefinido si faltan identificadores.
    * @api
    */
   getItem(collectionId, itemId) {
@@ -346,11 +438,13 @@ class Catalog extends Base {
    * `collections`.
    *
    * @function
+   * @public
    * @param {string|Array<string>} collectionId Identificador o array de identificadores
    * de la/s colección/es.
    * @param {Object} filters Parámetros de filtrado para la petición GET.
    * Filtros espaciales en EPSG:4326.
-   * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
+   * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC filtrada
+   * (FeatureCollection), o indefinido si no se indica el identificador de colección.
    * @api
    */
   getFilteredItems(collectionId, filters) {
@@ -370,15 +464,18 @@ class Catalog extends Base {
    * Soporta los formatos de filtrado `stac-query`, `cql-json` y `cql2-json`.
    *
    * @function
+   * @public
    * @param {string|Array<string>} collectionId Identificador o array de identificadores
    * de la/s colección/es.
    * @param {Object} filter Configuración del filtro avanzado.
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326.
+   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326
+   * (`[minX, minY, maxX, maxY]`).
    * @param {string|null} [datetime=null] Intervalo temporal de la búsqueda en RFC 3339.
-   * @returns {Promise<Object>} Promesa con la respuesta STAC filtrada (FeatureCollection).
+   * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC filtrada
+   * (FeatureCollection), o indefinido si no se indica el identificador de colección.
    * @api
    */
   getFilteredItemsAdvanced(collectionId, filter, bbox = null, datetime = null) {
@@ -394,12 +491,14 @@ class Catalog extends Base {
   /**
    * Obtiene ítems filtrados avanzados a partir de los enlaces de paginación.
    *
-   * Resuelve la URL del enlace indicado (`self`, `next` o `previous`), construye el cuerpo
-   * de la petición con {@link getFilterData} y delega en
-   * {@link getFilteredItemsAdvancedByUrl}.
+   * Resuelve la URL del enlace indicado (`self`, `next` o `previous`), toma el
+   * cuerpo de la petición del propio enlace y delega en
+   * {@link IDEE.stac.Catalog#getFilteredItemsAdvancedByUrl}.
    *
    * @function
-   * @param {Array<Object>} links Enlaces de paginación de la respuesta STAC.
+   * @public
+   * @param {Array<Object>} links Enlaces de paginación
+   * de la respuesta STAC.
    * @param {string} rel Relación del enlace a seguir (`self`, `next` o `previous`).
    * @returns {Promise<Object>|undefined} Promesa con la respuesta STAC filtrada
    * (FeatureCollection) o indefinido si los parámetros no son válidos.
@@ -425,8 +524,10 @@ class Catalog extends Base {
    *
    * Envía el filtro como JSON y añade la cabecera `Authorization` con el token
    * Bearer cuando el catálogo es privado y existe un token de acceso.
+   * Si la respuesta es 401, 403 o 503, intenta renovar el token y reintentar.
    *
    * @function
+   * @public
    * @param {string} url URL del endpoint STAC `/search`.
    * @param {Object} body Cuerpo de la petición con la configuración del filtro.
    * @param {string} errorMessage Mensaje de error a utilizar si la petición falla.
@@ -464,13 +565,15 @@ class Catalog extends Base {
    * a partir de la configuración de filtro indicada.
    *
    * @function
+   * @public
    * @param {string|Array<string>|null} collectionId Identificador o array de identificadores
    * de la/s colección/es. Si es nulo o vacío, la búsqueda no se restringe a una colección concreta.
    * @param {Object} filter Configuración del filtro avanzado.
    * - format: Formato del filtro (`stac-query`, `cql-json` o `cql2-json`).
    * - filter: Cuerpo del filtro según el formato indicado.
    * - limit: Número máximo de ítems a devolver (por defecto 10).
-   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326.
+   * @param {Array<number>|null} [bbox=null] Extensión de la zona de búsqueda en EPSG:4326
+   * (`[minX, minY, maxX, maxY]`).
    * @param {string|null} [datetime=null] Intervalo temporal de la búsqueda en RFC 3339.
    * @returns {Object|null} Objeto con el cuerpo de la petición o nulo si el
    * formato de filtro no es válido.

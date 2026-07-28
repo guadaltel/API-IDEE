@@ -111,14 +111,9 @@
   "unknown": "Desconocido",
   "masiveDownload": {
     "title": "Descargar selección",
-    "pickFolder": "Seleccione la carpeta donde guardar las imágenes.",
-    "progress": "Descargando {{current}} de {{total}}: {{filename}}",
-    "zipProgress": "Empaquetando {{current}} de {{total}} en ZIP: {{filename}}",
-    "complete": "Descarga finalizada. Correctos: {{success}}. Fallidos: {{failed}}.",
-    "completeZip": "ZIP \"{{filename}}\" creado con {{success}} archivos.",
+    "itemsDownloadMsg": "Tienes una descarga en curso de {{numItems}} elementos de la colección {{collectionName}}",
+    "collectionDownloadMsg": "Tienes una descarga en curso de la colección {{collectionName}}",
     "error": "No se pudo completar la descarga.",
-    "unsupportedBrowser": "Su navegador no soporta la selección de carpeta (File System Access API). Los archivos se descargarán en la carpeta de descargas del navegador.",
-    "browserDownloads": "El ZIP se descargará en la carpeta de descargas del navegador.",
     "cancelled": "Descarga cancelada."
   },
   "clearSelection": "Limpiar selección",

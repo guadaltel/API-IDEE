@@ -111,14 +111,9 @@
   "unknown": "Unknown",
   "masiveDownload": {
     "title": "Download selection",
-    "pickFolder": "Select the folder where images will be saved.",
-    "progress": "Downloading {{current}} of {{total}}: {{filename}}",
-    "zipProgress": "Packing {{current}} of {{total}} into ZIP: {{filename}}",
-    "complete": "Download finished. Successful: {{success}}. Failed: {{failed}}.",
-    "completeZip": "ZIP \"{{filename}}\" created with {{success}} files.",
+    "itemsDownloadMsg": "You have a download in progress of {{numItems}} items from the collection {{collectionName}}",
+    "collectionDownloadMsg": "You have a download in progress of the collection {{collectionName}}",
     "error": "Could not complete the download.",
-    "unsupportedBrowser": "Your browser does not support folder selection (File System Access API). Files will be downloaded to the browser downloads folder.",
-    "browserDownloads": "The ZIP file will be saved to the browser downloads folder.",
     "cancelled": "Download cancelled."
   },
   "clearSelection": "Clear selection",
