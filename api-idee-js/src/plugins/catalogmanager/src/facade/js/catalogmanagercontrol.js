@@ -2465,7 +2465,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
    *
    * @private
    * @function
-   * @param {{bands: Array<number>, indice?: string}|null} spec Especificación de bandas e índice espectral
+   * @param {{bands: Array<number>, indice?: string}|null} spec
+   * Especificación de bandas e índice espectral
    * @returns {IDEE.style.Raster|null} Estilo ráster o nulo si no hay especificación
    */
   buildRasterStyle(spec) {
