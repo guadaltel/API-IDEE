@@ -354,6 +354,11 @@ export default class TemplateCustomizer extends IDEE.Control {
       container: containerId,
       zoom: this.map.getImpl().getZoom(),
       center: Object.values(this.map.getImpl().getCenter()),
+      projection: this.map.getProjection().code,
+      controls: [new IDEE.control.ScaleLine({
+        bar: true,
+        steps: 4,
+      })],
     });
 
     this.previewMap.addLayers(this.map.getLayers().map((layer) => layer.clone()));
@@ -1200,6 +1205,23 @@ export default class TemplateCustomizer extends IDEE.Control {
           }
         },
       );
+
+      // Incluir la escala gráfica (ScaleLine) en la imagen exportada
+      context.globalAlpha = 1;
+      const scaleElement = map.getViewport().querySelector('.ol-scale-bar, .ol-scale-line');
+      if (scaleElement) {
+        const scaleCanvas = await html2canvas(scaleElement, {
+          backgroundColor: null,
+          logging: false,
+          scale: 1,
+        });
+        const scaleRect = scaleElement.getBoundingClientRect();
+        const viewportRect = map.getViewport().getBoundingClientRect();
+        const scaleX = scaleRect.left - viewportRect.left;
+        const scaleY = scaleRect.top - viewportRect.top;
+        context.drawImage(scaleCanvas, scaleX, scaleY);
+      }
+
       map.setSize(originalSize);
       map.getView().setResolution(originalResolution);
 
