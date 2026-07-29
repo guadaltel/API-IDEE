@@ -234,6 +234,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
             filtersTypes: getValue('filtersTypes'),
             masiveDownload: getValue('masiveDownload.title'),
             clearSelection: getValue('clearSelection'),
+            noResults: getValue('exception.no_results'),
           },
           startDate: yesterday,
           startTime: '00:00:00',
@@ -1377,6 +1378,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     } else if (downloadable) {
       extraActionsContent.classList.remove('hidden');
     }
+    const noResultsContent = this.template_.querySelector('#m-catalogmanager-no-results-content');
+    if (itemsJson.length === 0) {
+      noResultsContent.classList.remove('hidden');
+    } else if (!noResultsContent.classList.contains('hidden')) {
+      noResultsContent.classList.add('hidden');
+    }
     container.querySelector('.m-catalogmanager-ulitems').addEventListener('click', (evt) => this.itemsEvent(evt));
     container.querySelector('.m-catalogmanager-next-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'next'));
     container.querySelector('.m-catalogmanager-prev-items-button').addEventListener('click', (evt) => this.changeItemsPage(evt, 'previous'));
@@ -2082,11 +2089,19 @@ export default class CatalogmanagerControl extends IDEE.Control {
       return;
     }
     if (!collection.layerGroup) {
-      collection.layerGroup = new IDEE.layer.LayerGroup({
-        name: collection.title,
-        legend: collection.title,
-      });
-      catalog.layerGroup.addLayers(collection.layerGroup);
+      // Puede perderse la asignación del layerGroup al cambiar de colección,
+      // por lo que se debe buscar el layerGroup anterior y se asigna de nuevo
+      const previousGroup = catalog.layerGroup.getLayers()
+        .find((layer) => layer.legend === collection.title);
+      if (previousGroup) {
+        collection.layerGroup = previousGroup;
+      } else {
+        collection.layerGroup = new IDEE.layer.LayerGroup({
+          name: collection.title,
+          legend: collection.title,
+        });
+        catalog.layerGroup.addLayers(collection.layerGroup);
+      }
     }
     const huella = this.getHuellaLayer(collection);
     if (huella) {
@@ -2478,7 +2493,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     if (spec.indice) {
       options = INDICES_STYLES[spec.indice];
     } else {
-      options.gamma = 2;
+      options.exposure = 0.2;
     }
     options.nodata = 0;
     options.bands = bands;
@@ -2666,6 +2681,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
     IDEE.remote.post(this.downloadUrl_, downloadData, { headers }).then((response) => {
       if (response.code === 200 || response.code === 202) {
         this.notifyDownload(catalog.obj, message);
+        IDEE.dialog.info(getValue('masiveDownload.startDownloadMsg'));
+      } else if (response.code === 400) {
+        IDEE.dialog.info(JSON.parse(response.text).error);
       } else {
         console.error(response.text);
       }

@@ -3,7 +3,7 @@
     <select id="m-catalogmanager-filters-catalogs-content">
         {{#each catalogs}}
             <option value="{{this.index}}">{{this.title}}
-            {{#if public}}
+            <!--{{#if public}}
                 <span class="icon-lock-open">
                     {{../translations.public}}
                 </span>
@@ -11,7 +11,8 @@
                 <span class="icon-lock">
                     {{../translations.private}}
                 </span>
-            {{/if}}</option>
+            {{/if}}-->
+            </option>
         {{/each}}
     </select>
 </div>

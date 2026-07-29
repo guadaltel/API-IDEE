@@ -98,7 +98,7 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
     if (!this.selectItem) {
       this.createSelectItemInteraction([olLayer]);
     } else {
-      this.olLayers_.push(olLayer);
+      this.olLayers_[0] = olLayer;
     }
   }
 

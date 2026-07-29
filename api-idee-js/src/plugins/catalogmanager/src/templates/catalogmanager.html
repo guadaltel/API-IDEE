@@ -2,7 +2,7 @@
     <header id="m-catalogmanager-title" class="m-catalogmanager-title">
         <h1 aria-label="Plugin catalogmanager" class="title" role="text">{{translations.title}}</h1>
     </header>
-    <section aria-label="Plugin catalogmanager" id="m-catalogmanager-actions-content" class="m-catalogmanager-content">
+    <section id="m-catalogmanager-actions-content" class="m-catalogmanager-content">
         <div class="m-catalogmanager-actions">
             {{#if addCatalogEnabled}}
                 <button id="m-catalogmanager-addcatalog" title="{{translations.addCatalog}}"><span class="icon-plus"></span></button>
@@ -15,7 +15,7 @@
     </div>
     <div id="m-catalogmanager-tabs-contents">
         <div id="m-catalogmanager-filters-tab-content">
-            <section aria-label="Plugin catalogmanager" id="m-catalogmanager-filters-content" class="m-catalogmanager-content">
+            <section id="m-catalogmanager-filters-content" class="m-catalogmanager-content">
                 <div class="m-catalogmanager-actions">
                     <button id="m-catalogmanager-updatecatalog" title="{{translations.update}}"><span class="icon-arrows-cw"></span></button>
                 </div>
@@ -65,12 +65,15 @@
             </section>
         </div>
         <div id="m-catalogmanager-results-tab-content" class="hidden">
-            <section aria-label="Plugin catalogmanager" id="m-catalogmanager-results-content" class="m-catalogmanager-content"></section>
-            <section aria-label="Plugin catalogmanager" id="m-catalogmanager-extra-actions-content" class="m-catalogmanager-content">
+            <section id="m-catalogmanager-results-content" class="m-catalogmanager-content"></section>
+            <section id="m-catalogmanager-extra-actions-content" class="m-catalogmanager-content hidden">
                 <div class="m-catalogmanager-actions">
                     <button id="m-catalogmanager-download" title="{{translations.masiveDownload}}"><span class="icon-download"></span></button>
                     <button id="m-catalogmanager-delete" title="{{translations.clearSelection}}"><span class="icon-trash-empty"></span></button>
                 </div>
+            </section>
+            <section id="m-catalogmanager-no-results-content" class="m-catalogmanager-content">
+                <p style="text-align: center;">{{translations.noResults}}</p>
             </section>
         </div>
     </div>

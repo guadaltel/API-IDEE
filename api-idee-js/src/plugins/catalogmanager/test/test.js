@@ -17,6 +17,8 @@ const PREDEFINED_CATALOGS = [
     authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
     collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
     public: false,
+    user: '',
+    password: '',
   }, {
     title: 'Astraea Earth',
     url: 'https://eod-catalog-svc-prod.astraea.earth',
@@ -34,10 +36,9 @@ const PREDEFINED_CATALOGS = [
 
 const mp = new Catalogmanager({
   position: 'TL', // TR, BR, TL, BL
-  collapsed: true,
+  collapsed: false,
   collapsible: true,
   tooltip: 'Gestor de catálogos',
-  isDraggable: true,
   predefinedCatalogs: PREDEFINED_CATALOGS,
   addCatalogEnabled: false,
   downloadUrl: 'https://gneissd.desarrollo.guadaltel.es/serviciodescarga/v1/download-jobs',
@@ -46,6 +47,13 @@ window.mp = mp;
 
 map.addPlugin(mp);
 
-map.addPlugin(new IDEE.plugin.Layerswitcher({}));
+map.addPlugin(new IDEE.plugin.Layerswitcher({
+  isMoveLayers: true,
+}));
 
-IDEE.config.API_IDEE_URL = 'http://localhost:9090/api-idee/';
+map.addPlugin(new IDEE.plugin.RasterManagement({
+  position: 'TL', // TR, BR, TL, BL
+  collapsed: true,
+  collapsible: true,
+  tooltip: 'Gestor de estilos ráster',
+}));

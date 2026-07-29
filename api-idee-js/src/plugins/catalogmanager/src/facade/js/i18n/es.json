@@ -114,6 +114,7 @@
     "itemsDownloadMsg": "Tienes una descarga en curso de {{numItems}} elementos de la colección {{collectionName}}",
     "collectionDownloadMsg": "Tienes una descarga en curso de la colección {{collectionName}}",
     "error": "No se pudo completar la descarga.",
+    "startDownloadMsg": "La descarga se ha iniciado, puede comprobar el estado en el centro de descargas de la plataforma.",
     "cancelled": "Descarga cancelada."
   },
   "clearSelection": "Limpiar selección",
