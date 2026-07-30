@@ -122,6 +122,13 @@ export default class RasterManagementControl extends IDEE.Control {
      * @type {boolean}
      */
     this.updatingRampStops_ = false;
+
+    /**
+     * Grupos de capas con escuchador ADDED_TO_LAYERGROUP registrado
+     * @private
+     * @type {Set<string>}
+     */
+    this.layerGroupListeners_ = new Set();
   }
 
   /**
@@ -1010,8 +1017,16 @@ export default class RasterManagementControl extends IDEE.Control {
     applyBtn.addEventListener('click', () => this.applyStyle());
     clearBtn.addEventListener('click', () => this.clearStyle());
     copyBtn.addEventListener('click', () => this.copySerializedStyle());
-    this.map.on(IDEE.evt.ADDED_LAYER, () => this.refreshLayers());
+    this.map.on(IDEE.evt.ADDED_LAYER, (layers) => {
+      this.registerLayerGroupListeners_(layers);
+      this.refreshLayers();
+    });
+    this.map.on(IDEE.evt.ADDED_LAYERGROUP, (groups) => {
+      this.registerLayerGroupListeners_(groups);
+      this.refreshLayers();
+    });
     this.map.on(IDEE.evt.REMOVED_LAYER, () => this.refreshLayers());
+    this.registerLayerGroupListeners_(this.map.getLayerGroup());
   }
 
   /**
@@ -1142,6 +1157,53 @@ export default class RasterManagementControl extends IDEE.Control {
       collectFromGroup(group);
     });
     return geotiffLayers;
+  }
+
+  /**
+   * Registra escuchadores en grupos de capas para detectar capas añadidas dinámicamente
+   *
+   * @private
+   * @function
+   * @param {Array<IDEE.layer.LayerGroup>|IDEE.layer.LayerGroup} groups Grupos a registrar
+   */
+  registerLayerGroupListeners_(groups) {
+    let arrGroups = groups;
+    if (IDEE.utils.isNullOrEmpty(arrGroups)) {
+      return;
+    }
+    if (!Array.isArray(arrGroups)) {
+      arrGroups = [arrGroups];
+    }
+    arrGroups.forEach((layer) => {
+      if (layer instanceof IDEE.layer.LayerGroup) {
+        this.registerLayerGroupListener_(layer);
+        layer.getLayers().forEach((child) => {
+          if (child instanceof IDEE.layer.LayerGroup) {
+            this.registerLayerGroupListeners_(child);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Registra el escuchador ADDED_TO_LAYERGROUP en un grupo concreto
+   *
+   * @private
+   * @function
+   * @param {IDEE.layer.LayerGroup} group Grupo de capas
+   */
+  registerLayerGroupListener_(group) {
+    if (this.layerGroupListeners_.has(group.idLayer)) {
+      return;
+    }
+    this.layerGroupListeners_.add(group.idLayer);
+    group.on(IDEE.evt.ADDED_TO_LAYERGROUP, (addedLayer) => {
+      if (addedLayer instanceof IDEE.layer.LayerGroup) {
+        this.registerLayerGroupListener_(addedLayer);
+      }
+      this.refreshLayers();
+    });
   }
 
   /**
