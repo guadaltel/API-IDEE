@@ -129,6 +129,20 @@ export default class RasterManagementControl extends IDEE.Control {
      * @type {Set<string>}
      */
     this.layerGroupListeners_ = new Set();
+
+    /**
+     * Escuchadores del mapa ya registrados
+     * @private
+     * @type {boolean}
+     */
+    this.mapLayerEventsRegistered_ = false;
+
+    /**
+     * Indica si debe refrescarse el selector cuando la plantilla esté lista
+     * @private
+     * @type {boolean}
+     */
+    this.pendingLayersRefresh_ = false;
   }
 
   /**
@@ -141,6 +155,7 @@ export default class RasterManagementControl extends IDEE.Control {
    */
   createView(map) {
     this.map = map;
+    this.registerMapLayerEvents_();
     const ndviDefaults = IDEE.style.Raster.DEFAULT_NDVI;
     const ndwiDefaults = IDEE.style.Raster.DEFAULT_NDWI;
     const nbrDefaults = IDEE.style.Raster.DEFAULT_NBR;
@@ -1017,16 +1032,33 @@ export default class RasterManagementControl extends IDEE.Control {
     applyBtn.addEventListener('click', () => this.applyStyle());
     clearBtn.addEventListener('click', () => this.clearStyle());
     copyBtn.addEventListener('click', () => this.copySerializedStyle());
-    this.map.on(IDEE.evt.ADDED_LAYER, (layers) => {
-      this.registerLayerGroupListeners_(layers);
+    this.registerLayerGroupListeners_(this.map.getLayerGroup());
+    if (this.pendingLayersRefresh_) {
+      this.pendingLayersRefresh_ = false;
+      this.refreshLayers();
+    }
+  }
+
+  /**
+   * Registra escuchadores del mapa para GeoTIFF y grupos de capas
+   *
+   * @private
+   * @function
+   */
+  registerMapLayerEvents_() {
+    if (this.mapLayerEventsRegistered_ || IDEE.utils.isNullOrEmpty(this.map)) {
+      return;
+    }
+    this.mapLayerEventsRegistered_ = true;
+    this.map.on(IDEE.evt.ADDED_GEOTIFF, () => {
       this.refreshLayers();
     });
     this.map.on(IDEE.evt.ADDED_LAYERGROUP, (groups) => {
       this.registerLayerGroupListeners_(groups);
+    });
+    this.map.on(IDEE.evt.REMOVED_LAYER, () => {
       this.refreshLayers();
     });
-    this.map.on(IDEE.evt.REMOVED_LAYER, () => this.refreshLayers());
-    this.registerLayerGroupListeners_(this.map.getLayerGroup());
   }
 
   /**
@@ -1144,16 +1176,16 @@ export default class RasterManagementControl extends IDEE.Control {
     const geotiffLayers = this.map.getGeoTIFF().slice();
     const collectFromGroup = (group) => {
       group.getLayers().forEach((layer) => {
-        if (layer instanceof IDEE.layer.GeoTIFF) {
+        if (layer.type === 'GeoTIFF') {
           if (!geotiffLayers.includes(layer)) {
             geotiffLayers.push(layer);
           }
-        } else if (layer instanceof IDEE.layer.LayerGroup) {
+        } else if (layer.type === 'LayerGroup') {
           collectFromGroup(layer);
         }
       });
     };
-    this.map.getLayerGroup().forEach((group) => {
+    this.map.getImpl().getLayerGroups().forEach((group) => {
       collectFromGroup(group);
     });
     return geotiffLayers;
@@ -1175,10 +1207,10 @@ export default class RasterManagementControl extends IDEE.Control {
       arrGroups = [arrGroups];
     }
     arrGroups.forEach((layer) => {
-      if (layer instanceof IDEE.layer.LayerGroup) {
+      if (layer.type === 'LayerGroup') {
         this.registerLayerGroupListener_(layer);
         layer.getLayers().forEach((child) => {
-          if (child instanceof IDEE.layer.LayerGroup) {
+          if (child.type === 'LayerGroup') {
             this.registerLayerGroupListeners_(child);
           }
         });
@@ -1199,8 +1231,8 @@ export default class RasterManagementControl extends IDEE.Control {
     }
     this.layerGroupListeners_.add(group.idLayer);
     group.on(IDEE.evt.ADDED_TO_LAYERGROUP, (addedLayer) => {
-      if (addedLayer instanceof IDEE.layer.LayerGroup) {
-        this.registerLayerGroupListener_(addedLayer);
+      if (addedLayer.type === 'LayerGroup') {
+        this.registerLayerGroupListeners_(addedLayer);
       }
       this.refreshLayers();
     });
@@ -1214,6 +1246,10 @@ export default class RasterManagementControl extends IDEE.Control {
    * @api stable
    */
   refreshLayers() {
+    if (IDEE.utils.isNullOrEmpty(this.html)) {
+      this.pendingLayersRefresh_ = true;
+      return;
+    }
     const geotiffLayers = this.getGeoTIFFLayers();
     this.layers_ = geotiffLayers.map((layer) => {
       let text = layer.idLayer;
