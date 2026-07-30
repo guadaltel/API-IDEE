@@ -1119,14 +1119,29 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
-   * Obtiene las capas GeoTIFF del mapa
+   * Obtiene las capas GeoTIFF del mapa, incluyendo las contenidas en grupos
    *
    * @private
    * @function
    * @returns {Array<IDEE.layer.GeoTIFF>}
    */
   getGeoTIFFLayers() {
-    return this.map.getGeoTIFF();
+    const geotiffLayers = this.map.getGeoTIFF().slice();
+    const collectFromGroup = (group) => {
+      group.getLayers().forEach((layer) => {
+        if (layer instanceof IDEE.layer.GeoTIFF) {
+          if (!geotiffLayers.includes(layer)) {
+            geotiffLayers.push(layer);
+          }
+        } else if (layer instanceof IDEE.layer.LayerGroup) {
+          collectFromGroup(layer);
+        }
+      });
+    };
+    this.map.getLayerGroup().forEach((group) => {
+      collectFromGroup(group);
+    });
+    return geotiffLayers;
   }
 
   /**
