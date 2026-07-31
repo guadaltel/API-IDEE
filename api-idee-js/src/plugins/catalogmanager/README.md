@@ -16,7 +16,8 @@ Plugin que permite la gestión de catálogos STAC.
 - Ver la información de un elemento
 - Ver en el mapa la huella de una colección
 - Ver en el mapa la imagen tif asociada a un elemento
-- Descargar la imagen tif asociada a un elemento
+- Descarga individual de la imagen tif asociada a un elemento. Solo habilitado para catálogos privados autenticados.
+- Descarga masiva de las imágenes de una colección completa, elementos seleccionados o imagenes seleccionadas. Solo habilitado para catálogo de GNEIS
 
 
 # Dependencias
@@ -59,6 +60,8 @@ El constructor se inicializa con un JSON con los siguientes atributos:
 - **tooltip**. Información emergente para mostrar en el tooltip del plugin (se muestra al dejar el ratón encima del plugin como información). Por defecto: 'Plantilla plugin'
 - **draggable**. Indica si el plugin puede arrastrarse.
 - **predefinedCatalogs**. Lista de propiedades de catalogos predefinidos que se cargarán por defecto.
+- **addCatalogEnabled**. Indica si se podrán añadir catalogos desde la interfaz. Por defecto false.
+- **downloadUrl**. Url del servicio de descarga masiva.
 
 # API-REST
 
