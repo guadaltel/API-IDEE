@@ -44,7 +44,7 @@ El constructor se inicializa con un JSON con los siguientes atributos:
   - 'BR': (bottom right) - Abajo a la derecha.
 - **collapsed**: Indica si el plugin viene colapsado de entrada (true/false). Por defecto: true.
 - **collapsible**: Indica si el plugin puede abrirse y cerrarse (true) o si permanece siempre abierto (false). 
-- **tooltip**. Información emergente para mostrar en el tooltip del plugin (se muestra al dejar el ratón encima del plugin como información). Por defecto: 'Enlaces y contacto IGN'
+- **tooltip**. Información emergente para mostrar en el tooltip del plugin (se muestra al dejar el ratón encima del plugin como información). 
 
 # API-REST
 
@@ -84,7 +84,7 @@ URL_API?rastermanagement=position*collapsed*collapsible*tooltip
 ### Ejemplos de uso API-REST
 
 ```
-https://componentes.idee.es/api-idee/?rastermanagement=TR*true*true*Enlaces
+https://componentes.idee.es/api-idee/?rastermanagement=TR*true*true*EstilosRasters
 ```
 
 ```
@@ -97,7 +97,6 @@ Ejemplo del constructor:
 ```javascript
 {
   position:"TL",
-  tooltip:"Contacta con nosotros"
 }
 ```
 ```
