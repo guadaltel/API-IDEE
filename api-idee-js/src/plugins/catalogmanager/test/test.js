@@ -17,8 +17,6 @@ const PREDEFINED_CATALOGS = [
     authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
     collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
     public: false,
-    user: '',
-    password: '',
   }, {
     title: 'Astraea Earth',
     url: 'https://eod-catalog-svc-prod.astraea.earth',

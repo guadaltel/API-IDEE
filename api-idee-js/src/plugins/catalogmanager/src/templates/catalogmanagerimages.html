@@ -1,6 +1,9 @@
 <table class="m-catalogmanager-tableimages" style="width: 100%;">
     <thead>
         <tr>
+            {{#if showCheckbox}}
+            <th></th>
+            {{/if}}
             <th>{{translations.images}}</th>
             <th style="text-align: center;">{{translations.actions}}</th>
         </tr>
@@ -8,6 +11,12 @@
     <tbody>
     {{#each images}}
         <tr class="m-catalogmanager-title-image" data-image-key="{{key}}" data-item-id="{{itemId}}" data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">
+            {{#if ../showCheckbox}}
+            <td>
+                <input type="checkbox" class="m-catalogmanager-checkbox-image" id="select-image-{{key}}"
+                data-image-key="{{key}}" data-item-id="{{itemId}}" data-collection-index="{{collectionIndex}}" data-catalog-index="{{catalogIndex}}">
+            </td>
+            {{/if}}
             <td><span class="m-catalogmanager-title-box"  
                     title="{{title}}" tabindex="0">
                     {{title}}

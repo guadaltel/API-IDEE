@@ -35,7 +35,8 @@
   "imageActions": {
     "info": "Information",
     "preview": "Preview",
-    "download": "Download",
+    "download": "Download image",
+    "downloadCollection": "Download collection",
     "histogram": "Histogram"
   },
   "histogramDialog": {
@@ -112,6 +113,7 @@
   "masiveDownload": {
     "title": "Download selection",
     "itemsDownloadMsg": "You have a download in progress of {{numItems}} items from the collection {{collectionName}}",
+    "imagesDownloadMsg": "You have a download in progress of images from {{numItems}} items from the collection {{collectionName}}",
     "collectionDownloadMsg": "You have a download in progress of the collection {{collectionName}}",
     "error": "Could not complete the download.",
     "startDownloadMsg": "The download has started, you can check the status in the downloads center of the platform.",

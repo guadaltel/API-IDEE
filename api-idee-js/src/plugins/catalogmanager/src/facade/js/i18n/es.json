@@ -35,7 +35,8 @@
   "imageActions": {
     "info": "Información",
     "preview": "Vista previa",
-    "download": "Descargar",
+    "download": "Descargar imagen",
+    "downloadCollection": "Descargar colección",
     "histogram": "Histograma"
   },
   "histogramDialog": {
@@ -111,6 +112,7 @@
   "unknown": "Desconocido",
   "masiveDownload": {
     "title": "Descargar selección",
+    "imagesDownloadMsg": "Tienes una descarga en curso de imágenes de {{numItems}} elementos de la colección {{collectionName}}",
     "itemsDownloadMsg": "Tienes una descarga en curso de {{numItems}} elementos de la colección {{collectionName}}",
     "collectionDownloadMsg": "Tienes una descarga en curso de la colección {{collectionName}}",
     "error": "No se pudo completar la descarga.",

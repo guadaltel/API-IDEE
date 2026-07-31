@@ -156,6 +156,18 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.selectedItems_ = [];
 
     /**
+     * Identificadores de imágenes seleccionadas para descarga masiva
+     * @private
+     * @type {Object<string, Array<string>>}
+     */
+    this.selectedImages_ = {};
+
+    this.cachedElements_ = {
+      collectionId: null,
+      items: {},
+    };
+
+    /**
      * Operadores SQL disponibles en el filtro avanzado
      * @private
      * @type {Array<string>}
@@ -1299,6 +1311,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   getFilteredItemsAdvanced() {
     // this.updateBboxFilter();
     this.selectedItems_ = [];
+    this.selectedImages_ = {};
     const state = this.advancedFilterState_;
     const catalog = this.catalogs_[state.catalogIndex];
     const collection = catalog.collections[state.collectionIndex];
@@ -1366,7 +1379,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
           metadata: getValue('metadata'),
           previous: getValue('previous'),
           next: getValue('next'),
-          download: getValue('imageActions.download'),
+          download: getValue('imageActions.downloadCollection'),
         },
       },
     });
@@ -1398,6 +1411,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     } else {
       this.previewItems(catalogIndex, collectionIndex, items);
     }
+    this.statsRequest();
   }
 
   /**
@@ -1652,6 +1666,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {HTMLElement} collectionsElement Contenedor DOM de las colecciones
    */
   getCollections(catalogIndex, collectionsElement) {
+    this.resetCachedElements();
     const catalog = this.catalogs_[catalogIndex];
     if (!catalog.obj.public && IDEE.utils.isNullOrEmpty(catalog.obj.token)) {
       const callback = () => this.requestCollections(collectionsElement);
@@ -1768,6 +1783,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.collectionDownload(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
       return;
     }
+    this.resetCachedElements();
     if (target.classList.contains('active')) {
       target.classList.remove('active');
       const itemsElement = this.template_.querySelector('#m-catalogmanager-results-content');
@@ -1793,6 +1809,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   getItems(catalogIndex, collectionIndex) {
     this.selectedItems_ = [];
+    this.selectedImages_ = {};
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     let promise = null;
@@ -1897,6 +1914,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.toggleIcon(itemDiv);
       this.toggleHidden(imagesElement);
     }
+    this.statsRequest(itemId);
   }
 
   /**
@@ -1950,6 +1968,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
           vars: {
             images,
             downloadable: !catalog.obj.public,
+            showCheckbox: !catalog.obj.public && !openDialog,
             translations: {
               imageActions: getValue('imageActions'),
               images: getValue('images'),
@@ -1962,6 +1981,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
         IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
         document.querySelector('div.m-dialog.info .m-catalogmanager-tableimages').addEventListener('click', (evt) => this.imagesEvent(evt));
         this.changeCloseButtonModal();
+        this.statsRequest(itemId);
       } else {
         if (html) {
           html.addEventListener('click', (evt) => this.imagesEvent(evt));
@@ -1984,6 +2004,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
   imagesEvent(evt) {
     evt.stopPropagation();
     const target = evt.target;
+    if (target.classList.contains('m-catalogmanager-checkbox-image')) {
+      this.changeSelectedImages(target);
+      return;
+    }
     const imageDiv = this.findParentByClass(target, 'm-catalogmanager-title-image');
     const imageKey = imageDiv.dataset.imageKey;
     const collectionIndex = imageDiv.dataset.collectionIndex;
@@ -1991,6 +2015,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const itemId = imageDiv.dataset.itemId;
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
+    let operator = 'view';
     if (target.classList.contains('m-catalogmanager-preview-button')) {
       this.closeDialog();
       catalog.obj.getItem(collection.id, itemId).then((item) => {
@@ -2001,11 +2026,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
       });
     } else if (target.classList.contains('m-catalogmanager-download-button')) {
       this.closeDialog();
+      operator = 'download';
       catalog.obj.getItem(collection.id, itemId).then((item) => {
         const asset = item.assets[imageKey];
         window.open(asset.href, '_blank');
       });
     }
+    this.statsRequest(itemId, imageKey, operator);
   }
 
   /**
@@ -2021,7 +2048,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalog = cat;
     const collection = coll;
     const styleSpec = this.resolveStyleSpec(image);
-    // const style = this.buildWebGlStyle(styleSpec);
     const style = this.buildRasterStyle(styleSpec);
     const geotiff = new IDEE.layer.GeoTIFF({
       url: image.href,
@@ -2046,6 +2072,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
       });
       catalog.layerGroup.addLayers(collection.layerGroup);
     }
+    const oldLayer = collection.layerGroup.getLayers()
+      .find((layer) => layer.legend === geotiff.getLegend());
+    if (oldLayer) {
+      collection.layerGroup.removeLayers(oldLayer);
+    }
+    /* geotiff.on('load', () => {
+      this.map_.setBbox(geotiff.getMaxExtent());
+    }); */
     collection.layerGroup.addLayers(geotiff);
   }
 
@@ -2442,40 +2476,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
-   * Construye el estilo WebGL de OpenLayers a partir de una especificación de bandas.
-   * La normalización de valores la realiza la fuente GeoTIFF (normalize: true por defecto).
-   * Los píxeles con valor nodata (0) se renderizan transparentes.
-   *
-   * @private
-   * @function
-   * @param {{bands: Array<number>}} spec Índices de banda
-   * @returns {Object|null} Estilo WebGL para IDEE.layer.GeoTIFF
-   */
-  buildWebGlStyle(spec) {
-    if (!spec) {
-      return null;
-    }
-    const bands = spec.bands;
-    const channelValue = (bandIndex) => (bandIndex ? ['band', bandIndex] : 0);
-    const styleBands = ['array'];
-    for (let i = 0; i < bands.length && i < 3; i += 1) {
-      styleBands.push(channelValue(bands[i]));
-    }
-    styleBands.push(1);
-    return {
-      variables: {
-        nodata: 0,
-      },
-      color: [
-        'case',
-        ['==', ['band', 1], ['var', 'nodata']],
-        [0, 0, 0, 0],
-        styleBands,
-      ],
-    };
-  }
-
-  /**
    * Construye un estilo ráster a partir de la especificación de bandas e índice
    *
    * @private
@@ -2537,9 +2537,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   clearSelection() {
     this.selectedItems_ = [];
-    const checkedInputs = this.tamplate_.querySelectorAll('.m-catalogmanager-checkbox-item:checked');
-    for (let i = 0; i < checkedInputs.length; i += 1) {
-      checkedInputs[i].checked = false;
+    this.selectedImages_ = {};
+    const checkedItemsInputs = this.template_.querySelectorAll('.m-catalogmanager-checkbox-item:checked');
+    for (let i = 0; i < checkedItemsInputs.length; i += 1) {
+      checkedItemsInputs[i].checked = false;
+    }
+    const checkedImagesInputs = this.template_.querySelectorAll('.m-catalogmanager-checkbox-image:checked');
+    for (let i = 0; i < checkedImagesInputs.length; i += 1) {
+      checkedImagesInputs[i].checked = false;
     }
   }
 
@@ -2580,6 +2585,32 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
+   * Actualiza la selección de imagenes según el estado del checkbox indicado
+   *
+   * @private
+   * @function
+   * @param {HTMLInputElement} checkbox Checkbox de imagen individual
+   */
+  changeSelectedImages(checkbox) {
+    const itemId = checkbox.dataset.itemId;
+    const imageKey = checkbox.dataset.imageKey;
+    if (itemId && imageKey) {
+      if (checkbox.checked) {
+        if (!this.selectedImages_[itemId]) {
+          this.selectedImages_[itemId] = [];
+        }
+        this.selectedImages_[itemId].push(imageKey);
+      } else {
+        this.selectedImages_[itemId] = this.selectedImages_[itemId]
+          .filter((key) => key !== imageKey);
+        if (this.selectedImages_[itemId].length === 0) {
+          delete this.selectedImages_[itemId];
+        }
+      }
+    }
+  }
+
+  /**
    * Lanza la descarga masiva de todos los assets de una colección
    *
    * @private
@@ -2602,6 +2633,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.downloadRequest(downloadData);
   }
 
+  masiveDownload() {
+    if (!IDEE.utils.isNullOrEmpty(this.selectedImages_)) {
+      this.imagesDownload();
+    } else {
+      this.itemsDownload();
+    }
+  }
+
   /**
    * Descarga masivamente los elementos seleccionados.
    *
@@ -2610,8 +2649,24 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @returns {Promise<void>}
    * @api stable
    */
-  async masiveDownload() {
+  itemsDownload() {
     const selection = this.collectSelectedItems();
+    if (selection.length === 0) {
+      IDEE.dialog.info(getValue('exception').no_selection);
+      return;
+    }
+    const downloadData = {
+      selection,
+      options: {
+        assests: ['data'],
+        includeStacJson: true,
+      },
+    };
+    this.downloadRequest(downloadData);
+  }
+
+  imagesDownload() {
+    const selection = this.collectSelectedImages();
     if (selection.length === 0) {
       IDEE.dialog.info(getValue('exception').no_selection);
       return;
@@ -2637,19 +2692,29 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const selection = {
       type: 'items',
     };
-    let collectionIndex = null;
-    let catalogIndex = null;
-    const itemIds = [];
-    this.template_.querySelectorAll('.m-catalogmanager-checkbox-item:checked').forEach((input) => {
-      const itemId = input.dataset.itemId;
-      collectionIndex = input.dataset.collectionIndex;
-      catalogIndex = input.dataset.catalogIndex;
-      if (itemId) {
-        itemIds.push(itemId);
+    selection.collectionId = this.catalogs_[this.selectedCatalogIndex_]
+      .collections[this.selectedCollectionIndex_].id;
+    selection.itemIds = this.selectedItems_;
+    return selection;
+  }
+
+  collectSelectedImages() {
+    const selection = {
+      type: 'images',
+    };
+    const images = {};
+    Object.keys(this.selectedImages_).forEach((key) => {
+      const itemId = key;
+      images[itemId] = this.selectedImages_[key];
+    });
+    this.selectedItems_.forEach((itemId) => {
+      if (!images[itemId]) {
+        images[itemId] = ['*'];
       }
     });
-    selection.collectionId = this.catalogs_[catalogIndex].collections[collectionIndex].id;
-    selection.itemIds = itemIds;
+    selection.collectionId = this.catalogs_[this.selectedCatalogIndex_]
+      .collections[this.selectedCollectionIndex_].id;
+    selection.images = images;
     return selection;
   }
 
@@ -2661,12 +2726,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Object} downloadData Cuerpo de la petición con la selección y opciones de descarga
    */
   downloadRequest(downloadData) {
-    // console.log(downloadData);
+    console.log(downloadData);
     const catalog = this.catalogs_[this.selectedCatalogIndex_];
     const collection = catalog.collections[this.selectedCollectionIndex_];
     const token = catalog.obj.token;
     let message = '';
-    if (downloadData.selection.type === 'items') {
+    if (downloadData.selection.type === 'images') {
+      message = getValue('masiveDownload.imagesDownloadMsg')
+        .replace('{{numItems}}', Object.keys(downloadData.selection.images).length)
+        .replace('{{collectionName}}', collection.title);
+    } else if (downloadData.selection.type === 'items') {
       message = getValue('masiveDownload.itemsDownloadMsg')
         .replace('{{numItems}}', downloadData.selection.itemIds.length)
         .replace('{{collectionName}}', collection.title);
@@ -2715,5 +2784,78 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }).catch((error) => {
       console.error(error);
     });
+  }
+
+  resetCachedElements() {
+    this.cachedElements_ = {
+      collectionId: null,
+      items: {},
+    };
+  }
+
+  statsRequest(itemId = null, imageKey = null, operator = 'view') {
+    if (this.isValidStatsCatalog() && !this.isCachedElement(itemId, imageKey, operator)) {
+      const catalog = this.catalogs_[this.selectedCatalogIndex_];
+      const collection = catalog.collections[this.selectedCollectionIndex_];
+      this.cachedElements_.collectionId = collection.id;
+      const token = catalog.obj.token;
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const body = {
+        collectionId: collection.id,
+        source: 'visualizer',
+        accessToken: token,
+      };
+      if (itemId) {
+        body.itemId = itemId;
+        if (!this.cachedElements_.items[itemId]) {
+          this.cachedElements_.items[itemId] = {};
+        }
+      }
+      if (imageKey) {
+        body.imageId = imageKey;
+        body.operator = operator;
+        if (!this.cachedElements_.items[itemId][imageKey]) {
+          this.cachedElements_.items[itemId][imageKey] = [operator];
+        } else {
+          this.cachedElements_.items[itemId][imageKey].push(operator);
+        }
+      }
+      const url = `${catalog.obj.authUrl.substring(0, catalog.obj.authUrl.lastIndexOf('/'))}/collection-view`;
+      IDEE.remote.post(url, body, { headers }).then((response) => {
+        console.log(response);
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
+  }
+
+  isValidStatsCatalog() {
+    const catalog = this.catalogs_[this.selectedCatalogIndex_];
+    return !IDEE.utils.isNullOrEmpty(catalog.obj.authUrl);
+  }
+
+  isCachedElement(itemId, imageKey, operator) {
+    const selectedCollectionId = this.catalogs_[this.selectedCatalogIndex_]
+      .collections[this.selectedCollectionIndex_].id;
+
+    const cachedItem = this.cachedElements_.items[itemId];
+    if (imageKey) {
+      if (cachedItem && cachedItem[imageKey] && cachedItem[imageKey].includes(operator)) {
+        return true;
+      }
+      return false;
+    }
+    if (itemId) {
+      if (cachedItem) {
+        return true;
+      }
+      return false;
+    }
+    if (this.cachedElements_.collectionId === selectedCollectionId) {
+      return true;
+    }
+    return false;
   }
 }
