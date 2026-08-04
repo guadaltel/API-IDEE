@@ -242,10 +242,10 @@
                     'type': 'WMS',
                     'url': 'https://servicios.idee.es/wms-inspire/ocupacion-suelo-historico?',
                     },
-                    'Copernicus Land Monitoring Service': {
-                    'type': 'WMS',
-                    'url': 'https://servicios.idee.es/wms/copernicus-landservice-spain?',
-                    },
+                    // 'Copernicus Land Monitoring Service': {
+                    // 'type': 'WMS',
+                    // 'url': 'https://servicios.idee.es/wms/copernicus-landservice-spain?',
+                    // },
                 },
                 'Información sísmica (terremotos)': {
                     'type': 'WMS',
