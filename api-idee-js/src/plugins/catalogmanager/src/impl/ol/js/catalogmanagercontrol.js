@@ -88,6 +88,25 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
   }
 
   /**
+   * Crea la interacción de hover de ítems STAC en capas vectoriales
+   *
+   * @private
+   * @function
+   * @param {Array<ol.layer.Layer>} olLayers Capas OpenLayers seleccionables
+   */
+  createHoverItemInteraction(olLayers) {
+    this.olLayers_ = olLayers;
+    this.hoverItem = new ol.interaction.Select({
+      style: null,
+      layers: olLayers,
+      condition: ol.events.condition.pointerMove,
+      toggleCondition: ol.events.condition.never,
+    });
+    this.hoverItem.on('select', (evt) => this.onHoverItem(evt));
+    this.facadeMap_.getMapImpl().addInteraction(this.hoverItem);
+  }
+
+  /**
    * Añade una capa a la interacción de selección de ítems, creándola si no existe
    *
    * @public
@@ -95,8 +114,9 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
    * @param {ol.layer.Layer} olLayer Capa OpenLayers a incluir en la selección
    */
   addLayerToSelectItem(olLayer) {
-    if (!this.selectItem) {
+    if (!this.selectItem && !this.hoverItem) {
       this.createSelectItemInteraction([olLayer]);
+      this.createHoverItemInteraction([olLayer]);
     } else {
       this.olLayers_[0] = olLayer;
     }
@@ -182,6 +202,24 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
     const itemId = featuresArray[0].getId();
     features.clear();
     this.facadeControl_.onItemSelect(itemId);
+  }
+
+  /**
+   * Gestiona el hover de un ítem STAC en el mapa
+   *
+   * @private
+   * @function
+   * @param {ol.interaction.SelectEvent} evt Evento select de la interacción
+   */
+  onHoverItem(evt) {
+    const features = this.hoverItem.getFeatures();
+    const featuresArray = features.getArray();
+    if (featuresArray.length === 0) {
+      return;
+    }
+    const itemId = featuresArray[0].getId();
+    features.clear();
+    this.facadeControl_.onItemHover(itemId);
   }
 
   /**

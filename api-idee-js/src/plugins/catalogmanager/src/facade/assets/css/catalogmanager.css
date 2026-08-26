@@ -270,6 +270,11 @@ ul.m-catalogmanager-ulitems, ul.m-catalogmanager-tableimages {
     margin: 0.4rem 0;
 }
 
+.m-catalogmanager-title-item.active {
+    background-color: #71a7d3;
+    color: #fff;
+}
+
 ul.m-catalogmanager-ulcatalogs li {
     border: 1px solid rgb(194, 194, 194);
     min-width: fit-content;
@@ -586,4 +591,23 @@ h3.m-catalogmanager-section-title>span.m-catalogmanager-icon {
     color: white !important;
     padding: 0.3rem;
     border: none;
+}
+
+#m-catalogmanager-filters-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.m-catalogmanager-tag {
+    background-color: #71a7d3;
+    color: #fff;
+    padding: 0.2rem;
+}
+
+.m-catalogmanager-tag-close {
+    margin-left: 1rem;
+    padding-right: 0.3rem;
+    cursor: pointer;
 }

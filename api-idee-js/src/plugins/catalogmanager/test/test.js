@@ -13,11 +13,13 @@ window.map = map;
 const PREDEFINED_CATALOGS = [
   {
     title: 'GNEIS',
-    url: 'http://localhost:8090',
+    url: 'https://stac-gneis.idee.es',
     authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
     collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
     public: false,
-  }, {
+    user: 'test@liferay.com',
+    password: 'testt',
+  } /*, {
     title: 'Astraea Earth',
     url: 'https://eod-catalog-svc-prod.astraea.earth',
     public: true,
@@ -29,14 +31,14 @@ const PREDEFINED_CATALOGS = [
     title: 'Copernicus',
     url: 'https://stac.dataspace.copernicus.eu/v1',
     public: true,
-  }
+  } */
 ];
 
 const mp = new Catalogmanager({
   position: 'TL', // TR, BR, TL, BL
   collapsed: false,
   collapsible: true,
-  tooltip: 'Gestor de catálogos',
+  tooltip: 'Gestor STAC',
   predefinedCatalogs: PREDEFINED_CATALOGS,
   addCatalogEnabled: false,
   downloadUrl: 'https://gneissd.desarrollo.guadaltel.es/serviciodescarga/v1/download-jobs',
@@ -47,11 +49,21 @@ map.addPlugin(mp);
 
 map.addPlugin(new IDEE.plugin.Layerswitcher({
   isMoveLayers: true,
+  position: 'TR', // TR, BR, TL, BL
 }));
 
 map.addPlugin(new IDEE.plugin.RasterManagement({
-  position: 'TL', // TR, BR, TL, BL
+  position: 'TR', // TR, BR, TL, BL
   collapsed: true,
   collapsible: true,
   tooltip: 'Gestor de estilos ráster',
 }));
+
+map.addPlugin(new IDEE.plugin.Help({
+  position: 'TR', // TR, BR, TL, BL
+  collapsed: true,
+  collapsible: true,
+  tooltip: 'Ayuda',
+}));
+
+IDEE.config.API_IDEE_URL = 'http://localhost:9090/api-idee/';

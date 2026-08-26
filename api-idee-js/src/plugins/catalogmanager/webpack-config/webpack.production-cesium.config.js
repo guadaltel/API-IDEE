@@ -95,6 +95,17 @@ module.exports = {
       // files: 'src/**/*.js',
       exclude: ['**/node_modules/**', '/lib/', '/test/', '/dist/'],
     }),
+    new CopywebpackPlugin({
+      patterns: [
+        {
+          from: 'src/api.json',
+          to: 'api.json',
+        }, {
+          from: 'src/facade/assets/images',
+          to: 'images',
+        },
+      ],
+    }),
   ],
   devtool: 'source-map',
 };

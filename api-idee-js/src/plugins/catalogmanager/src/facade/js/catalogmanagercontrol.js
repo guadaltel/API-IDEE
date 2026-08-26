@@ -49,6 +49,25 @@ const INDICES_STYLES = {
   },
 };
 
+/**
+ * Estilo por defecto para la huella de los ítems en el mapa
+ * @constant
+ * @private
+ * @type {IDEE.style.Generic}
+ */
+const HUELLA_STYLE = new IDEE.style.Generic({
+  polygon: {
+    stroke: {
+      width: 1,
+      color: 'blue',
+    },
+    fill: {
+      color: 'blue',
+      opacity: 0,
+    },
+  },
+});
+
 export default class CatalogmanagerControl extends IDEE.Control {
   /**
    * @classdesc
@@ -146,7 +165,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
      * @private
      * @type {number}
      */
-    this.selectedCollectionIndex_ = 0;
+    this.selectedCollectionIndex_ = -1;
 
     /**
      * Identificadores de ítems seleccionados para descarga masiva
@@ -462,6 +481,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
   toggleTabs(evt) {
     evt.stopPropagation();
     const tab = evt.target;
+    this.changeTab(tab);
+  }
+
+  changeTab(tab) {
     const tabs = tab.parentNode.children;
     for (let i = 0; i < tabs.length; i += 1) {
       const child = tabs.item(i);
@@ -513,6 +536,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   setTemporalFilter(evt) {
     evt.stopPropagation();
     const btn = evt.target;
+    this.removeFilterTag('temporal');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.datetime;
@@ -626,10 +650,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
       startTimeInput.value = startTime;
       endDateInput.value = endDate;
       endTimeInput.value = endTime;
+      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate}T${startTime}Z ${getValue('filtersTypes.temporal.end')}: ${endDate}T${endTime}Z`, 'temporal');
     } else {
       this.commonFilters_.datetime = `${startDate}/${endDate}`;
       startDateInput.value = startDate;
       endDateInput.value = endDate;
+      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate} ${getValue('filtersTypes.temporal.end')}: ${endDate}`, 'temporal');
     }
     IDEE.toast.success(getValue('filtersTypes.temporal.success'), null, 2500);
   }
@@ -646,6 +672,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
 
     this.getImpl().deactivateAllInteractions();
+    this.removeFilterTag('spatial');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.bbox;
@@ -673,12 +700,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
         const bbox = this.map_.getBbox();
         const extent = [bbox.x.min, bbox.y.min, bbox.x.max, bbox.y.max];
         this.setSpatialFilterByExtent(this.getImpl().transformExtent(extent, this.map_.getProjection().code, 'EPSG:4326'));
+        this.addFilterTag(`${getValue('filtersTypes.spatial.view')}`, 'spatial');
         break;
       case 'extent':
         this.getImpl().activateDrawExtent();
+        this.addFilterTag(`${getValue('filtersTypes.spatial.extent')}`, 'spatial');
         break;
       case 'referenced':
         this.getImpl().activateSelectGeometry();
+        this.addFilterTag(`${getValue('filtersTypes.spatial.referenced')}`, 'spatial');
         break;
       default:
         delete this.commonFilters_.bbox;
@@ -717,6 +747,40 @@ export default class CatalogmanagerControl extends IDEE.Control {
         help.classList.remove('hidden');
       }
     });
+  }
+
+  addFilterTag(text, type) {
+    const container = this.template_.querySelector('#m-catalogmanager-filters-tags');
+    const tag = document.createElement('div');
+    tag.classList.add('m-catalogmanager-tag');
+    tag.classList.add(type);
+    const tagText = document.createElement('span');
+    tagText.innerHTML = text;
+    tag.appendChild(tagText);
+    const tagClose = document.createElement('span');
+    tagClose.classList.add('m-catalogmanager-tag-close');
+    tagClose.innerHTML = 'x';
+    tagClose.addEventListener('click', () => this.closeFilterTag(type));
+    tag.appendChild(tagClose);
+    container.appendChild(tag);
+  }
+
+  closeFilterTag(type) {
+    this.removeFilterTag(type);
+    this.updateItems();
+  }
+
+  removeFilterTag(type) {
+    const tagContainer = this.template_.querySelector('#m-catalogmanager-filters-tags');
+    const tags = tagContainer.querySelectorAll(`.m-catalogmanager-tag.${type}`);
+    tags.forEach((tag) => {
+      tag.remove();
+    });
+    const filterContainer = this.template_.querySelector(`#m-catalogmanager-filters-${type}-predefined`);
+    const activeFilter = filterContainer.querySelector('.active');
+    if (activeFilter) {
+      activeFilter.click();
+    }
   }
 
   /**
@@ -1404,13 +1468,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
       item.addEventListener('mouseenter', (evt) => this.applyFocusStyle(evt));
       item.addEventListener('mouseleave', (evt) => this.removeFocusStyle(evt));
     });
+    container.querySelectorAll('.m-catalogmanager-images').forEach((imagesContainer) => {
+      imagesContainer.addEventListener('mouseenter', (evt) => this.applyFocusStyle(evt));
+      imagesContainer.addEventListener('mouseleave', (evt) => this.removeFocusStyle(evt));
+    });
     container.querySelector('.m-catalogmanager-section-title').addEventListener('click', (evt) => this.collectionEvent(evt));
-    const huella = this.getHuellaLayer(collection);
-    if (huella) {
-      huella.setSource(items);
-    } else {
-      this.previewItems(catalogIndex, collectionIndex, items);
-    }
+    this.previewItems(catalogIndex, collectionIndex, items);
     this.statsRequest();
   }
 
@@ -1594,6 +1657,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   renderCatalogs() {
+    if (this.catalogs_.length <= 1) {
+      return;
+    }
     const contentElement = this.template_.querySelector('#m-catalogmanager-filters-catalogs');
     const translations = {
       catalogs: getValue('catalogs'),
@@ -1766,10 +1832,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
     evt.stopPropagation();
     let target = evt.target;
     if (target.tagName === 'SPAN') {
-      target = target.parentElement.parentElement;
-    } else if (target.tagName === 'BUTTON') {
       target = target.parentElement;
-    }
+    } /* else if (target.tagName === 'BUTTON') {
+      target = target;
+    } */
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
     if (target.classList.contains('no-event')) {
@@ -1788,7 +1854,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
       target.classList.remove('active');
       const itemsElement = this.template_.querySelector('#m-catalogmanager-results-content');
       itemsElement.innerHTML = '';
+      this.selectedCollectionIndex_ = -1;
     } else {
+      this.selectedCollectionIndex_ = collectionIndex;
       const collectionElements = this.template_.querySelectorAll('.m-catalogmanager-title-collection');
       collectionElements.forEach((element) => {
         element.classList.remove('active');
@@ -1928,8 +1996,30 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const itemElement = this.template_.querySelector(`#item-${itemId}`);
     const catalogIndex = itemElement.dataset.catalogIndex;
     const collectionIndex = itemElement.dataset.collectionIndex;
+    const imagesElement = this.template_.querySelector(`.m-catalogmanager-images.item-${itemId}`);
+    const resultsTab = this.template_.querySelector('#m-catalogmanager-results-tab');
+    if (!resultsTab.classList.contains('active')) {
+      this.changeTab(resultsTab);
+    }
+    this.getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, true);
+  }
 
-    this.getItemImages(catalogIndex, collectionIndex, itemId, null, true);
+  /**
+   * Gestiona el hover de un ítem STAC en el mapa
+   *
+   * @private
+   * @function
+   * @param {string} itemId Identificador del ítem STAC seleccionado
+   */
+  onItemHover(itemId) {
+    const itemDiv = document.querySelector(`#item-${itemId}`);
+    if (itemDiv) {
+      const catalogIndex = itemDiv.dataset.catalogIndex;
+      const collectionIndex = itemDiv.dataset.collectionIndex;
+      const collection = this.catalogs_[catalogIndex].collections[collectionIndex];
+      this.applyFocusStyleToLayer(collection, itemId);
+    }
+    this.applyFocusStyleToItem(itemId);
   }
 
   /**
@@ -1978,19 +2068,28 @@ export default class CatalogmanagerControl extends IDEE.Control {
         });
       }
       if (openDialog) {
-        IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
-        document.querySelector('div.m-dialog.info .m-catalogmanager-tableimages').addEventListener('click', (evt) => this.imagesEvent(evt));
+        /* IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
+        document.querySelector('div.m-dialog.info .m-catalogmanager-tableimages')
+          .addEventListener('click', (evt) => this.imagesEvent(evt));
         this.changeCloseButtonModal();
-        this.statsRequest(itemId);
+        this.statsRequest(itemId); */
+        document.querySelectorAll('.m-catalogmanager-images').forEach((element) => {
+          if (!element.classList.contains('hidden')) {
+            const itemDiv = element.parentElement.firstElementChild;
+            this.toggleIcon(itemDiv);
+            this.toggleHidden(element);
+          }
+        });
+      } // else {
+      if (html) {
+        html.addEventListener('click', (evt) => this.imagesEvent(evt));
+        container.appendChild(html);
       } else {
-        if (html) {
-          html.addEventListener('click', (evt) => this.imagesEvent(evt));
-          container.appendChild(html);
-        } else {
-          container.innerHTML = content;
-        }
-        container.classList.remove('empty');
+        container.innerHTML = content;
       }
+      container.classList.remove('empty');
+      container.classList.remove('hidden');
+      // }
     });
   }
 
@@ -2020,7 +2119,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.closeDialog();
       catalog.obj.getItem(collection.id, itemId).then((item) => {
         const asset = item.assets[imageKey];
-        this.drawImageTiff(asset, catalog, collection);
+        this.drawImageTiff(asset, catalog, collection, item);
         const itemBbox = item.bbox;
         this.map_.setBbox(this.getImpl().transformExtent(itemBbox, 'EPSG:4326', this.map_.getProjection().code));
       });
@@ -2044,15 +2143,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Object} cat Objeto catálogo interno
    * @param {Object} coll Objeto colección interno
    */
-  drawImageTiff(image, cat, coll) {
+  drawImageTiff(image, cat, coll, item) {
     const catalog = cat;
     const collection = coll;
     const styleSpec = this.resolveStyleSpec(image);
     const style = this.buildRasterStyle(styleSpec);
     const geotiff = new IDEE.layer.GeoTIFF({
       url: image.href,
-      name: image.title,
-      legend: image.title,
+      name: `${item.id} - ${image.title}`,
+      legend: `${item.id} - ${image.title}`,
     }, {
       convertToRGB: false,
       normalize: IDEE.utils.isNullOrEmpty(styleSpec.indice),
@@ -2137,22 +2236,23 @@ export default class CatalogmanagerControl extends IDEE.Control {
         catalog.layerGroup.addLayers(collection.layerGroup);
       }
     }
-    const huella = this.getHuellaLayer(collection);
+    let huella = this.getHuellaLayer(collection);
     if (huella) {
       huella.setSource(items);
     } else {
-      const layer = new IDEE.layer.GeoJSON({
+      huella = new IDEE.layer.GeoJSON({
         name: collection.id,
         legend: 'Huella',
         source: items,
         extract: true,
       });
-      layer.on('load', () => {
-        this.map_.setBbox(layer.getFeaturesExtent());
+      huella.on('load', () => {
+        this.map_.setBbox(huella.getFeaturesExtent());
       });
-      collection.layerGroup.addLayers(layer);
-      this.getImpl().addLayerToSelectItem(layer.getImpl().getLayer());
+      huella.setStyle(HUELLA_STYLE);
+      collection.layerGroup.addLayers(huella);
     }
+    this.getImpl().addLayerToSelectItem(huella.getImpl().getLayer());
   }
 
   /**
@@ -2162,6 +2262,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    */
   updateItems() {
+    if (this.selectedCatalogIndex_ === -1 || this.selectedCollectionIndex_ === -1) {
+      return;
+    }
     this.updateBboxFilter();
     this.updateTemporalFilter();
     this.getItems(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
@@ -2220,19 +2323,37 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   applyFocusStyle(evt) {
     evt.stopPropagation();
-    const target = evt.target;
+    let target = evt.target;
+    if (target.classList.contains('m-catalogmanager-images')) {
+      target = target.parentElement.firstElementChild;
+    }
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
     const itemId = target.dataset.itemId;
     const collection = this.catalogs_[catalogIndex].collections[collectionIndex];
+    this.applyFocusStyleToLayer(collection, itemId);
+    this.applyFocusStyleToItem(itemId);
+  }
+
+  applyFocusStyleToLayer(collection, itemId) {
     const huella = this.getHuellaLayer(collection);
     if (!huella) {
       return;
     }
-    this.clearFocusStyle(huella);
+    this.clearFocusStyleFromLayer(huella);
     const itemFeature = huella.getFeatureById(itemId);
     if (itemFeature) {
       itemFeature.setStyle(this.focusStyle_);
+    }
+  }
+
+  applyFocusStyleToItem(itemId) {
+    const itemElement = this.template_.querySelector(`#item-${itemId}`);
+    if (itemElement) {
+      document.querySelectorAll('.m-catalogmanager-title-item').forEach((element) => {
+        element.classList.remove('active');
+      });
+      itemElement.classList.add('active');
     }
   }
 
@@ -2245,7 +2366,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
    */
   removeFocusStyle(evt) {
     evt.stopPropagation();
-    const target = evt.target;
+    let target = evt.target;
+    if (target.classList.contains('m-catalogmanager-images')) {
+      target = target.parentElement.firstElementChild;
+    }
     const catalogIndex = target.dataset.catalogIndex;
     const collectionIndex = target.dataset.collectionIndex;
     const collection = this.catalogs_[catalogIndex].collections[collectionIndex];
@@ -2253,7 +2377,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
     if (!huella) {
       return;
     }
-    this.clearFocusStyle(huella);
+    this.clearFocusStyleFromLayer(huella);
+    this.clearFocusStyleFromItem(target.dataset.itemId);
   }
 
   /**
@@ -2263,10 +2388,17 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @function
    * @param {IDEE.layer.Vector} huellaLayer Capa de huella de la colección
    */
-  clearFocusStyle(huellaLayer) {
+  clearFocusStyleFromLayer(huellaLayer) {
     const focusFeature = huellaLayer.getFeatures().find((feature) => feature.getStyle() !== null);
     if (focusFeature) {
       focusFeature.setStyle(null);
+    }
+  }
+
+  clearFocusStyleFromItem(itemId) {
+    const itemElement = this.template_.querySelector(`#item-${itemId}`);
+    if (itemElement) {
+      itemElement.classList.remove('active');
     }
   }
 
