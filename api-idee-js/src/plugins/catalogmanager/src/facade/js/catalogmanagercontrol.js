@@ -261,6 +261,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
             addCatalog: getValue('addCatalog'),
             update: getValue('update'),
             filters: getValue('filters'),
+            filtersTab: getValue('filtersTab'),
+            resultsTab: getValue('resultsTab'),
             configuration: getValue('configuration'),
             filtersTypes: getValue('filtersTypes'),
             masiveDownload: getValue('masiveDownload.title'),

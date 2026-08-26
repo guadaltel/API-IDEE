@@ -17,8 +17,6 @@ const PREDEFINED_CATALOGS = [
     authUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/token',
     collectionsUrl: 'https://gneis.desarrollo.guadaltel.es/o/custom-auth/collections',
     public: false,
-    user: 'test@liferay.com',
-    password: 'testt',
   } /*, {
     title: 'Astraea Earth',
     url: 'https://eod-catalog-svc-prod.astraea.earth',
@@ -40,7 +38,7 @@ const mp = new Catalogmanager({
   collapsible: true,
   tooltip: 'Gestor STAC',
   predefinedCatalogs: PREDEFINED_CATALOGS,
-  addCatalogEnabled: false,
+  addCatalogEnabled: true,
   downloadUrl: 'https://gneissd.desarrollo.guadaltel.es/serviciodescarga/v1/download-jobs',
 });
 window.mp = mp;
@@ -65,5 +63,3 @@ map.addPlugin(new IDEE.plugin.Help({
   collapsible: true,
   tooltip: 'Ayuda',
 }));
-
-IDEE.config.API_IDEE_URL = 'http://localhost:9090/api-idee/';

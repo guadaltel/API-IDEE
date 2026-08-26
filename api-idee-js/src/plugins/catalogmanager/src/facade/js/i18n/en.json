@@ -89,7 +89,7 @@
     "license": "License",
     "stacVersion": "STAC version",
     "description": "Description",
-    "summaries": "Summaries",
+    "summaries": "Additional data",
     "platforms": "Platforms",
     "instruments": "Instruments"
   },
@@ -100,6 +100,8 @@
   "update": "Update",
   "filters": "Common filters",
   "advancedFilters": "Advanced filter",
+  "filtersTab": "Filters",
+  "resultsTab": "Results",
   "metadata": "Metadata",
   "configuration": "Configuration",
   "cat_title": "Title",
