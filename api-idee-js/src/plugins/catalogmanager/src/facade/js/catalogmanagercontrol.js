@@ -536,7 +536,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   setTemporalFilter(evt) {
     evt.stopPropagation();
     const btn = evt.target;
-    this.removeFilterTag('temporal');
+    this.resetFilterTag('temporal');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.datetime;
@@ -672,7 +672,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const btn = evt.target.tagName === 'SPAN' ? evt.target.parentElement : evt.target;
 
     this.getImpl().deactivateAllInteractions();
-    this.removeFilterTag('spatial');
+    this.resetFilterTag('spatial');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.bbox;
@@ -750,6 +750,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   addFilterTag(text, type) {
+    this.removeFilterTag(type);
     const container = this.template_.querySelector('#m-catalogmanager-filters-tags');
     const tag = document.createElement('div');
     tag.classList.add('m-catalogmanager-tag');
@@ -766,8 +767,17 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   closeFilterTag(type) {
-    this.removeFilterTag(type);
+    this.resetFilterTag(type);
     this.updateItems();
+  }
+
+  resetFilterTag(type) {
+    this.removeFilterTag(type);
+    const filterContainer = this.template_.querySelector(`#m-catalogmanager-filters-${type}-predefined`);
+    const activeFilter = filterContainer.querySelector('.active');
+    if (activeFilter) {
+      activeFilter.click();
+    }
   }
 
   removeFilterTag(type) {
@@ -776,11 +786,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     tags.forEach((tag) => {
       tag.remove();
     });
-    const filterContainer = this.template_.querySelector(`#m-catalogmanager-filters-${type}-predefined`);
-    const activeFilter = filterContainer.querySelector('.active');
-    if (activeFilter) {
-      activeFilter.click();
-    }
   }
 
   /**
@@ -802,10 +807,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       IDEE.dialog.error(getValue('advancedFilter.loadError'));
       return;
     }
-    if (Object.keys(queryableFields).length === 0) {
-      IDEE.dialog.info(getValue('advancedFilter.noQueryableFields'));
-      return;
-    }
+    const emptyQueryables = Object.keys(queryableFields).length === 0;
     const advancedFiltersHtml = IDEE.template.compileSync(advancedFilterTemplate, {
       vars: {
         catalogIndex,
@@ -814,16 +816,24 @@ export default class CatalogmanagerControl extends IDEE.Control {
         translations: getValue('advancedFilter'),
       },
     });
+    if (emptyQueryables) {
+      // IDEE.dialog.info(getValue('advancedFilter.noQueryableFields'));
+      const noQueryableFieldsHtml = document.createElement('div');
+      noQueryableFieldsHtml.innerHTML = `<p class="m-catalogmanager-headers">${getValue('advancedFilter.noQueryableFields')}</p>`;
+      advancedFiltersHtml.querySelector('#m-catalogmanager-advanced-filters-content').innerHTML = noQueryableFieldsHtml.outerHTML;
+    }
     const container = this.template_.querySelector('#m-catalogmanager-filters-advanced');
     container.innerHTML = advancedFiltersHtml.outerHTML;
-    this.initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields);
-    this.renderQueryableFields();
-    this.addAdvancedFilterEvents(container);
-    if (collection.advancedFilter?.sqlExpression) {
-      this.getAdvancedFilterAssistantTextarea().value = collection.advancedFilter.sqlExpression;
-    }
-    if (collection.advancedFilter?.queryExpression) {
-      this.getAdvancedFilterQueryTextarea().value = collection.advancedFilter.queryExpression;
+    if (!emptyQueryables) {
+      this.initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields);
+      this.renderQueryableFields();
+      this.addAdvancedFilterEvents(container);
+      if (collection.advancedFilter?.sqlExpression) {
+        this.getAdvancedFilterAssistantTextarea().value = collection.advancedFilter.sqlExpression;
+      }
+      if (collection.advancedFilter?.queryExpression) {
+        this.getAdvancedFilterQueryTextarea().value = collection.advancedFilter.queryExpression;
+      }
     }
     this.toggleAdvancedFilters();
   }
@@ -1892,10 +1902,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
     promise.then((items) => {
       collection.links = items.links;
-      if (items.features.length === 0) {
-        IDEE.dialog.info(getValue('exception').no_results);
-        return;
-      }
       this.renderCollectionItems(catalogIndex, collectionIndex, items);
     });
   }
@@ -2219,7 +2225,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
     if (items.features.length === 0) {
       IDEE.dialog.info(getValue('exception').no_results);
-      return;
     }
     if (!collection.layerGroup) {
       // Puede perderse la asignación del layerGroup al cambiar de colección,
