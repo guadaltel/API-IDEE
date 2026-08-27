@@ -97,7 +97,7 @@
     align-items: center;
 }
 
-.m-rastermanagement-layer-selector > select {
+.m-rastermanagement-layer-selector>select {
     flex: 1;
     min-width: 0;
     height: 34px;
@@ -111,7 +111,7 @@
     box-sizing: border-box;
 }
 
-.m-rastermanagement-layer-selector > button {
+.m-rastermanagement-layer-selector>button {
     flex-shrink: 0;
     width: 34px;
     height: 34px;
@@ -129,26 +129,27 @@
     transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.m-rastermanagement-layer-selector > button:hover {
+.m-rastermanagement-layer-selector>button:hover {
     background-color: #5a93c2;
     border-color: #4a7fa8;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.m-rastermanagement-layer-selector > button:active {
+.m-rastermanagement-layer-selector>button:active {
     background-color: #4a7fa8;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.m-rastermanagement-layer-selector > button:focus {
+.m-rastermanagement-layer-selector>button:focus {
     outline: 2px solid #71a7d3;
     outline-offset: 1px;
 }
 
-.m-rastermanagement-layer-selector > button.g-cartografia-raster-apply::before,
-.m-rastermanagement-layer-selector > button.g-cartografia-raster-reset::before,
-.m-rastermanagement-layer-selector > button.g-cartografia-raster-copy::before {
+.m-rastermanagement-layer-selector>button.g-cartografia-raster-apply::before,
+.m-rastermanagement-layer-selector>button.g-cartografia-raster-reset::before,
+.m-rastermanagement-layer-selector>button.g-cartografia-raster-copy::before {
     width: 18px;
+    color: black;
 }
 
 .m-rastermanagement-tab-content {
@@ -195,7 +196,7 @@
     color: #fff;
 }
 
-.m-rastermanagement-index-content > p {
+.m-rastermanagement-index-content>p {
     margin: 0;
 }
 
@@ -249,7 +250,7 @@
     gap: 4px;
 }
 
-.m-rastermanagement-band-item > input[type='number'] {
+.m-rastermanagement-band-item>input[type='number'] {
     width: 56px;
     flex: none;
 }
@@ -440,7 +441,7 @@
     gap: 8px;
 }
 
-.m-rastermanagement-filter-header > label {
+.m-rastermanagement-filter-header>label {
     font-size: 13px;
     color: #404040;
 }
@@ -453,7 +454,7 @@
     text-align: right;
 }
 
-.m-rastermanagement-filter-control > input[type='range'] {
+.m-rastermanagement-filter-control>input[type='range'] {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -464,21 +465,19 @@
     --range-progress: 50%;
 }
 
-.m-rastermanagement-filter-control > input[type='range']::-webkit-slider-runnable-track {
+.m-rastermanagement-filter-control>input[type='range']::-webkit-slider-runnable-track {
     width: 100%;
     height: 4px;
     border-radius: 2px;
     cursor: pointer;
-    background: linear-gradient(
-        to right,
-        #71a7d3 0%,
-        #71a7d3 var(--range-progress),
-        #d0d0d0 var(--range-progress),
-        #d0d0d0 100%
-    );
+    background: linear-gradient(to right,
+            #71a7d3 0%,
+            #71a7d3 var(--range-progress),
+            #d0d0d0 var(--range-progress),
+            #d0d0d0 100%);
 }
 
-.m-rastermanagement-filter-control > input[type='range']::-webkit-slider-thumb {
+.m-rastermanagement-filter-control>input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 14px;
@@ -490,7 +489,7 @@
     cursor: pointer;
 }
 
-.m-rastermanagement-filter-control > input[type='range']::-moz-range-track {
+.m-rastermanagement-filter-control>input[type='range']::-moz-range-track {
     width: 100%;
     height: 4px;
     border: none;
@@ -499,14 +498,14 @@
     cursor: pointer;
 }
 
-.m-rastermanagement-filter-control > input[type='range']::-moz-range-progress {
+.m-rastermanagement-filter-control>input[type='range']::-moz-range-progress {
     height: 4px;
     border: none;
     border-radius: 2px;
     background-color: #71a7d3;
 }
 
-.m-rastermanagement-filter-control > input[type='range']::-moz-range-thumb {
+.m-rastermanagement-filter-control>input[type='range']::-moz-range-thumb {
     width: 14px;
     height: 14px;
     border: none;
@@ -515,7 +514,7 @@
     cursor: pointer;
 }
 
-.m-rastermanagement-filter-control > input[type='number'] {
+.m-rastermanagement-filter-control>input[type='number'] {
     width: 100%;
     margin: 0;
     box-sizing: border-box;
@@ -528,6 +527,6 @@
     background-color: #fff;
 }
 
-.m-rastermanagement-tab-content > p {
+.m-rastermanagement-tab-content>p {
     margin: 0;
 }
