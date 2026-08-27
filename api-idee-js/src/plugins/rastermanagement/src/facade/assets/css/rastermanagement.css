@@ -149,7 +149,7 @@
 .m-rastermanagement-layer-selector>button.g-cartografia-raster-reset::before,
 .m-rastermanagement-layer-selector>button.g-cartografia-raster-copy::before {
     width: 18px;
-    color: white;
+    color: white !important;
 }
 
 .m-rastermanagement-tab-content {
