@@ -154,7 +154,7 @@
 #m-rastermanagement-apply,
 #m-rastermanagement-clear,
 #m-rastermanagement-copy {
-    color: #404040;
+    color: #404040 !important;
 }
 
 .m-rastermanagement-tab-content {
