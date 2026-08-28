@@ -15,6 +15,7 @@ import collectionMetadataTemplate from 'templates/collectionMetadata';
 import advancedFilterTemplate from 'templates/advancedFilter';
 import fieldsTableTemplate from 'templates/fieldstable';
 import typeTableTemplate from 'templates/typetable';
+import cloudCoverSliderTemplate from 'templates/cloudCoverSlider';
 import { getValue } from './i18n/language';
 
 // - Modal
@@ -68,6 +69,18 @@ const HUELLA_STYLE = new IDEE.style.Generic({
   },
 });
 
+const BOX_EXTENT_STYLE = new IDEE.style.Generic({
+  polygon: {
+    stroke: {
+      width: 1,
+      color: 'orange',
+    },
+    fill: {
+      color: 'orange',
+      opacity: 0.1,
+    },
+  },
+});
 export default class CatalogmanagerControl extends IDEE.Control {
   /**
    * @classdesc
@@ -238,6 +251,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
         },
       },
     });
+
+    this.collectionsSortType_ = 'sort-name-up';
   }
 
   /**
@@ -538,10 +553,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
   setTemporalFilter(evt) {
     evt.stopPropagation();
     const btn = evt.target;
-    this.resetFilterTag('temporal');
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.datetime;
+      this.resetFilterTag('temporal_start');
+      this.resetFilterTag('temporal_end');
     } else {
       const activeBtn = btn.parentElement.querySelector('.active');
       if (activeBtn) {
@@ -652,12 +668,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
       startTimeInput.value = startTime;
       endDateInput.value = endDate;
       endTimeInput.value = endTime;
-      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate}T${startTime}Z ${getValue('filtersTypes.temporal.end')}: ${endDate}T${endTime}Z`, 'temporal');
+      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate}T${startTime}Z`, 'temporal_start');
+      this.addFilterTag(`${getValue('filtersTypes.temporal.end')}: ${endDate}T${endTime}Z`, 'temporal_end');
     } else {
       this.commonFilters_.datetime = `${startDate}/${endDate}`;
       startDateInput.value = startDate;
       endDateInput.value = endDate;
-      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate} ${getValue('filtersTypes.temporal.end')}: ${endDate}`, 'temporal');
+      this.addFilterTag(`${getValue('filtersTypes.temporal.start')}: ${startDate}`, 'temporal_start');
+      this.addFilterTag(`${getValue('filtersTypes.temporal.end')}: ${endDate}`, 'temporal_end');
     }
     IDEE.toast.success(getValue('filtersTypes.temporal.success'), null, 2500);
   }
@@ -675,6 +693,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
     this.getImpl().deactivateAllInteractions();
     this.resetFilterTag('spatial');
+    this.removeBoxExtent();
     if (btn.classList.contains('active')) {
       btn.classList.remove('active');
       delete this.commonFilters_.bbox;
@@ -729,6 +748,30 @@ export default class CatalogmanagerControl extends IDEE.Control {
   setSpatialFilterByExtent(extent) {
     this.commonFilters_.bbox = extent;
     IDEE.toast.success(getValue('filtersTypes.spatial.success'), null, 2500);
+    this.getImpl().deactivateAllInteractions();
+  }
+
+  drawBoxExtent(coordinates) {
+    if (this.boxLayer_) {
+      this.boxLayer_.removeFeatures(this.boxLayer_.getFeatures());
+    } else {
+      this.boxLayer_ = new IDEE.layer.Vector();
+      this.boxLayer_.displayInLayerSwitcher = false;
+      this.boxLayer_.setStyle(BOX_EXTENT_STYLE);
+      this.map_.addLayers(this.boxLayer_);
+    }
+    const feature = new IDEE.Feature();
+    feature.setGeometry({
+      coordinates,
+      type: 'Polygon',
+    });
+    this.boxLayer_.addFeatures(feature);
+  }
+
+  removeBoxExtent() {
+    if (this.boxLayer_) {
+      this.boxLayer_.removeFeatures(this.boxLayer_.getFeatures());
+    }
   }
 
   /**
@@ -753,19 +796,21 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
   addFilterTag(text, type) {
     this.removeFilterTag(type);
-    const container = this.template_.querySelector('#m-catalogmanager-filters-tags');
-    const tag = document.createElement('div');
-    tag.classList.add('m-catalogmanager-tag');
-    tag.classList.add(type);
-    const tagText = document.createElement('span');
-    tagText.innerHTML = text;
-    tag.appendChild(tagText);
-    const tagClose = document.createElement('span');
-    tagClose.classList.add('m-catalogmanager-tag-close');
-    tagClose.innerHTML = 'x';
-    tagClose.addEventListener('click', () => this.closeFilterTag(type));
-    tag.appendChild(tagClose);
-    container.appendChild(tag);
+    const containers = this.template_.querySelectorAll('.m-catalogmanager-filters-tags');
+    containers.forEach((container) => {
+      const tag = document.createElement('div');
+      tag.classList.add('m-catalogmanager-tag');
+      tag.classList.add(type);
+      const tagText = document.createElement('span');
+      tagText.innerHTML = text;
+      tag.appendChild(tagText);
+      const tagClose = document.createElement('span');
+      tagClose.classList.add('m-catalogmanager-tag-close');
+      tagClose.innerHTML = 'x';
+      tagClose.addEventListener('click', () => this.closeFilterTag(type));
+      tag.appendChild(tagClose);
+      container.appendChild(tag);
+    });
   }
 
   closeFilterTag(type) {
@@ -775,18 +820,36 @@ export default class CatalogmanagerControl extends IDEE.Control {
 
   resetFilterTag(type) {
     this.removeFilterTag(type);
-    const filterContainer = this.template_.querySelector(`#m-catalogmanager-filters-${type}-predefined`);
-    const activeFilter = filterContainer.querySelector('.active');
-    if (activeFilter) {
-      activeFilter.click();
+    const tagType = type.startsWith('temporal') ? 'temporal' : type;
+    if (['temporal', 'spatial'].includes(tagType)) {
+      const filterContainer = this.template_.querySelector(`#m-catalogmanager-filters-${tagType}-predefined`);
+      const activeFilter = filterContainer.querySelector('.active');
+      if (activeFilter) {
+        if (tagType === 'temporal') {
+          activeFilter.classList.remove('active');
+          this.updateTemporalFilterByTag(type);
+        } else if (tagType === 'spatial') {
+          activeFilter.click();
+        }
+      }
+    } else if (tagType === 'collection') {
+      const collectionsContainer = this.template_.querySelector('.m-catalogmanager-collections-list');
+      const activeCollection = collectionsContainer.querySelector('.active');
+      if (activeCollection) {
+        activeCollection.click();
+      }
+    } else if (tagType === 'cloud_cover') {
+      this.resetCloudCoverFilter();
     }
   }
 
   removeFilterTag(type) {
-    const tagContainer = this.template_.querySelector('#m-catalogmanager-filters-tags');
-    const tags = tagContainer.querySelectorAll(`.m-catalogmanager-tag.${type}`);
-    tags.forEach((tag) => {
-      tag.remove();
+    const tagContainers = this.template_.querySelectorAll('.m-catalogmanager-filters-tags');
+    tagContainers.forEach((tagContainer) => {
+      const tags = tagContainer.querySelectorAll(`.m-catalogmanager-tag.${type}`);
+      tags.forEach((tag) => {
+        tag.remove();
+      });
     });
   }
 
@@ -828,6 +891,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     container.innerHTML = advancedFiltersHtml.outerHTML;
     if (!emptyQueryables) {
       this.initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields);
+      this.renderCloudCoverSlider();
       this.renderQueryableFields();
       this.addAdvancedFilterEvents(container);
       if (collection.advancedFilter?.sqlExpression) {
@@ -956,6 +1020,103 @@ export default class CatalogmanagerControl extends IDEE.Control {
         container.classList.add('hidden');
       }
     });
+  }
+
+  renderCloudCoverSlider() {
+    const state = this.advancedFilterState_;
+    const fields = state.fieldsPages[state.currentFieldsPage] || [];
+    const cloudCoverContainer = this.template_.querySelector('#m-catalogmanager-filters-cloud-cover');
+    cloudCoverContainer.innerHTML = '';
+    if (fields.includes('eo:cloud_cover')) {
+      const cloudCoverSliderHtml = IDEE.template.compileSync(cloudCoverSliderTemplate, {
+        jsonp: true,
+        vars: {
+          minValue: 0,
+          maxValue: 100,
+          translations: getValue('filtersTypes.cloudCover'),
+        },
+      });
+      cloudCoverSliderHtml.querySelector('#m-catalogmanager-cloudcover-min')
+        .addEventListener('change', () => this.changeCloudCoverFilter());
+      cloudCoverSliderHtml.querySelector('#m-catalogmanager-cloudcover-max')
+        .addEventListener('change', () => this.changeCloudCoverFilter());
+      cloudCoverContainer.appendChild(cloudCoverSliderHtml);
+      this.bindCloudCoverSlider(cloudCoverContainer);
+    }
+  }
+
+  /**
+   * Asocia eventos al slider dual de cobertura de nubes y sincroniza la barra
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} container Contenedor del slider
+   */
+  bindCloudCoverSlider(container) {
+    const minInput = container.querySelector('#m-catalogmanager-cloudcover-min');
+    const maxInput = container.querySelector('#m-catalogmanager-cloudcover-max');
+    if (!minInput || !maxInput) {
+      return;
+    }
+    const onInput = (evt) => this.syncCloudCoverSlider(container, evt?.target);
+    minInput.addEventListener('input', onInput);
+    maxInput.addEventListener('input', onInput);
+    this.syncCloudCoverSlider(container);
+  }
+
+  syncCloudCoverSliderStyle() {
+    const container = this.template_.querySelector('#m-catalogmanager-filters-cloud-cover');
+    const minInput = container.querySelector('#m-catalogmanager-cloudcover-min');
+    const maxInput = container.querySelector('#m-catalogmanager-cloudcover-max');
+    this.syncCloudCoverSlider(container, minInput);
+    this.syncCloudCoverSlider(container, maxInput);
+  }
+
+  /**
+   * Evita que min/max se crucen y colorea solo el tramo seleccionado
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} container Contenedor del slider
+   * @param {HTMLInputElement} [activeInput] Input que disparó el cambio
+   */
+  syncCloudCoverSlider(container, activeInput) {
+    const minInput = container.querySelector('#m-catalogmanager-cloudcover-min');
+    const maxInput = container.querySelector('#m-catalogmanager-cloudcover-max');
+    const track = container.querySelector('.m-catalogmanager-dual-range-track');
+    const valuesLabel = container.querySelector('#m-catalogmanager-cloudcover-values');
+    if (!minInput || !maxInput || !track) {
+      return;
+    }
+
+    const gap = 1;
+    let min = Number(minInput.value);
+    let max = Number(maxInput.value);
+    const rangeMax = Number(minInput.max) || 100;
+
+    if (min > max - gap) {
+      if (activeInput === minInput) {
+        min = max - gap;
+        minInput.value = min;
+      } else {
+        max = min + gap;
+        maxInput.value = max;
+      }
+    }
+
+    const percentMin = (min / rangeMax) * 100;
+    const percentMax = (max / rangeMax) * 100;
+    track.style.background = `linear-gradient(to right,
+      #fff 0%,
+      #fff ${percentMin}%,
+      #71a7d3 ${percentMin}%,
+      #71a7d3 ${percentMax}%,
+      #fff ${percentMax}%,
+      #fff 100%)`;
+
+    if (valuesLabel) {
+      valuesLabel.textContent = `${min}% – ${max}%`;
+    }
   }
 
   /**
@@ -1341,6 +1502,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
       IDEE.dialog.error(getValue('advancedFilter.invalidQuery'));
       return;
     }
+    if (collection.advancedFilter && !IDEE.utils.isNullOrEmpty(collection.advancedFilter.filter['eo:cloud_cover'])) {
+      if (IDEE.utils.isNullOrEmpty(filterObj['eo:cloud_cover'])) {
+        filterObj['eo:cloud_cover'] = collection.advancedFilter.filter['eo:cloud_cover'];
+      }
+    }
     collection.advancedFilter = {
       format: 'stac-query',
       filter: filterObj,
@@ -1427,6 +1593,39 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  changeCloudCoverFilter() {
+    const cloudCoverMin = this.template_.querySelector('#m-catalogmanager-cloudcover-min');
+    const cloudCoverMax = this.template_.querySelector('#m-catalogmanager-cloudcover-max');
+    const cloudCoverMinValue = cloudCoverMin.value;
+    const cloudCoverMaxValue = cloudCoverMax.value;
+    this.addFilterTag(`${getValue('filtersTypes.cloudCover.cloudCover')}: ${cloudCoverMinValue}% - ${cloudCoverMaxValue}%`, 'cloud_cover');
+    const catalog = this.catalogs_[this.selectedCatalogIndex_];
+    const collection = catalog.collections[this.selectedCollectionIndex_];
+    const filterObj = {
+      'eo:cloud_cover': {
+        gte: cloudCoverMinValue,
+        lte: cloudCoverMaxValue,
+      },
+    };
+    collection.advancedFilter = {
+      format: 'stac-query',
+      filter: filterObj,
+      limit: 10,
+    };
+    this.getFilteredItemsAdvanced();
+  }
+
+  resetCloudCoverFilter() {
+    const cloudCoverMin = this.template_.querySelector('#m-catalogmanager-cloudcover-min');
+    const cloudCoverMax = this.template_.querySelector('#m-catalogmanager-cloudcover-max');
+    cloudCoverMin.value = 0;
+    cloudCoverMax.value = 100;
+    const catalog = this.catalogs_[this.selectedCatalogIndex_];
+    const collection = catalog.collections[this.selectedCollectionIndex_];
+    delete collection.advancedFilter.filter['eo:cloud_cover'];
+    this.syncCloudCoverSliderStyle();
+  }
+
   /**
    * Renderiza la lista de ítems de una colección en el DOM
    *
@@ -1459,6 +1658,8 @@ export default class CatalogmanagerControl extends IDEE.Control {
         },
       },
     });
+    const resultsTab = this.template_.querySelector('#m-catalogmanager-results-tab');
+    resultsTab.innerHTML = `${getValue('resultsTab')} (${items.numberMatched})`;
     container.innerHTML = html.outerHTML;
     container.classList.remove('empty', 'hidden');
     const extraActionsContent = this.template_.querySelector('#m-catalogmanager-extra-actions-content');
@@ -1602,23 +1803,28 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     const item = collection.items.find((it) => it.id === itemId);
+    const sunElevationValue = item.properties['view:sun_elevation'];
+    const cloudCoverValue = item.properties['eo:cloud_cover'];
+    const vars = {
+      id: item.id,
+      collectionId: collection.id,
+      datetime: item.properties.datetime,
+      provider: item.properties.provider || getValue('unknown'),
+      extent: item.bbox.join(', '),
+      crs: 'EPSG:4326',
+      platform: item.properties.platform || getValue('unknown'),
+      instruments: item.properties.instruments.join(', '),
+      sunElevation: sunElevationValue >= 0,
+      sunElevationValue,
+      cloudCover: cloudCoverValue >= 0,
+      cloudCoverValue,
+      processingLevel: item.properties.processing_level || getValue('unknown'),
+      translations: getValue('itemMetadata'),
+    };
     const metadataTemplate = IDEE.template.compileSync(itemMetadataTemplate, {
       jsonp: true,
       parseToHtml: false,
-      vars: {
-        id: item.id,
-        collectionId: collection.id,
-        datetime: item.properties.datetime,
-        provider: item.properties.provider || getValue('unknown'),
-        extent: item.bbox.join(', '),
-        crs: 'EPSG:4326',
-        platform: item.properties.platform || getValue('unknown'),
-        instruments: item.properties.instruments.join(', '),
-        sunElevation: item.properties['view:sun_elevation'],
-        cloudCover: item.properties['eo:cloud_cover'],
-        processingLevel: item.properties.processing_level || getValue('unknown'),
-        translations: getValue('itemMetadata'),
-      },
+      vars,
     });
     IDEE.dialog.info(metadataTemplate, getValue('itemMetadata.title'), this.order);
     this.changeCloseButtonModal();
@@ -1762,25 +1968,65 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {HTMLElement} collectionsElement Contenedor DOM donde se pintan las colecciones
    */
   requestCollections(collectionsElement) {
-    const container = collectionsElement;
     const catalog = this.catalogs_[this.selectedCatalogIndex_];
     catalog.obj.getCollections().then((collections) => {
       const collectionsJson = this.getJsonCollections(collections, this.selectedCatalogIndex_);
       catalog.collections = collectionsJson;
-      const html = IDEE.template.compileSync(collectionsTemplate, {
-        vars: {
-          collections: collectionsJson,
-          translations: {
-            footprint: getValue('footprint'),
-            metadata: getValue('metadata'),
-            advancedFilters: getValue('advancedFilters'),
-          },
-        },
-      });
-      container.innerHTML = html.outerHTML;
-      container.classList.remove('empty');
-      container.querySelector('.m-catalogmanager-collections-list').addEventListener('click', (evt) => this.collectionEvent(evt));
+      this.renderCollections(collectionsElement, collectionsJson);
     });
+  }
+
+  renderCollections(collectionsElement, collections) {
+    const container = collectionsElement;
+    const html = IDEE.template.compileSync(collectionsTemplate, {
+      vars: {
+        collections,
+        translations: {
+          footprint: getValue('footprint'),
+          metadata: getValue('metadata'),
+          advancedFilters: getValue('advancedFilters'),
+        },
+      },
+    });
+    container.innerHTML = html.outerHTML;
+    container.classList.remove('empty');
+    container.querySelector('.m-catalogmanager-collections-container').addEventListener('click', (evt) => this.collectionEvent(evt));
+    container.querySelector(`#${this.collectionsSortType_}`).classList.add('active');
+  }
+
+  sortCollections(sortType) {
+    const collections = this.catalogs_[this.selectedCatalogIndex_].collections;
+    this.collectionsSortType_ = sortType;
+    let sortFunction = null;
+    switch (sortType) {
+      case 'sort-name-up':
+        sortFunction = (a, b) => a.title.localeCompare(b.title);
+        break;
+      case 'sort-name-down':
+        sortFunction = (a, b) => b.title.localeCompare(a.title);
+        break;
+      case 'sort-date-up':
+        sortFunction = (a, b) => a.metadata.extent.temporal.interval
+          .localeCompare(b.metadata.extent.temporal.interval);
+        break;
+      case 'sort-date-down':
+        sortFunction = (a, b) => b.metadata.extent.temporal.interval
+          .localeCompare(a.metadata.extent.temporal.interval);
+        break;
+      default:
+        sortFunction = (a, b) => a.title.localeCompare(b.title);
+        break;
+    }
+    collections.sort(sortFunction);
+    collections.forEach((c, index) => {
+      const collection = c;
+      if (collection.index === this.selectedCollectionIndex_) {
+        this.selectedCollectionIndex_ = index;
+      }
+      collection.index = index;
+    });
+    const container = this.template_.querySelector('#m-catalogmanager-filters-collections-content');
+    this.renderCollections(container, collections);
   }
 
   /**
@@ -1861,19 +2107,39 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.collectionDownload(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
       return;
     }
+    if (target.classList.contains('m-catalogmanager-collections-order-button')) {
+      if (!target.classList.contains('active')) {
+        const activeButton = this.template_.querySelector('.m-catalogmanager-collections-order-button.active');
+        if (activeButton) {
+          activeButton.classList.remove('active');
+        }
+        target.classList.add('active');
+        this.sortCollections(target.id);
+      }
+      return;
+    }
     this.resetCachedElements();
     if (target.classList.contains('active')) {
       target.classList.remove('active');
       const itemsElement = this.template_.querySelector('#m-catalogmanager-results-content');
       itemsElement.innerHTML = '';
+      this.catalogs_[catalogIndex].collections[this.selectedCollectionIndex_].selected = false;
       this.selectedCollectionIndex_ = -1;
+      this.resetFilterTag('collection');
+      const resultsTab = this.template_.querySelector('#m-catalogmanager-results-tab');
+      resultsTab.innerHTML = `${getValue('resultsTab')} (0)`;
     } else {
+      if (this.selectedCollectionIndex_ >= 0) {
+        this.catalogs_[catalogIndex].collections[this.selectedCollectionIndex_].selected = false;
+      }
       this.selectedCollectionIndex_ = collectionIndex;
       const collectionElements = this.template_.querySelectorAll('.m-catalogmanager-title-collection');
       collectionElements.forEach((element) => {
         element.classList.remove('active');
       });
       target.classList.add('active');
+      this.catalogs_[catalogIndex].collections[this.selectedCollectionIndex_].selected = true;
+      this.addFilterTag(`${this.catalogs_[catalogIndex].collections[collectionIndex].title}`, 'collection');
       this.openAdvancedFilters(catalogIndex, collectionIndex);
       this.getItems(catalogIndex, collectionIndex);
     }
@@ -2009,7 +2275,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     if (!resultsTab.classList.contains('active')) {
       this.changeTab(resultsTab);
     }
-    this.getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, true);
+    if (imagesElement.classList.contains('empty')) {
+      this.getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, true);
+    } else if (imagesElement.classList.contains('hidden')) {
+      this.closeAllImages();
+      this.toggleIcon(itemElement);
+      this.toggleHidden(imagesElement);
+    }
   }
 
   /**
@@ -2041,7 +2313,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {HTMLElement|null} imagesElement Contenedor DOM de las imágenes
    * @param {boolean} [openDialog=false] Si es verdadero, abre un modal con las imágenes
    */
-  getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, openDialog = false) {
+  getItemImages(catalogIndex, collectionIndex, itemId, imagesElement, closeAll = false) {
     const catalog = this.catalogs_[catalogIndex];
     const collection = catalog.collections[collectionIndex];
     catalog.obj.getItem(collection.id, itemId).then((item) => {
@@ -2066,7 +2338,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
           vars: {
             images,
             downloadable: !catalog.obj.public,
-            showCheckbox: !catalog.obj.public && !openDialog,
+            showCheckbox: !catalog.obj.public,
             translations: {
               imageActions: getValue('imageActions'),
               images: getValue('images'),
@@ -2075,20 +2347,9 @@ export default class CatalogmanagerControl extends IDEE.Control {
           },
         });
       }
-      if (openDialog) {
-        /* IDEE.dialog.info(html ? html.outerHTML : content, item.id, this.order);
-        document.querySelector('div.m-dialog.info .m-catalogmanager-tableimages')
-          .addEventListener('click', (evt) => this.imagesEvent(evt));
-        this.changeCloseButtonModal();
-        this.statsRequest(itemId); */
-        document.querySelectorAll('.m-catalogmanager-images').forEach((element) => {
-          if (!element.classList.contains('hidden')) {
-            const itemDiv = element.parentElement.firstElementChild;
-            this.toggleIcon(itemDiv);
-            this.toggleHidden(element);
-          }
-        });
-      } // else {
+      if (closeAll) {
+        this.closeAllImages();
+      }
       if (html) {
         html.addEventListener('click', (evt) => this.imagesEvent(evt));
         container.appendChild(html);
@@ -2098,6 +2359,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
       container.classList.remove('empty');
       container.classList.remove('hidden');
       // }
+    });
+  }
+
+  closeAllImages() {
+    document.querySelectorAll('.m-catalogmanager-images').forEach((element) => {
+      if (!element.classList.contains('hidden')) {
+        const itemDiv = element.parentElement.firstElementChild;
+        this.toggleIcon(itemDiv);
+        this.toggleHidden(element);
+      }
     });
   }
 
@@ -2254,7 +2525,11 @@ export default class CatalogmanagerControl extends IDEE.Control {
         extract: true,
       });
       huella.on('load', () => {
-        this.map_.setBbox(huella.getFeaturesExtent());
+        if (huella.getFeatures().length > 0) {
+          this.map_.setBbox(huella.getFeaturesExtent());
+        } else if (this.commonFilters_.bbox) {
+          this.map_.setBbox(this.getImpl().transformExtent(this.commonFilters_.bbox, 'EPSG:4326', this.map_.getProjection().code));
+        }
       });
       huella.setStyle(HUELLA_STYLE);
       collection.layerGroup.addLayers(huella);
@@ -2302,6 +2577,21 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const btnRange = this.template_.querySelector('#m-catalogmanager-filters-temporal-predefined #range');
     if (btnRange && btnRange.classList.contains('active')) {
       this.setTemporalFilterByType('range');
+    }
+  }
+
+  updateTemporalFilterByTag(tag) {
+    const dateType = tag.startsWith('temporal_') ? tag.split('_')[1] : null;
+    const dateFilter = this.commonFilters_.datetime.split('/');
+    if (dateType === 'start') {
+      dateFilter[0] = '..';
+    } else if (dateType === 'end') {
+      dateFilter[1] = '..';
+    }
+    if (dateFilter[0] === '..' && dateFilter[1] === '..') {
+      delete this.commonFilters_.datetime;
+    } else {
+      this.commonFilters_.datetime = dateFilter.join('/');
     }
   }
 

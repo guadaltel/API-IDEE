@@ -42,7 +42,13 @@
       "success": "Temporal filter set successfully."
     },
     "collections": "Collections",
-    "catalogs": "Catalogs"
+    "catalogs": "Catalogs",
+    "cloudCover": {
+      "title": "Cloud cover",
+      "cloudCover": "Cloud cover",
+      "cloudCoverMin": "Minimum cloud cover",
+      "cloudCoverMax": "Maximum cloud cover"
+    }
   },
   "imageActions": {
     "info": "Information",

@@ -75,13 +75,11 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
    *
    * @private
    * @function
-   * @param {Array<ol.layer.Layer>} olLayers Capas OpenLayers seleccionables
    */
-  createSelectItemInteraction(olLayers) {
-    this.olLayers_ = olLayers;
+  createSelectItemInteraction() {
     this.selectItem = new ol.interaction.Select({
       style: null,
-      layers: olLayers,
+      layers: this.olLayers_,
     });
     this.selectItem.on('select', (evt) => this.onSelectItem(evt));
     this.facadeMap_.getMapImpl().addInteraction(this.selectItem);
@@ -92,13 +90,11 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
    *
    * @private
    * @function
-   * @param {Array<ol.layer.Layer>} olLayers Capas OpenLayers seleccionables
    */
-  createHoverItemInteraction(olLayers) {
-    this.olLayers_ = olLayers;
+  createHoverItemInteraction() {
     this.hoverItem = new ol.interaction.Select({
       style: null,
-      layers: olLayers,
+      layers: this.olLayers_,
       condition: ol.events.condition.pointerMove,
       toggleCondition: ol.events.condition.never,
     });
@@ -115,8 +111,9 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
    */
   addLayerToSelectItem(olLayer) {
     if (!this.selectItem && !this.hoverItem) {
-      this.createSelectItemInteraction([olLayer]);
-      this.createHoverItemInteraction([olLayer]);
+      this.olLayers_ = [olLayer];
+      this.createSelectItemInteraction();
+      this.createHoverItemInteraction();
     } else {
       this.olLayers_[0] = olLayer;
     }
@@ -183,6 +180,7 @@ export default class CatalogmanagerControl extends IDEE.impl.Control {
   onBoxEnd(evt) {
     const geom = this.dragBox.getGeometry();
     const extent = geom.getExtent();
+    this.facadeControl_.drawBoxExtent(geom.getCoordinates());
     this.facadeControl_.setSpatialFilterByExtent(this.transformExtent(extent, this.facadeMap_.getProjection().code, 'EPSG:4326'));
   }
 
