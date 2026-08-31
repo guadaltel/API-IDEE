@@ -1409,7 +1409,14 @@ export default class LayerswitcherControl extends IDEE.Control {
                         let matrixSet = 'EPSG:3857';
                         const links = layerInfo.TileMatrixSetLink || layerInfo.tileMatrixSetLink;
                         if (links && links.length > 0) {
-                          matrixSet = links[0].TileMatrixSet || links[0].tileMatrixSet || matrixSet;
+                          const projMap = [this.map_.getProjection().code];
+                          if (projMap[0] === 'EPSG:3857') {
+                            projMap.push('GoogleMapsCompatible');
+                          }
+                          const link = links.find((lnk) => projMap.includes(lnk.TileMatrixSet));
+                          if (link) {
+                            matrixSet = link.TileMatrixSet || link.tileMatrixSet || matrixSet;
+                          }
                         }
 
                         // Rescatar el formato de imagen
@@ -1439,7 +1446,8 @@ export default class LayerswitcherControl extends IDEE.Control {
                         layers.push(wmtsLayer);
                       });
                     } else {
-                      console.error('No se encontró la estructura de capas WMTS:', getCapabilities); // eslint-disable-line no-console
+                      // eslint-disable-next-line no-console
+                      console.error('No se encontró la estructura de capas WMTS:', getCapabilities);
                     }
 
                     // Pasar las capas por la lista blanca/filtros y se asignan
