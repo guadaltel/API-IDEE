@@ -1,11 +1,11 @@
 @font-face {
     font-family: 'catalogmanager';
-    src: url('../fonts/catalogmanager.eot?52291623');
-    src: url('../fonts/catalogmanager.eot?52291623#iefix') format('embedded-opentype'),
-            url('../fonts/catalogmanager.woff2?52291623') format('woff2'),
-            url('../fonts/catalogmanager.woff?52291623') format('woff'),
-            url('../fonts/catalogmanager.ttf?52291623') format('truetype'),
-            url('../fonts/catalogmanager.svg?52291623#catalogmanager') format('svg');
+    src: url('../fonts/catalogmanager.eot?49032958');
+    src: url('../fonts/catalogmanager.eot?49032958#iefix') format('embedded-opentype'),
+            url('../fonts/catalogmanager.woff2?49032958') format('woff2'),
+            url('../fonts/catalogmanager.woff?49032958') format('woff'),
+            url('../fonts/catalogmanager.ttf?49032958') format('truetype'),
+            url('../fonts/catalogmanager.svg?49032958#catalogmanager') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -15,7 +15,7 @@
 @media screen and (-webkit-min-device-pixel-ratio:0) {
 @font-face {
     font-family: 'catalogmanager';
-    src: url('../fonts/catalogmanager.svg?52291623#catalogmanager') format('svg');
+    src: url('../fonts/catalogmanager.svg?49032958#catalogmanager') format('svg');
 }
 }
 */
@@ -58,6 +58,7 @@
 .icon-lock:before { content: '\e801'; }
 .icon-lock-open:before { content: '\e802'; }
 .icon-download:before { content: '\e803'; }
+.icon-upload:before { content: '\e80f'; }
 .icon-eye:before { content: '\e804'; }
 .icon-calendar:before { content: '\e805'; }
 .icon-arrows-cw:before { content: '\e806'; }

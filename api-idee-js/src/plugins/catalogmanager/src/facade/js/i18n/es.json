@@ -27,7 +27,7 @@
       "view": "Por vista",
       "extent": "Por extensión dibujada",
       "extentHelp": "Dibuje una extensión geográfica en el mapa",
-      "referenced": "Geometía de referencia",
+      "referenced": "Subida de fichero",
       "referencedHelp": "Seleccione una geometría dibujada previamente en el mapa para tomarla de referencia.",
       "success": "Filtro espacial establecido correctamente."
     },
@@ -129,6 +129,7 @@
   "actions": "Acciones",
   "previous": "Anterior",
   "next": "Siguiente",
+  "pagination": "Página {0} de {1}",
   "unknown": "Desconocido",
   "masiveDownload": {
     "title": "Descargar selección",

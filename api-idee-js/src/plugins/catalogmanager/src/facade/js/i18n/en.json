@@ -27,7 +27,7 @@
       "view": "By view",
       "extent": "By drawn extent",
       "extentHelp": "Draw an extent on the map.",
-      "referenced": "Referenced geometry",
+      "referenced": "File upload",
       "referencedHelp": "Select a previously drawn geometry on the map to take it as reference.",
       "success": "Spatial filter set successfully."
     },
@@ -129,6 +129,7 @@
   "actions": "Actions",
   "previous": "Previous",
   "next": "Next",
+  "pagination": "Page {0} of {1}",
   "unknown": "Unknown",
   "masiveDownload": {
     "title": "Download selection",
