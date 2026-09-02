@@ -535,3 +535,7 @@
 .m-rastermanagement-tab-content>p {
     margin: 0;
 }
+
+.m-areas > div.m-area > div.m-panel.m-plugin-rastermanagement.opened {
+	z-index: 100000;
+}
