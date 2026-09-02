@@ -952,7 +952,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @param {Object} queryableFields Campos consultables devueltos por la API STAC
    */
   initAdvancedFilterState(catalogIndex, collectionIndex, queryableFields) {
-    const fields = Object.keys(queryableFields || {});
+    const fields = this.formatQueryableFields(queryableFields);
     this.advancedFilterState_ = {
       catalogIndex,
       collectionIndex,
@@ -963,6 +963,18 @@ export default class CatalogmanagerControl extends IDEE.Control {
       selectedField: null,
       fieldsTemplate: null,
     };
+  }
+
+  formatQueryableFields(queryableFields) {
+    const fields = [];
+    const keys = Object.keys(queryableFields);
+    keys.forEach((key) => {
+      fields.push({
+        key,
+        title: queryableFields[key].title,
+      });
+    });
+    return fields;
   }
 
   /**
@@ -1065,7 +1077,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const fields = state.fieldsPages[state.currentFieldsPage] || [];
     const cloudCoverContainer = this.template_.querySelector('#m-catalogmanager-filters-cloud-cover');
     cloudCoverContainer.innerHTML = '';
-    if (fields.includes('eo:cloud_cover')) {
+    if (fields.find((field) => field.key === 'eo:cloud_cover')) {
       const cloudCoverSliderHtml = IDEE.template.compileSync(cloudCoverSliderTemplate, {
         jsonp: true,
         vars: {
@@ -1189,7 +1201,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const state = this.advancedFilterState_;
     this.getAdvancedFilterContainer().querySelector('#m-catalogmanager-fieldstable')
       .addEventListener('click', (evt) => {
-        const fieldName = evt.target.innerHTML;
+        const fieldName = evt.target.id;
         state.selectedField = fieldName;
         this.getAdvancedFilterAssistantTextarea().value += fieldName;
         this.showQueryableFieldValues(fieldName);
@@ -2027,7 +2039,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     catalog.obj.getCollections().then((collections) => {
       const collectionsJson = this.getJsonCollections(collections, this.selectedCatalogIndex_);
       catalog.collections = collectionsJson;
-      this.renderCollections(collectionsElement, collectionsJson);
+      this.sortCollections(this.collectionsSortType_);
     });
   }
 

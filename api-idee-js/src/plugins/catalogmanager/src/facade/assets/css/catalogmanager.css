@@ -137,6 +137,7 @@ div.m-area.m-right .m-plugin-catalogmanager.opened #div-contenedor {
     border: 1px solid #71a7d3;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
+    margin-top: 0.25rem;
 }
 
 .m-catalogmanager-items-buttons button:disabled {
