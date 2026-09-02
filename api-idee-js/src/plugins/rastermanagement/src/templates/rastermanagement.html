@@ -137,16 +137,16 @@
         </div>
         <div id="m-rastermanagement-spectralindices-tab-content" class="m-rastermanagement-tab-content hidden" role="tabpanel" aria-labelledby="m-rastermanagement-spectralindices-tab">
             <div id="m-rastermanagement-indices" role="tablist" aria-label="{{spectralIndices}}">
-                <button type="button" id="m-rastermanagement-ndvi-index" class="m-rastermanagement-index active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-ndvi-index-content">{{ndvi}}</button>
-                <button type="button" id="m-rastermanagement-ndwi-index" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-ndwi-index-content">{{ndwi}}</button>
-                <button type="button" id="m-rastermanagement-nbr-index" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-nbr-index-content">{{nbr}}</button>
+                <button type="button" id="m-rastermanagement-ndvi-index" title="{{ndviTooltip}}" aria-label="{{ndviTooltip}}" class="m-rastermanagement-index active" role="tab" tabindex="0" aria-selected="true" aria-controls="m-rastermanagement-ndvi-index-content">{{ndvi}}</button>
+                <button type="button" id="m-rastermanagement-ndwi-index" title="{{ndwiTooltip}}" aria-label="{{ndwiTooltip}}" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-ndwi-index-content">{{ndwi}}</button>
+                <button type="button" id="m-rastermanagement-nbr-index" title="{{nbrTooltip}}" aria-label="{{nbrTooltip}}" class="m-rastermanagement-index" role="tab" tabindex="0" aria-selected="false" aria-controls="m-rastermanagement-nbr-index-content">{{nbr}}</button>
             </div>
             <div id="m-rastermanagement-indices-contents">
                 <div id="m-rastermanagement-ndvi-index-content" class="m-rastermanagement-index-content" role="tabpanel" aria-labelledby="m-rastermanagement-ndvi-index">
                     <div class="m-rastermanagement-index-form">
                         <div class="m-rastermanagement-filters-grid">
                             <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-ndvi-nir">{{bandNir}}</label>
+                                <label title="{{bandNirTooltip}}" aria-label="{{bandNirTooltip}}" for="m-rastermanagement-ndvi-nir">{{bandNir}}</label>
                                 <input type="number" id="m-rastermanagement-ndvi-nir" name="ndvi-nir" min="1" step="1" value="{{ndviDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
                             </div>
                             <div class="m-rastermanagement-filter-control">
@@ -204,7 +204,7 @@
                                 <input type="number" id="m-rastermanagement-ndwi-green" name="ndwi-green" min="1" step="1" value="{{ndwiDefaults.green}}" tabindex="0" aria-label="{{bandGreen}}">
                             </div>
                             <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-ndwi-nir">{{bandNir}}</label>
+                                <label title="{{bandNirTooltip}}" aria-label="{{bandNirTooltip}}" for="m-rastermanagement-ndwi-nir">{{bandNir}}</label>
                                 <input type="number" id="m-rastermanagement-ndwi-nir" name="ndwi-nir" min="1" step="1" value="{{ndwiDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
                             </div>
                             <div class="m-rastermanagement-filter-control">
@@ -254,11 +254,11 @@
                     <div class="m-rastermanagement-index-form">
                         <div class="m-rastermanagement-filters-grid">
                             <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-nbr-nir">{{bandNir}}</label>
+                                <label title="{{bandNirTooltip}}" aria-label="{{bandNirTooltip}}" for="m-rastermanagement-nbr-nir">{{bandNir}}</label>
                                 <input type="number" id="m-rastermanagement-nbr-nir" name="nbr-nir" min="1" step="1" value="{{nbrDefaults.nir}}" tabindex="0" aria-label="{{bandNir}}">
                             </div>
                             <div class="m-rastermanagement-filter-control">
-                                <label for="m-rastermanagement-nbr-swir">{{bandSwir}}</label>
+                                <label title="{{bandSwirTooltip}}" aria-label="{{bandSwirTooltip}}" for="m-rastermanagement-nbr-swir">{{bandSwir}}</label>
                                 <input type="number" id="m-rastermanagement-nbr-swir" name="nbr-swir" min="1" step="1" value="{{nbrDefaults.swir}}" tabindex="0" aria-label="{{bandSwir}}">
                             </div>
                             <div class="m-rastermanagement-filter-control">
@@ -319,7 +319,7 @@
                         <input type="number" id="m-rastermanagement-rgb-g" name="rgb-g" min="0" step="1" value="{{rgbDefaults.g}}" tabindex="0" aria-label="{{bandChannelG}}">
                     </div>
                     <div class="m-rastermanagement-filter-control">
-                        <label for="m-rastermanagement-rgb-b">{{bandChannelB}}</label>
+                        <label title="{{bandChannelBTooltip}}" aria-label="{{bandChannelBTooltip}}" for="m-rastermanagement-rgb-b">{{bandChannelB}}</label>
                         <input type="number" id="m-rastermanagement-rgb-b" name="rgb-b" min="0" step="1" value="{{rgbDefaults.b}}" tabindex="0" aria-label="{{bandChannelB}}">
                     </div>
                     <div class="m-rastermanagement-filter-control">
