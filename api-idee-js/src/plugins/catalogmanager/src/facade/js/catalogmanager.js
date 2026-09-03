@@ -229,6 +229,9 @@ export default class Catalogmanager extends IDEE.Plugin {
               help12: getValue('textHelp.help12'),
               help13: getValue('textHelp.help13'),
               help14: getValue('textHelp.help14'),
+              help15: getValue('textHelp.help15'),
+              help16: getValue('textHelp.help16'),
+              help17: getValue('textHelp.help17'),
             },
           },
         });

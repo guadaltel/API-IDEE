@@ -351,7 +351,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.template_.querySelector('#m-catalogmanager-filters-temporal-predefined').addEventListener('click', (evt) => this.setTemporalFilter(evt));
     this.template_.querySelector('#m-catalogmanager-filters-spatial-predefined').addEventListener('click', (evt) => this.toggleSpatialFilter(evt));
     this.template_.querySelector('#m-catalogmanager-file-input').addEventListener('change', (evt) => this.uploadFile(evt));
-    this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.updateItems.bind(this));
+    this.template_.querySelector('#m-catalogmanager-updatecatalog').addEventListener('click', this.updateItems.bind(this, true));
     this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-download').addEventListener('click', this.masiveDownload.bind(this));
     this.template_.querySelector('#m-catalogmanager-extra-actions-content #m-catalogmanager-delete').addEventListener('click', this.clearSelection.bind(this));
     this.template_.querySelector('#m-catalogmanager-filters-tabs').addEventListener('click', (evt) => this.toggleTabs(evt));
@@ -512,6 +512,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.changeTab(tab);
   }
 
+  /**
+   * Activa la pestaña indicada y muestra su contenido asociado
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} tab Elemento DOM de la pestaña a activar
+   */
   changeTab(tab) {
     const tabs = tab.parentNode.children;
     for (let i = 0; i < tabs.length; i += 1) {
@@ -689,7 +696,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       this.addFilterTag(`${getValue('filtersTypes.temporal.end')}: ${endDate}`, 'temporal_end');
     }
     IDEE.toast.success(getValue('filtersTypes.temporal.success'), null, 2500);
-    this.updateItems();
+    this.updateItems(false);
   }
 
   /**
@@ -763,9 +770,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.commonFilters_.bbox = extent;
     IDEE.toast.success(getValue('filtersTypes.spatial.success'), null, 2500);
     this.getImpl().deactivateAllInteractions();
-    this.updateItems();
+    this.updateItems(false);
   }
 
+  /**
+   * Dibuja en el mapa un polígono con la extensión espacial del filtro
+   *
+   * @private
+   * @function
+   * @param {Array<Array<number>>} coordinates Coordenadas del polígono en el CRS del mapa
+   */
   drawBoxExtent(coordinates) {
     if (this.boxLayer_) {
       this.boxLayer_.removeFeatures(this.boxLayer_.getFeatures());
@@ -783,12 +797,25 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.boxLayer_.addFeatures(feature);
   }
 
+  /**
+   * Elimina del mapa las features del polígono de extensión espacial
+   *
+   * @private
+   * @function
+   */
   removeBoxExtent() {
     if (this.boxLayer_) {
       this.boxLayer_.removeFeatures(this.boxLayer_.getFeatures());
     }
   }
 
+  /**
+   * Carga un fichero vectorial al mapa y usa su extensión como filtro espacial
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento change del input de fichero
+   */
   uploadFile(evt) {
     evt.stopPropagation();
     const inputFile = evt.target;
@@ -828,6 +855,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Añade una etiqueta visual de filtro activo en los contenedores de tags
+   *
+   * @private
+   * @function
+   * @param {string} text Texto descriptivo de la etiqueta
+   * @param {string} type Tipo de filtro (`temporal`, `spatial`, `cloud_cover`, `collection`, etc.)
+   */
   addFilterTag(text, type) {
     this.removeFilterTag(type);
     const containers = this.template_.querySelectorAll('.m-catalogmanager-filters-tags');
@@ -847,11 +882,25 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Cierra una etiqueta de filtro, restablece el filtro asociado y actualiza los ítems
+   *
+   * @private
+   * @function
+   * @param {string} type Tipo de filtro de la etiqueta a cerrar
+   */
   closeFilterTag(type) {
     this.resetFilterTag(type);
-    this.updateItems();
+    this.updateItems(true);
   }
 
+  /**
+   * Restablece el estado del filtro asociado a una etiqueta sin actualizar los ítems
+   *
+   * @private
+   * @function
+   * @param {string} type Tipo de filtro de la etiqueta a restablecer
+   */
   resetFilterTag(type) {
     this.removeFilterTag(type);
     const tagType = type.startsWith('temporal') ? 'temporal' : type;
@@ -881,6 +930,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Elimina del DOM las etiquetas visuales del tipo de filtro indicado
+   *
+   * @private
+   * @function
+   * @param {string} type Tipo de filtro cuyas etiquetas se eliminan
+   */
   removeFilterTag(type) {
     const tagContainers = this.template_.querySelectorAll('.m-catalogmanager-filters-tags');
     tagContainers.forEach((tagContainer) => {
@@ -965,6 +1021,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  /**
+   * Transforma el esquema de campos consultables STAC en una lista para la UI
+   *
+   * @private
+   * @function
+   * @param {Object} queryableFields Propiedades consultables del endpoint queryables
+   * @returns {Array<{key: string, title: string}>} Lista de campos con clave y título
+   */
   formatQueryableFields(queryableFields) {
     const fields = [];
     const keys = Object.keys(queryableFields);
@@ -1072,6 +1136,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Renderiza el slider dual de cobertura de nubes si el campo `eo:cloud_cover` existe
+   *
+   * @private
+   * @function
+   */
   renderCloudCoverSlider() {
     const state = this.advancedFilterState_;
     const fields = state.fieldsPages[state.currentFieldsPage] || [];
@@ -1114,6 +1184,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.syncCloudCoverSlider(container);
   }
 
+  /**
+   * Resincroniza el estilo visual del slider dual de cobertura de nubes
+   *
+   * @private
+   * @function
+   */
   syncCloudCoverSliderStyle() {
     const container = this.template_.querySelector('#m-catalogmanager-filters-cloud-cover');
     const minInput = container.querySelector('#m-catalogmanager-cloudcover-min');
@@ -1643,6 +1719,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Aplica el filtro de cobertura de nubes desde el slider y lanza la búsqueda avanzada
+   *
+   * @private
+   * @function
+   */
   changeCloudCoverFilter() {
     const cloudCoverMin = this.template_.querySelector('#m-catalogmanager-cloudcover-min');
     const cloudCoverMax = this.template_.querySelector('#m-catalogmanager-cloudcover-max');
@@ -1665,6 +1747,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.getFilteredItemsAdvanced();
   }
 
+  /**
+   * Restablece el slider de cobertura de nubes a 0–100 y elimina el filtro activo
+   *
+   * @private
+   * @function
+   */
   resetCloudCoverFilter() {
     const cloudCoverMin = this.template_.querySelector('#m-catalogmanager-cloudcover-min');
     const cloudCoverMax = this.template_.querySelector('#m-catalogmanager-cloudcover-max');
@@ -1742,6 +1830,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.statsRequest();
   }
 
+  /**
+   * Actualiza el estado de paginación a partir de la respuesta STAC de ítems
+   *
+   * @private
+   * @function
+   * @param {Object} items Respuesta STAC con `numberMatched` y `numberReturned`
+   */
   updatePagination(items) {
     this.pagination_.totalItems = items.numberMatched;
     this.pagination_.pageSize = items.numberReturned;
@@ -1750,6 +1845,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     );
   }
 
+  /**
+   * Restablece la paginación a sus valores iniciales
+   *
+   * @private
+   * @function
+   */
   resetPagination() {
     this.pagination_.currentPage = 1;
     this.pagination_.totalPages = 1;
@@ -2043,6 +2144,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Renderiza el listado de colecciones en el contenedor indicado
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} collectionsElement Contenedor DOM de las colecciones
+   * @param {Array<Object>} collections Colecciones a pintar
+   */
   renderCollections(collectionsElement, collections) {
     const container = collectionsElement;
     const html = IDEE.template.compileSync(collectionsTemplate, {
@@ -2061,6 +2170,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     container.querySelector(`#${this.collectionsSortType_}`).classList.add('active');
   }
 
+  /**
+   * Ordena las colecciones del catálogo seleccionado y las vuelve a renderizar
+   *
+   * @private
+   * @function
+   * @param {string} sortType Criterio de orden (`sort-name-up`, `sort-name-down`,
+   * `sort-date-up` o `sort-date-down`)
+   */
   sortCollections(sortType) {
     const collections = this.catalogs_[this.selectedCatalogIndex_].collections;
     this.collectionsSortType_ = sortType;
@@ -2435,6 +2552,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Contrae todos los paneles de imágenes de ítems abiertos en el listado de resultados
+   *
+   * @private
+   * @function
+   */
   closeAllImages() {
     document.querySelectorAll('.m-catalogmanager-images').forEach((element) => {
       if (!element.classList.contains('hidden')) {
@@ -2613,6 +2736,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.getImpl().addLayerToSelectItem(huella.getImpl().getLayer());
   }
 
+  /**
+   * Oculta todas las capas de huella (footprint) almacenadas en el control
+   *
+   * @private
+   * @function
+   */
   hideFootprintLayers() {
     this.footprintLayers_.forEach((layer) => {
       layer.setVisible(false);
@@ -2625,12 +2754,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
    * @private
    * @function
    */
-  updateItems() {
+  updateItems(updateFilters = false) {
     if (this.selectedCatalogIndex_ === -1 || this.selectedCollectionIndex_ === -1) {
       return;
     }
-    this.updateBboxFilter();
-    this.updateTemporalFilter();
+    if (updateFilters) {
+      this.updateBboxFilter();
+      this.updateTemporalFilter();
+    }
     this.getItems(this.selectedCatalogIndex_, this.selectedCollectionIndex_);
   }
 
@@ -2662,6 +2793,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Actualiza el filtro temporal al cerrar una etiqueta de inicio o fin de rango
+   *
+   * @private
+   * @function
+   * @param {string} tag Identificador de la etiqueta (`temporal_start` o `temporal_end`)
+   */
   updateTemporalFilterByTag(tag) {
     const dateType = tag.startsWith('temporal_') ? tag.split('_')[1] : null;
     const dateFilter = this.commonFilters_.datetime.split('/');
@@ -2714,6 +2852,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.applyFocusStyleToItem(itemId);
   }
 
+  /**
+   * Aplica el estilo de foco a la feature de huella del ítem indicado
+   *
+   * @private
+   * @function
+   * @param {Object} collection Colección que contiene la capa de huella
+   * @param {string} itemId Identificador del ítem a resaltar
+   */
   applyFocusStyleToLayer(collection, itemId) {
     const huella = this.getHuellaLayer(collection);
     if (!huella) {
@@ -2726,6 +2872,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Marca como activo en la UI el título del ítem indicado
+   *
+   * @private
+   * @function
+   * @param {string} itemId Identificador del ítem a resaltar
+   */
   applyFocusStyleToItem(itemId) {
     const itemElement = this.template_.querySelector(`#item-${itemId}`);
     if (itemElement) {
@@ -2774,6 +2927,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Quita la clase activa del título del ítem indicado en el listado
+   *
+   * @private
+   * @function
+   * @param {string} itemId Identificador del ítem
+   */
   clearFocusStyleFromItem(itemId) {
     const itemElement = this.template_.querySelector(`#item-${itemId}`);
     if (itemElement) {
@@ -3144,6 +3304,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.downloadRequest(downloadData);
   }
 
+  /**
+   * Lanza la descarga masiva de imágenes o ítems según la selección activa
+   *
+   * @public
+   * @function
+   * @api stable
+   */
   masiveDownload() {
     if (!IDEE.utils.isNullOrEmpty(this.selectedImages_)) {
       this.imagesDownload();
@@ -3153,11 +3320,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
   }
 
   /**
-   * Descarga masivamente los elementos seleccionados.
+   * Descarga masivamente los ítems seleccionados
    *
    * @public
    * @function
-   * @returns {Promise<void>}
    * @api stable
    */
   itemsDownload() {
@@ -3176,6 +3342,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     this.downloadRequest(downloadData);
   }
 
+  /**
+   * Descarga masivamente las imágenes seleccionadas
+   *
+   * @public
+   * @function
+   * @api stable
+   */
   imagesDownload() {
     const selection = this.collectSelectedImages();
     if (selection.length === 0) {
@@ -3209,6 +3382,13 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return selection;
   }
 
+  /**
+   * Recoge las imágenes marcadas en el panel para la descarga masiva
+   *
+   * @private
+   * @function
+   * @returns {Object} Selección con `type`, `collectionId` e `images`
+   */
   collectSelectedImages() {
     const selection = {
       type: 'images',
@@ -3297,6 +3477,12 @@ export default class CatalogmanagerControl extends IDEE.Control {
     });
   }
 
+  /**
+   * Restablece la caché de elementos ya contabilizados en estadísticas de visualización
+   *
+   * @private
+   * @function
+   */
   resetCachedElements() {
     this.cachedElements_ = {
       collectionId: null,
@@ -3304,6 +3490,15 @@ export default class CatalogmanagerControl extends IDEE.Control {
     };
   }
 
+  /**
+   * Envía una petición de estadística de visualización al servicio de autenticación
+   *
+   * @private
+   * @function
+   * @param {string|null} [itemId=null] Identificador del ítem visualizado
+   * @param {string|null} [imageKey=null] Clave del asset/imagen visualizado
+   * @param {string} [operator='view'] Operación realizada (`view`, etc.)
+   */
   statsRequest(itemId = null, imageKey = null, operator = 'view') {
     if (this.isValidStatsCatalog() && !this.isCachedElement(itemId, imageKey, operator)) {
       const catalog = this.catalogs_[this.selectedCatalogIndex_];
@@ -3342,11 +3537,28 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
   }
 
+  /**
+   * Indica si el catálogo seleccionado admite el envío de estadísticas
+   *
+   * @private
+   * @function
+   * @returns {boolean} Verdadero si el catálogo tiene `authUrl` configurada
+   */
   isValidStatsCatalog() {
     const catalog = this.catalogs_[this.selectedCatalogIndex_];
     return !IDEE.utils.isNullOrEmpty(catalog.obj.authUrl);
   }
 
+  /**
+   * Comprueba si un elemento (colección, ítem o imagen) ya está en la caché de estadísticas
+   *
+   * @private
+   * @function
+   * @param {string|null} itemId Identificador del ítem
+   * @param {string|null} imageKey Clave del asset/imagen
+   * @param {string} operator Operación ya registrada
+   * @returns {boolean} Verdadero si el elemento ya fue contabilizado
+   */
   isCachedElement(itemId, imageKey, operator) {
     const selectedCollectionId = this.catalogs_[this.selectedCatalogIndex_]
       .collections[this.selectedCollectionIndex_].id;

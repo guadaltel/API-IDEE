@@ -5,20 +5,23 @@
     "no_selection": "No hay imágenes seleccionadas."
   },
   "textHelp": {
-    "help1": "La extensión Gestor de catálogos permite gestionar catálogos STAC: consultar colecciones e ítems, aplicar filtros espaciales, temporales y avanzados, visualizar huellas e imágenes en el mapa y descargar los resultados.",
+    "help1": "La extensión Gestor STAC permite gestionar catálogos STAC: consultar colecciones e ítems, aplicar filtros espaciales, temporales, de cobertura de nubes y avanzados, ordenar colecciones, visualizar huellas e imágenes en el mapa y descargar los resultados.",
     "help2": "Esta extensión es personalizable mediante parámetros, por lo que la extensión puede cambiar de un visualizador a otro.",
     "help3": "Algunos catálogos requieren autenticación. Al seleccionarlos se muestra un diálogo de inicio de sesión donde se puede acceder con usuario y contraseña o como usuario público:",
     "help4": "Desde la sección Catálogos se elige el catálogo STAC con el que se desea trabajar:",
     "help5": "El filtro temporal permite restringir la búsqueda por un rango de fechas y horas. Se pueden indicar las fechas manualmente o usar los accesos rápidos (últimos 30 días, 3 meses o último año) y aplicar el rango indicado:",
-    "help6": "El filtro espacial limita los resultados a una zona geográfica. Permite filtrar por la vista actual del mapa, por una extensión dibujada o por una geometría de referencia previamente dibujada:",
-    "help7": "En la sección Colecciones se listan las colecciones disponibles del catálogo. Al seleccionar una o varias se consultan sus elementos según los filtros aplicados:",
-    "help8": "El filtro avanzado STAC permite refinar la búsqueda sobre las propiedades consultables de los elementos de una colección.",
-    "help9": "En la pestaña Asistente se construye la expresión de filtro seleccionando campos consultables y operadores, y se aplica o limpia desde el propio diálogo:",
-    "help10": "En la pestaña Consulta manual se puede introducir directamente una consulta STAC en formato JSON:",
-    "help11": "En la pestaña Resultados se muestran los elementos encontrados. Se pueden paginar, seleccionar, ver metadatos, visualizar la huella en el mapa y lanzar descargas individuales o masivas (según el catálogo):",
-    "help12": "Al expandir un elemento se listan sus imágenes asociadas, con acciones para previsualizarlas en el mapa o descargarlas:",
-    "help13": "La información relevante a la extensión y su posible parametrización está documentada en",
-    "help14": "El ejemplo de uso de sus parámetros puede comprobarse en"
+    "help6": "El filtro espacial limita los resultados a una zona geográfica. Permite filtrar por la vista actual del mapa, por una extensión dibujada o mediante la subida de un fichero con geometría:",
+    "help7": "El filtro de cobertura de nubes permite restringir los resultados según un porcentaje mínimo y máximo de nubosidad mediante un deslizador de rango entre 0% y 100%:",
+    "help8": "En la sección Colecciones se listan las colecciones disponibles del catálogo. Al seleccionar una o varias se consultan sus elementos según los filtros aplicados:",
+    "help9": "Las colecciones se pueden ordenar alfabéticamente (A-Z o Z-A) o por fecha (ascendente o descendente):",
+    "help10": "Los filtros activos se muestran como etiquetas. Al pulsar la X de una etiqueta se elimina ese filtro:",
+    "help11": "El filtro avanzado STAC permite refinar la búsqueda sobre las propiedades consultables de los elementos de una colección.",
+    "help12": "En la pestaña Asistente se construye la expresión de filtro seleccionando campos consultables y operadores, y se aplica o limpia desde el propio diálogo:",
+    "help13": "En la pestaña Consulta manual se puede introducir directamente una consulta STAC en formato JSON:",
+    "help14": "En la pestaña Resultados se muestran los elementos encontrados. Se pueden paginar, seleccionar, ver metadatos, visualizar la huella en el mapa y lanzar descargas individuales o masivas (según el catálogo):",
+    "help15": "Al expandir un elemento se listan sus imágenes asociadas, con acciones para previsualizarlas en el mapa o descargarlas:",
+    "help16": "La información relevante a la extensión y su posible parametrización está documentada en",
+    "help17": "El ejemplo de uso de sus parámetros puede comprobarse en"
   },
 
   "filtersTypes": {

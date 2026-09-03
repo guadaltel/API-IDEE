@@ -5,20 +5,23 @@
     "no_selection": "No images selected."
   },
   "textHelp": {
-    "help1": "The Catalog manager extension allows you to manage STAC catalogs: browse collections and items, apply spatial, temporal and advanced filters, display footprints and images on the map, and download the results.",
+    "help1": "The STAC Manager extension allows you to manage STAC catalogs: browse collections and items, apply spatial, temporal, cloud cover and advanced filters, sort collections, display footprints and images on the map, and download the results.",
     "help2": "This extension is customizable via parameters, so the extension can change from one viewer to another.",
     "help3": "Some catalogs require authentication. When selected, a login dialog is shown where you can sign in with username and password or as a public user:",
     "help4": "From the Catalogs section you choose the STAC catalog you want to work with:",
     "help5": "The temporal filter restricts the search to a date and time range. You can set the dates manually or use the shortcuts (last 30 days, 3 months or last year) and apply the indicated range:",
-    "help6": "The spatial filter limits the results to a geographic area. It allows filtering by the current map view, by a drawn extent or by a previously drawn reference geometry:",
-    "help7": "The Collections section lists the available collections of the catalog. Selecting one or more queries their items according to the applied filters:",
-    "help8": "The advanced STAC filter allows refining the search over the queryable properties of the items in a collection.",
-    "help9": "In the Assistant tab the filter expression is built by selecting queryable fields and operators, and it can be applied or cleared from the dialog itself:",
-    "help10": "In the Manual query tab you can enter a STAC query directly in JSON format:",
-    "help11": "The Results tab shows the items found. You can paginate, select, view metadata, display the footprint on the map and start individual or bulk downloads (depending on the catalog):",
-    "help12": "Expanding an item lists its associated images, with actions to preview them on the map or download them:",
-    "help13": "The information relevant to the extension and its possible parameterization is documented in",
-    "help14": "The example of use of its parameters can be checked in"
+    "help6": "The spatial filter limits the results to a geographic area. It allows filtering by the current map view, by a drawn extent or by uploading a file with geometry:",
+    "help7": "The cloud cover filter restricts the results according to a minimum and maximum cloud percentage using a range slider between 0% and 100%:",
+    "help8": "The Collections section lists the available collections of the catalog. Selecting one or more queries their items according to the applied filters:",
+    "help9": "Collections can be sorted alphabetically (A-Z or Z-A) or by date (ascending or descending):",
+    "help10": "Active filters are shown as tags. Clicking the X on a tag removes that filter:",
+    "help11": "The advanced STAC filter allows refining the search over the queryable properties of the items in a collection.",
+    "help12": "In the Assistant tab the filter expression is built by selecting queryable fields and operators, and it can be applied or cleared from the dialog itself:",
+    "help13": "In the Manual query tab you can enter a STAC query directly in JSON format:",
+    "help14": "The Results tab shows the items found. You can paginate, select, view metadata, display the footprint on the map and start individual or bulk downloads (depending on the catalog):",
+    "help15": "Expanding an item lists its associated images, with actions to preview them on the map or download them:",
+    "help16": "The information relevant to the extension and its possible parameterization is documented in",
+    "help17": "The example of use of its parameters can be checked in"
   },
 
   "filtersTypes": {
