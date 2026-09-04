@@ -16,8 +16,14 @@
   "textHelp": {
     "help1": "Txt 1"
   },
-  "tooltip": "Raster styles management",
-  "title": "Raster styles management",
+  "tooltip": "Raster layer management",
+  "title": "Raster layer management",
+  "sections": "Sections",
+  "stylesSection": "Styles",
+  "geoprocessSection": "Geoprocesses",
+  "histograms": "Histograms",
+  "rasterCalculator": "Raster calculator",
+  "inDevelopment": "In development",
   "colorRamps": "Color ramps",
   "monoband": "Monoband",
   "bandsMean": "Mean",

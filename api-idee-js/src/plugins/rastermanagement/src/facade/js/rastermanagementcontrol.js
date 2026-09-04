@@ -165,6 +165,12 @@ export default class RasterManagementControl extends IDEE.Control {
       const html = IDEE.template.compileSync(template, {
         vars: {
           title: getValue('title'),
+          sections: getValue('sections'),
+          stylesSection: getValue('stylesSection'),
+          geoprocessSection: getValue('geoprocessSection'),
+          histograms: getValue('histograms'),
+          rasterCalculator: getValue('rasterCalculator'),
+          inDevelopment: getValue('inDevelopment'),
           colorRamps: getValue('colorRamps'),
           monoband: getValue('monoband'),
           bandsMean: getValue('bandsMean'),
@@ -264,7 +270,9 @@ export default class RasterManagementControl extends IDEE.Control {
       });
       this.accessibilityTab(html);
       this.html = html;
+      this.addSectionEvents(html);
       this.addTabEvents(html);
+      this.addGeoprocessTabEvents(html);
       this.addIndexEvents(html);
       this.addRampModeEvents(html);
       this.addLayerSelectorEvents(html);
@@ -278,6 +286,71 @@ export default class RasterManagementControl extends IDEE.Control {
   }
 
   /**
+   * Añade los eventos de cambio de sección principal (Estilos / Geoprocesos).
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addSectionEvents(html) {
+    const sectionsContainer = html.querySelector('#m-rastermanagement-sections');
+    sectionsContainer.addEventListener('click', (evt) => this.toggleSections(evt));
+  }
+
+  /**
+   * Cambia la sección activa (Estilos / Geoprocesos).
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic en una sección
+   */
+  toggleSections(evt) {
+    evt.stopPropagation();
+    let sectionTab = evt.target;
+    if (!sectionTab.classList.contains('m-rastermanagement-section-tab')) {
+      sectionTab = sectionTab.closest('.m-rastermanagement-section-tab');
+    }
+    if (!sectionTab) {
+      return;
+    }
+
+    const sectionTabs = sectionTab.parentNode.children;
+    for (let i = 0; i < sectionTabs.length; i += 1) {
+      const child = sectionTabs.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    sectionTab.classList.add('active');
+    sectionTab.setAttribute('aria-selected', 'true');
+
+    const isStylesSection = sectionTab.id === 'm-rastermanagement-styles-section-tab';
+    const stylesSection = this.html.querySelector('#m-rastermanagement-styles-section');
+    const geoprocessSection = this.html.querySelector('#m-rastermanagement-geoprocess-section');
+
+    if (isStylesSection) {
+      stylesSection.classList.remove('hidden');
+      geoprocessSection.classList.add('hidden');
+    } else {
+      stylesSection.classList.add('hidden');
+      geoprocessSection.classList.remove('hidden');
+    }
+
+    this.updateEditorVisibility();
+  }
+
+  /**
+   * Indica si la sección de estilos está activa.
+   *
+   * @private
+   * @function
+   * @returns {boolean}
+   */
+  isStylesSectionActive() {
+    const tab = this.html.querySelector('#m-rastermanagement-styles-section-tab');
+    return tab.classList.contains('active');
+  }
+
+  /**
    * Añade los eventos de cambio de pestaña
    *
    * @private
@@ -287,6 +360,55 @@ export default class RasterManagementControl extends IDEE.Control {
   addTabEvents(html) {
     const tabsContainer = html.querySelector('#m-rastermanagement-tabs');
     tabsContainer.addEventListener('click', (evt) => this.toggleTabs(evt));
+  }
+
+  /**
+   * Añade los eventos de cambio de pestaña en la sección Geoprocesos.
+   *
+   * @private
+   * @function
+   * @param {HTMLElement} html Plantilla del control
+   */
+  addGeoprocessTabEvents(html) {
+    const tabsContainer = html.querySelector('#m-rastermanagement-geoprocess-tabs');
+    tabsContainer.addEventListener('click', (evt) => this.toggleGeoprocessTabs(evt));
+  }
+
+  /**
+   * Cambia la pestaña activa en la sección Geoprocesos.
+   *
+   * @private
+   * @function
+   * @param {Event} evt Evento de clic
+   */
+  toggleGeoprocessTabs(evt) {
+    evt.stopPropagation();
+    let tab = evt.target;
+    if (!tab.classList.contains('m-rastermanagement-tab')) {
+      tab = tab.closest('.m-rastermanagement-tab');
+    }
+    if (!tab || !tab.closest('#m-rastermanagement-geoprocess-tabs')) {
+      return;
+    }
+
+    const tabs = tab.parentNode.children;
+    for (let i = 0; i < tabs.length; i += 1) {
+      const child = tabs.item(i);
+      child.classList.remove('active');
+      child.setAttribute('aria-selected', 'false');
+    }
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+
+    const tabsContent = this.html.querySelector('#m-rastermanagement-geoprocess-contents').children;
+    for (let i = 0; i < tabsContent.length; i += 1) {
+      const child = tabsContent.item(i);
+      if (child.id !== `${tab.id}-content`) {
+        child.classList.add('hidden');
+      } else if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
   }
 
   /**
@@ -1319,8 +1441,9 @@ export default class RasterManagementControl extends IDEE.Control {
     const clearBtn = this.html.querySelector('#m-rastermanagement-clear');
     const copyBtn = this.html.querySelector('#m-rastermanagement-copy');
     const hasLayer = !IDEE.utils.isNullOrEmpty(this.selectedLayer);
+    const isStylesSection = this.isStylesSectionActive();
 
-    if (hasLayer) {
+    if (hasLayer && isStylesSection) {
       editor.classList.remove('hidden');
       applyBtn.classList.remove('hidden');
       clearBtn.classList.remove('hidden');

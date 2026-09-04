@@ -16,8 +16,14 @@
   "textHelp": {
     "help1": "Txt 1"
   },
-  "tooltip": "Gestor de estilos ráster",
-  "title": "Gestor de estilos ráster",
+  "tooltip": "Gestión de capas ráster",
+  "title": "Gestión de capas ráster",
+  "sections": "Secciones",
+  "stylesSection": "Estilos",
+  "geoprocessSection": "Geoprocesos",
+  "histograms": "Histogramas",
+  "rasterCalculator": "Calculadora ráster",
+  "inDevelopment": "En desarrollo",
   "colorRamps": "Rampas de color",
   "monoband": "Monobanda",
   "bandsMean": "Media",
