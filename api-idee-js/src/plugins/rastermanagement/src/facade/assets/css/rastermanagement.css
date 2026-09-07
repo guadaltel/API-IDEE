@@ -594,6 +594,10 @@
     padding: 12px;
 }
 
+.m-rastermanagement-calculator-message {
+    margin: 0;
+}
+
 .m-rastermanagement-histogram-message {
     margin: 0;
 }
