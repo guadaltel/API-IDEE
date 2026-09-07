@@ -145,15 +145,15 @@ IDEE.utils.encodeBase64(obj_params);
 Ejemplo del constructor:
 
 ```javascript
-{
-  position: "right",
+IDEE.utils.encodeBase64({
+  position: 'right',
   order: 0,
-  tooltip: "Obtener ayuda",
-}
+  tooltip: 'Obtener ayuda',
+});
 ```
 
 ```
-https://componentes.idee.es/api-idee/?help=base64=ewogIHBvc2l0aW9uOiAiVFIiLAogIHRvb2x0aXA6ICJPYnRlbmVyIGF5dWRhIiwKfQ==
+https://componentes.idee.es/api-idee/?help=base64=eyJwb3NpdGlvbiI6InJpZ2h0Iiwib3JkZXIiOjAsInRvb2x0aXAiOiJPYnRlbmVyIGF5dWRhIn0=
 ```
 
 # Ejemplo de uso
