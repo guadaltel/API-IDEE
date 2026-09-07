@@ -4,6 +4,7 @@
 
 import RasterManagementImplControl from 'impl/rastermanagementcontrol';
 import template from 'templates/rastermanagement';
+import HistogramControl from './histogramcontrol';
 import { getValue } from './i18n/language';
 
 /**
@@ -143,6 +144,13 @@ export default class RasterManagementControl extends IDEE.Control {
      * @type {boolean}
      */
     this.pendingLayersRefresh_ = false;
+
+    /**
+     * Control de histogramas en la sección Geoprocesos
+     * @private
+     * @type {HistogramControl}
+     */
+    this.histogramControl_ = new HistogramControl(this);
   }
 
   /**
@@ -167,6 +175,7 @@ export default class RasterManagementControl extends IDEE.Control {
           title: getValue('title'),
           sections: getValue('sections'),
           stylesSection: getValue('stylesSection'),
+          stylesSelectLayer: getValue('stylesSelectLayer'),
           geoprocessSection: getValue('geoprocessSection'),
           histograms: getValue('histograms'),
           rasterCalculator: getValue('rasterCalculator'),
@@ -270,6 +279,7 @@ export default class RasterManagementControl extends IDEE.Control {
       });
       this.accessibilityTab(html);
       this.html = html;
+      this.histogramControl_.init(html);
       this.addSectionEvents(html);
       this.addTabEvents(html);
       this.addGeoprocessTabEvents(html);
@@ -336,6 +346,7 @@ export default class RasterManagementControl extends IDEE.Control {
     }
 
     this.updateEditorVisibility();
+    this.histogramControl_.loadIfVisible();
   }
 
   /**
@@ -409,6 +420,8 @@ export default class RasterManagementControl extends IDEE.Control {
         child.classList.remove('hidden');
       }
     }
+
+    this.histogramControl_.loadIfVisible();
   }
 
   /**
@@ -1437,6 +1450,7 @@ export default class RasterManagementControl extends IDEE.Control {
       return;
     }
     const editor = this.html.querySelector('#m-rastermanagement-editor');
+    const emptyMessage = this.html.querySelector('#m-rastermanagement-styles-empty');
     const applyBtn = this.html.querySelector('#m-rastermanagement-apply');
     const clearBtn = this.html.querySelector('#m-rastermanagement-clear');
     const copyBtn = this.html.querySelector('#m-rastermanagement-copy');
@@ -1445,6 +1459,7 @@ export default class RasterManagementControl extends IDEE.Control {
 
     if (hasLayer && isStylesSection) {
       editor.classList.remove('hidden');
+      emptyMessage.classList.add('hidden');
       applyBtn.classList.remove('hidden');
       clearBtn.classList.remove('hidden');
       copyBtn.classList.remove('hidden');
@@ -1453,6 +1468,11 @@ export default class RasterManagementControl extends IDEE.Control {
       applyBtn.classList.add('hidden');
       clearBtn.classList.add('hidden');
       copyBtn.classList.add('hidden');
+      if (isStylesSection && !hasLayer) {
+        emptyMessage.classList.remove('hidden');
+      } else {
+        emptyMessage.classList.add('hidden');
+      }
     }
   }
 
@@ -1476,6 +1496,7 @@ export default class RasterManagementControl extends IDEE.Control {
     }
     this.updateEditorVisibility();
     this.loadSelectedLayerStyle();
+    this.histogramControl_.loadIfVisible();
   }
 
   /**
