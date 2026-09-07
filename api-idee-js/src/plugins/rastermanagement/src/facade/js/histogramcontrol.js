@@ -134,7 +134,7 @@ export default class HistogramControl {
     this.isLoading_ = true;
     this.showState_('loading');
 
-    const request = createCalcHistogramRequest(urlRaster);
+    const request = createCalcHistogramRequest(urlRaster, this.parentControl_.calcHistogramUrl);
     this.activeRequest_ = request;
 
     request.promise

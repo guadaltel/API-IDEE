@@ -35,6 +35,13 @@ export default class RasterManagementControl extends IDEE.Control {
     this.order = values.order >= -1 ? values.order : null;
 
     /**
+     * URL del servicio WPS calcHistogram
+     * @public
+     * @type {string}
+     */
+    this.calcHistogramUrl = values.calcHistogramUrl;
+
+    /**
      * Capas GeoTIFF disponibles en el selector
      * @private
      * @type { Array<{value: string, text: string}> }

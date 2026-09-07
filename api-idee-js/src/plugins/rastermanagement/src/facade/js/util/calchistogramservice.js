@@ -39,9 +39,15 @@ function parseCalcHistogramResponse(response) {
  * Solicita el histograma de un ráster al servicio WPS calcHistogram.
  *
  * @param {string} urlRaster URL del GeoTIFF.
+ * @param {string} [serviceUrl=CALC_HISTOGRAM_WPS_URL] URL del proceso WPS.
  * @returns {{ promise: Promise<Array<object>>, abort: Function }}
  */
-export function createCalcHistogramRequest(urlRaster) {
+export function createCalcHistogramRequest(urlRaster, serviceUrl = CALC_HISTOGRAM_WPS_URL) {
+  let requestUrl = CALC_HISTOGRAM_WPS_URL;
+  if (!IDEE.utils.isNullOrEmpty(serviceUrl)) {
+    requestUrl = serviceUrl;
+  }
+
   const body = {
     inputs: {
       urlRaster,
@@ -52,7 +58,7 @@ export function createCalcHistogramRequest(urlRaster) {
     'Content-Type': 'application/json',
   };
 
-  const promise = IDEE.remote.post(CALC_HISTOGRAM_WPS_URL, body, {
+  const promise = IDEE.remote.post(requestUrl, body, {
     headers,
   }).then(parseCalcHistogramResponse);
 
