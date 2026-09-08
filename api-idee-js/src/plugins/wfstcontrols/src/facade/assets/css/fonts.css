@@ -23,8 +23,8 @@
 }
 
 .g-cartografia-btn-wfstcontrols-attributes::before {
-  -webkit-mask-image: url('https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_texto.svg');
-  mask-image: url('https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_texto.svg');
+  -webkit-mask-image: url('https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_lista.svg');
+  mask-image: url('https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_lista.svg');
 }
 
 .g-cartografia-btn-wfstcontrols-save::before {
