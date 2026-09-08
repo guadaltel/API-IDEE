@@ -2,6 +2,7 @@
   "exception": {
     "impl": "The implementation used cannot create MapheaderControl controls"
   },
+  "tooltip": "Map header",
   "hideheader": "Hide header",
   "showheader": "Show header",
   "hide": " Hide ",

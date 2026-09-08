@@ -1,49 +1,77 @@
 /**
- * @module M/plugin/Mapheader
+ * @module IDEE/plugin/Mapheader
  */
 import 'assets/css/mapheader';
 import api from '../../api';
 import myhelp from '../../templates/myhelp.html';
+import ca from './i18n/ca';
 import en from './i18n/en';
 import es from './i18n/es';
-import MapheaderControl from './mapheadercontrol';
 import { getValue } from './i18n/language';
+import MapheaderControl from './mapheadercontrol';
 
 export default class Mapheader extends IDEE.Plugin {
   /**
    * @classdesc
-   * Main facade plugin object. This class creates a plugin
-   * object which has an implementation Object
+   * Plugin de cabecera HTML colapsable sobre el mapa.
    *
    * @constructor
    * @extends {IDEE.Plugin}
-   * @param {Object} impl implementation object
+   * @param {Object} options opciones del plugin
    * @api stable
    */
-  constructor(config) {
-    super();
-    /**
-     * Facade of the map
-     * @private
-     * @type {IDEE.Map}
-     */
-    this.map_ = null;
-    this.config = config;
-    this.open = config.open;
+  constructor(options = {}) {
+    super('mapheader', {
+      position: options.position || 'center-top-left',
+      tooltip: options.tooltip || getValue('tooltip'),
+      order: options.order,
+    });
 
-    /**
-     * Array of controls
-     * @private
-     * @type {Array<IDEE.Control>}
-     */
-    this.controls_ = [];
+    this.options = options;
+    this.map = null;
+    this.controls = [];
 
-    /**
-     * Metadata from api.json
-     * @private
-     * @type {Object}
-     */
-    this.metadata_ = api.metadata;
+    this.className = 'm-plugin-mapheader';
+    if (!IDEE.utils.isNullOrEmpty(options.className)) {
+      this.className = `${this.className} ${options.className}`;
+    }
+
+    // Compat: legacy `open` → collapsed = !open
+    this.collapsed = true;
+    if (IDEE.utils.isBoolean(options.collapsed)) {
+      this.collapsed = options.collapsed;
+    } else if (IDEE.utils.isBoolean(options.open)) {
+      this.collapsed = !options.open;
+    }
+
+    this.collapsible = options.collapsible;
+    if (this.collapsible === undefined) {
+      this.collapsible = true;
+    }
+
+    this.collapsedButtonClass = 'g-cartografia-flecha-abajo';
+    if (!IDEE.utils.isNullOrEmpty(options.collapsedButtonClass)) {
+      this.collapsedButtonClass = options.collapsedButtonClass;
+    }
+
+    this.openedButtonClass = 'g-cartografia-flecha-arriba';
+    if (!IDEE.utils.isNullOrEmpty(options.openedButtonClass)) {
+      this.openedButtonClass = options.openedButtonClass;
+    }
+
+    this.htmlCode = options.htmlCode || '';
+
+    this.cssList = [];
+    if (!IDEE.utils.isNullOrEmpty(options.cssList)) {
+      if (IDEE.utils.isArray(options.cssList)) {
+        this.cssList = options.cssList;
+      } else if (IDEE.utils.isString(options.cssList)) {
+        this.cssList = options.cssList.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
+
+    this.metadata = api.metadata;
+    this.separatorApiJson = api.url.separator;
   }
 
   /**
@@ -55,31 +83,41 @@ export default class Mapheader extends IDEE.Plugin {
    * @api stable
    */
   addTo(map) {
-    this.controls_.push(new MapheaderControl(this.config));
-    this.map_ = map;
-    // panel para agregar control - no obligatorio
-    this.panel_ = new IDEE.ui.panels.PluginSidePanel('panelMapheader', {
-      collapsible: true,
-      className: 'm-mapheader',
-      position: IDEE.ui.position.TR,
-      collapsedButtonClass: 'g-cartografia-flecha-abajo',
+    this.map = map;
+    this.control = new MapheaderControl({
+      htmlCode: this.htmlCode,
+      cssList: this.cssList,
+      open: !this.collapsed,
+      tooltip: this.tooltip,
+      position: this.position,
+      order: this.order,
     });
-    this.panel_.addControls(this.controls_);
-    map.addPanels(this.panel_);
-    if (this.open) {
-      this.panel_.open();
-    }
-  }
+    this.controls = [this.control];
 
-  /**
-   * This function gets metadata plugin
-   *
-   * @public
-   * @function
-   * @api stable
-   */
-  getMetadata() {
-    return this.metadata_;
+    this.panel = new IDEE.ui.panels.CollapsiblePanel(this.name, {
+      collapsed: this.collapsed,
+      collapsible: this.collapsible,
+      position: this.position,
+      className: this.className,
+      tooltip: this.tooltip,
+      order: this.order,
+      collapsedButtonClass: this.collapsedButtonClass,
+      openedButtonClass: this.openedButtonClass,
+    });
+
+    this.control.setPanel(this.panel);
+    this.panel.addControls(this.controls);
+    map.addControlPanels(this.panel);
+
+    // ADDED_TO_MAP del panel es síncrono: enlazar después
+    if (this.panel.element) {
+      IDEE.utils.enableTouchScroll(this.panel.element);
+    }
+    this.control.bindPanelEvents(this.panel);
+
+    this.control.on(IDEE.evt.ADDED_TO_MAP, () => {
+      this.fire(IDEE.evt.ADDED_TO_MAP);
+    });
   }
 
   /**
@@ -90,32 +128,62 @@ export default class Mapheader extends IDEE.Plugin {
    * @api stable
    */
   destroy() {
-    this.map_.removeControls(this.controls_);
-    [this.controls_, this.panel_, this.map_] = [null, null, null];
+    if (this.map) {
+      if (this.control) {
+        this.control.setPanel(null);
+        this.control.deactivate();
+        this.control.destroy();
+      }
+      if (this.panel) {
+        this.map.removePanel(this.panel);
+      }
+      if (this.controls.length > 0) {
+        this.map.removeControls(this.controls);
+      }
+    }
+    this.map = null;
+    this.control = null;
+    this.controls = [];
+    this.panel = null;
   }
 
-  /**
-   * Return plugin language
-   *
-   * @public
-   * @function
-   * @param {string} lang type language
-   * @api stable
-   */
+  getPanel() {
+    return this.panel;
+  }
+
+  getControls() {
+    return this.controls;
+  }
+
+  getAPIRest() {
+    return `${this.name}=${this.position}${this.separatorApiJson}${this.collapsed}${this.separatorApiJson}${this.order}${this.separatorApiJson}${this.tooltip}${this.separatorApiJson}${this.collapsible}`;
+  }
+
+  getAPIRestBase64() {
+    return `${this.name}=base64=${IDEE.utils.encodeBase64(this.options)}`;
+  }
+
+  getMetadata() {
+    return this.metadata;
+  }
+
+  equals(plugin) {
+    return plugin instanceof Mapheader;
+  }
+
   static getJSONTranslations(lang) {
-    if (lang === 'en' || lang === 'es') {
-      return (lang === 'en') ? en : es;
+    if (lang === 'en' || lang === 'es' || lang === 'ca') {
+      if (lang === 'en') {
+        return en;
+      }
+      if (lang === 'ca') {
+        return ca;
+      }
+      return es;
     }
     return IDEE.language.getTranslation(lang).mapheader;
   }
 
-  /**
-   * Obtiene la ayuda del plugin
-   *
-   * @function
-   * @public
-   * @api
-   */
   getHelp() {
     return {
       title: getValue('textHelp.squemaTitle'),

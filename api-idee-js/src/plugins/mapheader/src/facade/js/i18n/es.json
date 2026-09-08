@@ -2,6 +2,7 @@
   "exception": {
     "impl": "La implementación usada no puede crear controles MapheaderControl"
   },
+  "tooltip": "Cabecera del mapa",
   "hideheader": "Ocultar cabecera de página",
   "showheader": "Mostrar cabecera de página",
   "hide": " Ocultar ",

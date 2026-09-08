@@ -2,6 +2,7 @@
   "exception": {
     "impl": "La implementació usada no pot crear controls MapheaderControl"
   },
+  "tooltip": "Capçalera del mapa",
   "hideheader": "Amagar capçalera de pàgina",
   "showheader": "Mostrar capçalera de pàgina",
   "hide": " Amagar ",
