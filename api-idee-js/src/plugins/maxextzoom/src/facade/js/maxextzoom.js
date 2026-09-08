@@ -1,5 +1,5 @@
 /**
- * @module M/plugin/MaxExtZoom
+ * @module IDEE/plugin/MaxExtZoom
  */
 import 'assets/css/maxextzoom';
 import api from '../../api';
@@ -9,53 +9,54 @@ import es from './i18n/es';
 import { getValue } from './i18n/language';
 import MaxExtZoomControl from './maxextzoomcontrol';
 
+const SVG_PATH = 'https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_overview_white.svg';
+
 export default class MaxExtZoom extends IDEE.Plugin {
   /**
    * @classdesc
-   * Main facade plugin object. This class creates a plugin
-   * object which has an implementation Object
+   * Plugin de botón one-shot que ajusta la vista a la extensión máxima del mapa.
    *
    * @constructor
    * @extends {IDEE.Plugin}
-   * @param {Object} impl implementation object
+   * @param {Object} options opciones del plugin
    * @api stable
    */
   constructor(options = {}) {
-    super();
+    super('maxextzoom', {
+      position: options.position || 'left',
+      tooltip: options.tooltip || getValue('tooltip'),
+      order: options.order,
+    });
+
+    /**
+     * Plugin options
+     * @private
+     * @type {Object}
+     */
+    this.options = options;
+
     /**
      * Facade of the map
      * @private
      * @type {IDEE.Map}
      */
-    this.map_ = null;
-
-    /**
-     * Plugin options.
-     * @private
-     * @type {Object}
-     */
-    this.options = options || {};
+    this.map = null;
 
     /**
      * Array of controls
      * @private
      * @type {Array<IDEE.Control>}
      */
-    this.controls_ = [];
-
-    /**
-     * This variable indicates plugin's position on window
-     * @private
-     * @type {string} { 'TL' | 'TR' | 'BL' | 'BR' } (corners)
-     */
-    this.position = options.position || 'TL';
+    this.controls = [];
 
     /**
      * Metadata from api.json
      * @private
      * @type {Object}
      */
-    this.metadata_ = api.metadata;
+    this.metadata = api.metadata;
+
+    this.separatorApiJson = api.url.separator;
   }
 
   /**
@@ -67,29 +68,82 @@ export default class MaxExtZoom extends IDEE.Plugin {
    * @api stable
    */
   addTo(map) {
-    this.controls_.push(new MaxExtZoomControl());
-    this.map_ = map;
-    // panel para agregar control - no obligatorio
-    this.panel_ = new IDEE.ui.panels.PluginSidePanel('panelMaxExtZoom', {
-      collapsible: false,
-      collapsed: this.options.collapsed,
-      position: IDEE.ui.position[this.position],
-      className: 'm-maxextzoom',
-      tooltip: getValue('tooltip'),
+    this.map = map;
+    this.control = new MaxExtZoomControl({
+      tooltip: this.tooltip,
+      position: this.position,
+      order: this.order,
+      svgPath: SVG_PATH,
     });
-    this.panel_.addControls(this.controls_);
-    map.addPanels(this.panel_);
+    this.controls = [this.control];
+
+    this.control.on(IDEE.evt.ADDED_TO_MAP, () => {
+      this.fire(IDEE.evt.ADDED_TO_MAP);
+    });
+
+    map.addControls(this.controls);
   }
 
   /**
-   * Destroys plugin
+   * This function destroys this plugin
+   *
    * @public
    * @function
-   * @api
+   * @api stable
    */
   destroy() {
-    this.map_.removeControls(this.controls_);
-    [this.map_, this.control_, this.controls_, this.panel_] = [null, null, null, null];
+    if (this.map && this.controls.length > 0) {
+      this.map.removeControls(this.controls);
+    }
+    this.map = null;
+    this.control = null;
+    this.controls = [];
+  }
+
+  /**
+   * This function return the control of plugin
+   *
+   * @public
+   * @function
+   * @api stable
+   */
+  getControls() {
+    return this.controls;
+  }
+
+  /**
+   * Comprueba si el plugin recibido es instancia de MaxExtZoom
+   *
+   * @public
+   * @function
+   * @param {IDEE.Plugin} plugin Plugin a comparar
+   * @returns {boolean}
+   * @api
+   */
+  equals(plugin) {
+    return plugin instanceof MaxExtZoom;
+  }
+
+  /**
+   * Get the API REST Parameters of the plugin
+   *
+   * @function
+   * @public
+   * @api
+   */
+  getAPIRest() {
+    return `${this.name}=${this.position}${this.separatorApiJson}${this.order}${this.separatorApiJson}${this.tooltip}`;
+  }
+
+  /**
+   * Gets the API REST Parameters in base64 of the plugin
+   *
+   * @function
+   * @public
+   * @api
+   */
+  getAPIRestBase64() {
+    return `${this.name}=base64=${IDEE.utils.encodeBase64(this.options)}`;
   }
 
   /**
@@ -100,15 +154,7 @@ export default class MaxExtZoom extends IDEE.Plugin {
    * @api stable
    */
   getMetadata() {
-    return this.metadata_;
-  }
-
-  /**
-   * @getter
-   * @public
-   */
-  get name() {
-    return 'maxextzoom';
+    return this.metadata;
   }
 
   /**
