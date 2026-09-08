@@ -1,6 +1,28 @@
+import {
+  Chart,
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import template from 'templates/histograms';
 import { getValue } from './i18n/language';
-import { computeBandStats, createCalcHistogramRequest } from './util/calchistogramservice';
+import {
+  computeBandStats,
+  createCalcHistogramRequest,
+  getHistogramChartSeries,
+} from './util/calchistogramservice';
+
+Chart.register(
+  BarController,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+);
 
 /**
  * Control de histogramas y estadísticas descriptivas de la capa seleccionada.
@@ -46,6 +68,13 @@ export default class HistogramControl {
      * @type {boolean}
      */
     this.isLoading_ = false;
+
+    /**
+     * Instancia Chart.js del histograma.
+     * @private
+     * @type {Chart|null}
+     */
+    this.chart_ = null;
   }
 
   /**
@@ -61,6 +90,7 @@ export default class HistogramControl {
         histogramCalculate: getValue('histogramCalculate'),
         histogramCancel: getValue('histogramCancel'),
         histogramLoading: getValue('histogramLoading'),
+        histogramChart: getValue('histogramChart'),
         band: getValue('band'),
         descriptiveStats: getValue('descriptiveStats'),
         statPixels: getValue('statPixels'),
@@ -115,6 +145,7 @@ export default class HistogramControl {
     }
 
     this.cancelPendingRequest_();
+    this.destroyChart_();
     this.bandHistograms_ = [];
 
     const layer = this.parentControl_.selectedLayer;
@@ -150,8 +181,8 @@ export default class HistogramControl {
         }
         this.bandHistograms_ = bandHistograms;
         this.populateBandSelector_();
-        this.renderSelectedBandStats_();
         this.showState_('content');
+        this.renderSelectedBandStats_();
       })
       .catch((err) => {
         if (requestId !== this.requestId_) {
@@ -177,6 +208,7 @@ export default class HistogramControl {
     }
     this.cancelPendingRequest_();
     this.isLoading_ = false;
+    this.destroyChart_();
     this.bandHistograms_ = [];
 
     const layer = this.parentControl_.selectedLayer;
@@ -196,6 +228,7 @@ export default class HistogramControl {
   resetView_() {
     this.cancelPendingRequest_();
     this.isLoading_ = false;
+    this.destroyChart_();
     this.bandHistograms_ = [];
 
     const layer = this.parentControl_.selectedLayer;
@@ -279,6 +312,7 @@ export default class HistogramControl {
    * @param {string} message Mensaje de error.
    */
   showError_(message) {
+    this.destroyChart_();
     this.showState_('error', message);
   }
 
@@ -337,6 +371,114 @@ export default class HistogramControl {
     this.setStatValue_('stddev', stats.stdDev, 1);
     this.setStatValue_('p25', stats.percentile25, 1);
     this.setStatValue_('p75', stats.percentile75, 1);
+    this.renderChart_(bandHistogram);
+  }
+
+  /**
+   * Dibuja o actualiza la gráfica del histograma.
+   *
+   * @private
+   * @function
+   * @param {object} bandHistogram Datos de histograma de la banda.
+   */
+  renderChart_(bandHistogram) {
+    const series = getHistogramChartSeries(bandHistogram);
+    if (!series) {
+      this.destroyChart_();
+      return;
+    }
+
+    const canvas = this.root_.querySelector('#m-rastermanagement-histogram-chart');
+    if (!canvas) {
+      return;
+    }
+
+    const labels = [];
+    for (let i = 0; i < series.labels.length; i += 1) {
+      labels.push(this.formatNumber_(series.labels[i], 1));
+    }
+
+    if (this.chart_) {
+      this.chart_.data.labels = labels;
+      this.chart_.data.datasets[0].data = series.counts;
+      this.chart_.update();
+      return;
+    }
+
+    this.chart_ = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: getValue('statPixels'),
+          data: series.counts,
+          backgroundColor: 'rgba(113, 167, 211, 0.75)',
+          borderColor: '#71a7d3',
+          borderWidth: 1,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            callbacks: {
+              title(tooltipItems) {
+                if (!tooltipItems.length) {
+                  return '';
+                }
+                return tooltipItems[0].label;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: getValue('histogramAxisX'),
+            },
+            ticks: {
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 8,
+            },
+            grid: {
+              display: false,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: getValue('histogramAxisY'),
+            },
+            ticks: {
+              precision: 0,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Destruye la instancia de Chart.js si existe.
+   *
+   * @private
+   * @function
+   */
+  destroyChart_() {
+    if (!this.chart_) {
+      return;
+    }
+    this.chart_.destroy();
+    this.chart_ = null;
   }
 
   /**

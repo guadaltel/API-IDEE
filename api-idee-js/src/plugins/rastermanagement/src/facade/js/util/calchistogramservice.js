@@ -95,6 +95,23 @@ function getHistogramCenters(bandHistogram) {
 }
 
 /**
+ * Obtiene los centros y conteos del histograma para representar la gráfica.
+ *
+ * @param {object} bandHistogram Datos de histograma.
+ * @returns {{ labels: Array<number>, counts: Array<number> }|null}
+ */
+export function getHistogramChartSeries(bandHistogram) {
+  if (!bandHistogram || !IDEE.utils.isArray(bandHistogram.counts)) {
+    return null;
+  }
+  const { centers } = getHistogramCenters(bandHistogram);
+  return {
+    labels: centers,
+    counts: bandHistogram.counts,
+  };
+}
+
+/**
  * Calcula el mínimo y máximo a partir de los buckets con datos.
  *
  * @param {Array<number>} centers Centros de bucket.

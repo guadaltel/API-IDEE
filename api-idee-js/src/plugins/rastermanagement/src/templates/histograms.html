@@ -13,6 +13,12 @@
             <label for="m-rastermanagement-histogram-band">{{band}}</label>
             <select id="m-rastermanagement-histogram-band" class="m-rastermanagement-histogram-band-select"></select>
         </div>
+        <div class="m-rastermanagement-histogram-chart-wrap">
+            <h3 class="m-rastermanagement-histogram-stats-title">{{histogramChart}}</h3>
+            <div class="m-rastermanagement-histogram-chart-box">
+                <canvas id="m-rastermanagement-histogram-chart" aria-label="{{histogramChart}}" role="img"></canvas>
+            </div>
+        </div>
         <h3 class="m-rastermanagement-histogram-stats-title">{{descriptiveStats}}</h3>
         <div class="m-rastermanagement-histogram-stats-grid">
             <div class="m-rastermanagement-histogram-stat">
