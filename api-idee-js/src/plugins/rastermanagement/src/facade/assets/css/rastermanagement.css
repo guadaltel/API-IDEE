@@ -95,20 +95,86 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    min-width: 0;
 }
 
-.m-rastermanagement-layer-selector>select {
-    flex: 1;
+.m-rastermanagement-layer-select {
+    position: relative;
+    flex: 1 1 0%;
+    min-width: 0;
+}
+
+.m-rastermanagement-layer-select-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
     min-width: 0;
     height: 34px;
+    margin: 0;
+    padding: 4px 28px 4px 8px;
     font-family: 'Muli', 'sans-serif';
     font-size: 13px;
     color: #404040;
+    text-align: left;
     border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 4px 8px;
     background-color: #fff;
     box-sizing: border-box;
+    cursor: pointer;
+}
+
+.m-rastermanagement-layer-select-btn::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    margin-top: -2px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #666;
+}
+
+.m-rastermanagement-layer-select-btn > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.m-rastermanagement-layer-select-list {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 220px;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+}
+
+.m-rastermanagement-layer-select-list > li {
+    padding: 8px 10px;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 13px;
+    color: #404040;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.m-rastermanagement-layer-select-list > li:hover,
+.m-rastermanagement-layer-select-list > li.is-selected {
+    background-color: #71a7d3;
+    color: #fff;
 }
 
 .m-rastermanagement-layer-selector>button {

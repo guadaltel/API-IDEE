@@ -236,9 +236,30 @@ export default class RasterManagementControl extends IDEE.Control {
    */
   addLayerSelectorEvents(html) {
     const selector = html.querySelector('#m-rastermanagement-selectionlayer');
+    const selectBtn = html.querySelector('#m-rastermanagement-selectionlayer-btn');
+    const selectList = html.querySelector('#m-rastermanagement-selectionlayer-list');
     const applyBtn = html.querySelector('#m-rastermanagement-apply');
     const clearBtn = html.querySelector('#m-rastermanagement-clear');
     const copyBtn = html.querySelector('#m-rastermanagement-copy');
+
+    selectBtn.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      selectList.classList.toggle('hidden');
+    });
+    selectList.addEventListener('click', (evt) => {
+      const option = evt.target.closest('li[data-value]');
+      if (!option) {
+        return;
+      }
+      selector.value = option.dataset.value;
+      selectList.classList.add('hidden');
+      this.updateLayerSelectLabel_();
+      this.selectLayerEvent();
+    });
+    document.addEventListener('click', () => {
+      selectList.classList.add('hidden');
+    });
+
     selector.addEventListener('change', () => this.selectLayerEvent());
     applyBtn.addEventListener('click', () => this.stylesControl_.applyStyle());
     clearBtn.addEventListener('click', () => this.stylesControl_.clearStyle());
@@ -401,13 +422,59 @@ export default class RasterManagementControl extends IDEE.Control {
 
     if (!layerExists) {
       this.selectedLayer = null;
+      selector.value = '';
     }
+    this.renderLayerSelectOptions_();
     if (this.stylesControl_) {
       this.stylesControl_.updateEditorVisibility();
     }
     if (this.geoprocessControl_) {
       this.geoprocessControl_.onLayerSelected();
     }
+  }
+
+  /**
+   * Actualiza el listado visual del selector de capas.
+   *
+   * @private
+   * @function
+   */
+  renderLayerSelectOptions_() {
+    const selector = this.html.querySelector('#m-rastermanagement-selectionlayer');
+    const list = this.html.querySelector('#m-rastermanagement-selectionlayer-list');
+    list.innerHTML = '';
+    list.classList.add('hidden');
+
+    this.layers_.forEach((layer) => {
+      const item = document.createElement('li');
+      item.dataset.value = layer.value;
+      item.innerText = layer.text;
+      item.title = layer.text;
+      if (layer.value === selector.value) {
+        item.classList.add('is-selected');
+      }
+      list.appendChild(item);
+    });
+    this.updateLayerSelectLabel_();
+  }
+
+  /**
+   * Actualiza la etiqueta visible del selector de capas.
+   *
+   * @private
+   * @function
+   */
+  updateLayerSelectLabel_() {
+    const selector = this.html.querySelector('#m-rastermanagement-selectionlayer');
+    const label = this.html.querySelector('#m-rastermanagement-selectionlayer-label');
+    const btn = this.html.querySelector('#m-rastermanagement-selectionlayer-btn');
+    let text = `${getValue('selectLayerDefault')}...`;
+    if (!IDEE.utils.isNullOrEmpty(selector.value) && selector.selectedOptions.length > 0) {
+      text = selector.selectedOptions[0].text;
+    }
+    label.innerText = text;
+    label.title = text;
+    btn.title = text;
   }
 
   /**
