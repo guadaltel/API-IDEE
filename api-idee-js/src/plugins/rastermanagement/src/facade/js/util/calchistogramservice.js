@@ -40,9 +40,17 @@ function parseCalcHistogramResponse(response) {
  *
  * @param {string} urlRaster URL del GeoTIFF.
  * @param {string} [serviceUrl=CALC_HISTOGRAM_WPS_URL] URL del proceso WPS.
+ * @param {object} [options] Opciones adicionales de la petición.
+ * @param {object} [options.geom] GeoJSON Geometry, Feature o FeatureCollection.
+ * @param {number} [options.distance] Distancia de muestreo en metros
+ * para perfiles lineales.
  * @returns {{ promise: Promise<Array<object>>, abort: Function }}
  */
-export function createCalcHistogramRequest(urlRaster, serviceUrl = CALC_HISTOGRAM_WPS_URL) {
+export function createCalcHistogramRequest(
+  urlRaster,
+  serviceUrl = CALC_HISTOGRAM_WPS_URL,
+  options = {},
+) {
   let requestUrl = CALC_HISTOGRAM_WPS_URL;
   if (!IDEE.utils.isNullOrEmpty(serviceUrl)) {
     requestUrl = serviceUrl;
@@ -53,6 +61,14 @@ export function createCalcHistogramRequest(urlRaster, serviceUrl = CALC_HISTOGRA
       urlRaster,
     },
   };
+
+  if (!IDEE.utils.isNullOrEmpty(options.geom)) {
+    body.inputs.geom = options.geom;
+  }
+  if (IDEE.utils.isNumber(options.distance) && options.distance > 0) {
+    body.inputs.distance = options.distance;
+  }
+
   const headers = {
     Accept: 'application/json',
     'Content-Type': 'application/json',

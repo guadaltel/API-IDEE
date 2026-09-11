@@ -1,6 +1,16 @@
 <div class="m-rastermanagement-histogram">
     <p id="m-rastermanagement-histogram-empty" class="m-rastermanagement-histogram-message hidden">{{selectLayerHint}}</p>
     <div id="m-rastermanagement-histogram-actions" class="m-rastermanagement-histogram-actions hidden">
+        <div class="m-rastermanagement-histogram-geom-modes" role="group" aria-label="{{histogramScope}}">
+            <button type="button" class="m-rastermanagement-histogram-mode active" data-mode="full" title="{{histogramScopeFull}}" aria-label="{{histogramScopeFull}}">{{histogramScopeFull}}</button>
+            <button type="button" class="m-rastermanagement-histogram-mode" data-mode="polygon" title="{{histogramDrawPolygon}}" aria-label="{{histogramDrawPolygon}}">{{histogramDrawPolygon}}</button>
+            <button type="button" class="m-rastermanagement-histogram-mode" data-mode="line" title="{{histogramDrawLine}}" aria-label="{{histogramDrawLine}}">{{histogramDrawLine}}</button>
+            <button type="button" id="m-rastermanagement-histogram-clear-geom" class="m-rastermanagement-histogram-clear-geom" title="{{histogramClearGeom}}" aria-label="{{histogramClearGeom}}">{{histogramClearGeom}}</button>
+        </div>
+        <div id="m-rastermanagement-histogram-distance-row" class="m-rastermanagement-histogram-distance-row hidden">
+            <label for="m-rastermanagement-histogram-distance">{{histogramDistance}}</label>
+            <input type="number" id="m-rastermanagement-histogram-distance" min="0" step="any" placeholder="{{histogramDistancePlaceholder}}">
+        </div>
         <button type="button" id="m-rastermanagement-histogram-calculate" class="m-rastermanagement-histogram-calculate" tabindex="0" title="{{histogramCalculate}}" aria-label="{{histogramCalculate}}">{{histogramCalculate}}</button>
     </div>
     <div id="m-rastermanagement-histogram-loading-row" class="m-rastermanagement-histogram-loading-row hidden">

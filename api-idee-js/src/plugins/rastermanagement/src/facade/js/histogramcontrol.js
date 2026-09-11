@@ -75,6 +75,34 @@ export default class HistogramControl {
      * @type {Chart|null}
      */
     this.chart_ = null;
+
+    /**
+     * Modo de ámbito: full | polygon | line
+     * @private
+     * @type {string}
+     */
+    this.geomMode_ = 'full';
+
+    /**
+     * GeoJSON seleccionado para enviar como geom.
+     * @private
+     * @type {object|null}
+     */
+    this.geom_ = null;
+
+    /**
+     * Capa vectorial temporal de dibujo.
+     * @private
+     * @type {IDEE.layer.Vector|null}
+     */
+    this.drawLayer_ = null;
+
+    /**
+     * Interacción de dibujo OpenLayers.
+     * @private
+     * @type {ol.interaction.Draw|null}
+     */
+    this.drawInteraction_ = null;
   }
 
   /**
@@ -91,6 +119,13 @@ export default class HistogramControl {
         histogramCancel: getValue('histogramCancel'),
         histogramLoading: getValue('histogramLoading'),
         histogramChart: getValue('histogramChart'),
+        histogramScope: getValue('histogramScope'),
+        histogramScopeFull: getValue('histogramScopeFull'),
+        histogramDrawPolygon: getValue('histogramDrawPolygon'),
+        histogramDrawLine: getValue('histogramDrawLine'),
+        histogramClearGeom: getValue('histogramClearGeom'),
+        histogramDistance: getValue('histogramDistance'),
+        histogramDistancePlaceholder: getValue('histogramDistancePlaceholder'),
         band: getValue('band'),
         descriptiveStats: getValue('descriptiveStats'),
         statPixels: getValue('statPixels'),
@@ -122,6 +157,18 @@ export default class HistogramControl {
       this.cancelCalculation_();
     });
 
+    const modeButtons = this.root_.querySelectorAll('.m-rastermanagement-histogram-mode');
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.setGeomMode_(btn.dataset.mode);
+      });
+    });
+
+    const clearGeomBtn = this.root_.querySelector('#m-rastermanagement-histogram-clear-geom');
+    clearGeomBtn.addEventListener('click', () => {
+      this.clearGeometry_(true);
+    });
+
     this.loadIfVisible();
   }
 
@@ -131,6 +178,7 @@ export default class HistogramControl {
    */
   loadIfVisible() {
     if (!this.isActive_()) {
+      this.stopDrawing_();
       return;
     }
     this.resetView_();
@@ -160,12 +208,32 @@ export default class HistogramControl {
       return;
     }
 
+    if (this.geomMode_ !== 'full' && IDEE.utils.isNullOrEmpty(this.geom_)) {
+      this.showError_(getValue('histogramNeedGeom'));
+      return;
+    }
+
+    const requestOptions = {};
+    if (!IDEE.utils.isNullOrEmpty(this.geom_)) {
+      requestOptions.geom = this.geom_;
+    }
+    if (this.geomMode_ === 'line') {
+      const distance = this.getDistanceValue_();
+      if (distance !== null) {
+        requestOptions.distance = distance;
+      }
+    }
+
     const requestId = this.requestId_ + 1;
     this.requestId_ = requestId;
     this.isLoading_ = true;
     this.showState_('loading');
 
-    const request = createCalcHistogramRequest(urlRaster, this.parentControl_.calcHistogramUrl);
+    const request = createCalcHistogramRequest(
+      urlRaster,
+      this.parentControl_.calcHistogramUrl,
+      requestOptions,
+    );
     this.activeRequest_ = request;
 
     request.promise
@@ -230,6 +298,7 @@ export default class HistogramControl {
     this.isLoading_ = false;
     this.destroyChart_();
     this.bandHistograms_ = [];
+    this.clearGeometry_(true);
 
     const layer = this.parentControl_.selectedLayer;
     if (!layer) {
@@ -248,6 +317,182 @@ export default class HistogramControl {
     if (this.activeRequest_) {
       this.activeRequest_.abort();
       this.activeRequest_ = null;
+    }
+  }
+
+  /**
+   * Cambia el modo de ámbito del histograma.
+   *
+   * @private
+   * @function
+   * @param {string} mode full | polygon | line
+   */
+  setGeomMode_(mode) {
+    this.geomMode_ = mode;
+    const modeButtons = this.root_.querySelectorAll('.m-rastermanagement-histogram-mode');
+    modeButtons.forEach((btn) => {
+      if (btn.dataset.mode === mode) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    this.updateDistanceRow_();
+
+    if (mode === 'full') {
+      this.clearGeometry_(false);
+      return;
+    }
+    if (mode === 'polygon') {
+      this.startDrawing_('Polygon');
+      return;
+    }
+    if (mode === 'line') {
+      this.startDrawing_('LineString');
+    }
+  }
+
+  /**
+   * Muestra u oculta el campo distance según el modo.
+   *
+   * @private
+   * @function
+   */
+  updateDistanceRow_() {
+    const distanceRow = this.root_.querySelector('#m-rastermanagement-histogram-distance-row');
+    if (this.geomMode_ === 'line') {
+      distanceRow.classList.remove('hidden');
+      return;
+    }
+    distanceRow.classList.add('hidden');
+  }
+
+  /**
+   * Lee la distancia de muestreo del input.
+   *
+   * @private
+   * @function
+   * @returns {number|null}
+   */
+  getDistanceValue_() {
+    const input = this.root_.querySelector('#m-rastermanagement-histogram-distance');
+    if (!input || IDEE.utils.isNullOrEmpty(input.value)) {
+      return null;
+    }
+    const value = Number(input.value);
+    if (!IDEE.utils.isNumber(value) || value <= 0) {
+      return null;
+    }
+    return value;
+  }
+
+  /**
+   * Inicia el dibujo de una geometría en el mapa.
+   *
+   * @private
+   * @function
+   * @param {string} type Polygon | LineString
+   */
+  startDrawing_(type) {
+    if (typeof ol === 'undefined' || !ol.interaction || !ol.interaction.Draw) {
+      this.showError_(getValue('histogramDrawUnavailable'));
+      this.setGeomMode_('full');
+      return;
+    }
+
+    this.clearGeometry_(false);
+    this.ensureDrawLayer_();
+    this.stopDrawing_();
+
+    const map = this.parentControl_.map;
+    const olMap = map.getMapImpl();
+    const olLayer = this.drawLayer_.getImpl().getLayer();
+    const source = olLayer.getSource();
+
+    this.drawInteraction_ = new ol.interaction.Draw({
+      source,
+      type,
+    });
+
+    this.drawInteraction_.on('drawend', (evt) => {
+      window.setTimeout(() => {
+        const facadeFeature = IDEE.impl.Feature.olFeature2Facade(evt.feature);
+        this.drawLayer_.clear();
+        this.drawLayer_.addFeatures([facadeFeature]);
+        this.geom_ = this.drawLayer_.toGeoJSON();
+        this.stopDrawing_();
+      }, 0);
+    });
+
+    olMap.addInteraction(this.drawInteraction_);
+  }
+
+  /**
+   * Crea la capa vectorial de dibujo si no existe.
+   *
+   * @private
+   * @function
+   */
+  ensureDrawLayer_() {
+    if (this.drawLayer_) {
+      return;
+    }
+    this.drawLayer_ = new IDEE.layer.Vector({
+      name: 'rastermanagement_histogram_geom',
+      legend: 'Histogram geometry',
+    });
+    this.drawLayer_.displayInLayerSwitcher = false;
+    this.parentControl_.map.addLayers(this.drawLayer_);
+  }
+
+  /**
+   * Detiene la interacción de dibujo activa.
+   *
+   * @private
+   * @function
+   */
+  stopDrawing_() {
+    if (!this.drawInteraction_) {
+      return;
+    }
+    const map = this.parentControl_.map;
+    if (map) {
+      map.getMapImpl().removeInteraction(this.drawInteraction_);
+    }
+    this.drawInteraction_ = null;
+  }
+
+  /**
+   * Elimina la geometría dibujada.
+   *
+   * @private
+   * @function
+   * @param {boolean} resetMode Si true, vuelve al modo "toda la capa".
+   */
+  clearGeometry_(resetMode) {
+    this.stopDrawing_();
+    this.geom_ = null;
+    if (this.drawLayer_) {
+      this.drawLayer_.clear();
+    }
+    if (resetMode) {
+      this.geomMode_ = 'full';
+      if (this.root_) {
+        const modeButtons = this.root_.querySelectorAll('.m-rastermanagement-histogram-mode');
+        modeButtons.forEach((btn) => {
+          if (btn.dataset.mode === 'full') {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        const distanceInput = this.root_.querySelector('#m-rastermanagement-histogram-distance');
+        if (distanceInput) {
+          distanceInput.value = '';
+        }
+        this.updateDistanceRow_();
+      }
     }
   }
 

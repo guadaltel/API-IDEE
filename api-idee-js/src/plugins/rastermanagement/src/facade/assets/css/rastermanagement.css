@@ -671,15 +671,52 @@
 .m-rastermanagement-histogram-actions {
     margin-bottom: 12px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
 }
 
-.m-rastermanagement-histogram-loading-row {
+.m-rastermanagement-histogram-geom-modes {
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.m-rastermanagement-histogram-mode,
+.m-rastermanagement-histogram-clear-geom {
+    flex: 1 1 auto;
+    min-height: 32px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #b8d4ea;
+    background-color: #fff;
+    color: #3d7aa6;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.m-rastermanagement-histogram-mode.active {
+    border-color: #71a7d3;
+    background-color: #71a7d3;
+    color: #fff;
+}
+
+.m-rastermanagement-histogram-distance-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.m-rastermanagement-histogram-distance-row input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-family: 'Muli', 'sans-serif';
+    font-size: 13px;
 }
 
 .m-rastermanagement-histogram-calculate,
@@ -694,6 +731,14 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+}
+
+.m-rastermanagement-histogram-loading-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .m-rastermanagement-histogram-calculate {
