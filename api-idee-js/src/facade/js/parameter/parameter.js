@@ -2613,14 +2613,17 @@ export const getNormalizeGeoTIFF = (parameter) => {
   let params;
   if (isString(parameter)) {
     params = parameter.split('*');
-    if (params.length >= 8) {
-      const value = params[7];
+    if (params.length >= 9) {
+      const value = params[8];
       normalizeParam = isNullOrEmpty(value) ? undefined : value;
     }
   } else if (isObject(parameter) && !isNullOrEmpty(parameter.normalize)) {
     normalizeParam = parameter.normalize;
   } else if (!isObject(parameter)) {
     Exception(`El parámetro no es de un tipo soportado: ${typeof parameter}`);
+  }
+  if (isString(parameter) && !isNullOrEmpty(normalizeParam)) {
+    normalizeParam = /^1|(true)$/i.test(normalizeParam);
   }
   return normalizeParam;
 };
@@ -3018,6 +3021,9 @@ export const getUseCapabilitiesWMTS = (parameter) => {
 
 /**
  * Analiza los parámetros especificados por el usuario para la capa GeoTIFF.
+ *
+ * Cadena REST (separador *): GeoTIFF, legend, url, name, transparent, projection,
+ * displayInLayerSwitcher, visibility, normalize, extract.
  *
  * @param {string|Mx.parameters.GeoTIFF} userParameters Parámetros para la capa GeoTIFF.
  * @returns {Mx.parameters.GeoTIFF|Array<Mx.parameters.GeoTIFF>} Parámetros de la capa GeoTIFF.
