@@ -2626,6 +2626,40 @@ export const getNormalizeGeoTIFF = (parameter) => {
 };
 
 /**
+ * Analiza el parámetro para obtener el "extract" de la capa GeoTIFF.
+ * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
+ *
+ * @public
+ * @function
+ * @param {string|Mx.parameters.GeoTIFF} parameter Parámetro para obtener
+ * el "extract" de la capa GeoTIFF.
+ * @returns {Boolean|undefined} Valor del extract.
+ * @throws {IDEE.exception} Si el parámetro no es de un tipo soportado.
+ * @api
+ */
+export const getExtractGeoTIFF = (parameter) => {
+  let extract;
+  let params;
+  if (isString(parameter)) {
+    params = parameter.split('*');
+    if (params.length >= 10) {
+      const value = params[9];
+      extract = isNullOrEmpty(value) ? undefined : value;
+    }
+  } else if (isObject(parameter) && !isNullOrEmpty(parameter.extract)) {
+    extract = parameter.extract;
+  } else if (!isObject(parameter)) {
+    Exception(`El parámetro no es de un tipo soportado: ${typeof parameter}`);
+  }
+  if (!isNullOrEmpty(extract)) {
+    extract = /^1|(true)$/i.test(extract);
+  } else {
+    extract = undefined;
+  }
+  return extract;
+};
+
+/**
  * Analiza el parámetro para obtener el nombre de la capa WMTS.
  * - ⚠️ Advertencia: Este método no debe ser llamado por el usuario.
  *
@@ -3038,6 +3072,9 @@ export const geotiff = (userParameters) => {
     // get normalize
     layerObj.normalize = getNormalizeGeoTIFF(userParam);
 
+    // gets the extract
+    layerObj.extract = getExtractGeoTIFF(userParam);
+
     layerObj.isBase = (layerObj.transparent === undefined)
       ? userParam.isBase
       : !layerObj.transparent;
@@ -3277,6 +3314,9 @@ export const xyz = (userParamer) => {
     // gets the legend
     layerObj.legend = getExtraParameter(userParam, layerObj.name, 3, 'legend') || layerObj.name;
 
+    // gets the extract
+    layerObj.extract = getExtraParameter(userParam, 'true', 4, 'extract');
+
     return layerObj;
   });
 
@@ -3386,6 +3426,9 @@ export const tms = (userParamer) => {
 
     // gets tileSize
     layerObj.tileSize = getExtraParameter(userParam, undefined, 6, 'tileSize');
+
+    // gets the extract
+    layerObj.extract = getExtraParameter(userParam, 'true', 7, 'extract');
 
     return layerObj;
   });
