@@ -219,11 +219,13 @@ export default class TemplateCustomizer extends IDEE.Control {
     this.projection = currentProjection;
     this.templateItems_ = this.templateData_.types.map((fullType) => {
       const [type, name] = fullType.split(':');
+      const labelKey = name || type || fullType;
+      const translatedLabel = getValue(labelKey) || getValue(type) || labelKey;
       return {
         id: name ? `texto-libre-${name}` : type,
         type: type || fullType,
         name: name || null,
-        label: name || getValue(type) || type,
+        label: translatedLabel,
       };
     });
     const content = IDEE.template.compileSync(templateCustomizer, {
