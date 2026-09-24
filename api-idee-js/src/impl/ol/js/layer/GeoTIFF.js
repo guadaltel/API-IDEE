@@ -101,6 +101,10 @@ class GeoTIFF extends LayerBase {
    * - opacity: Opacidad de la capa de 0 a 1, por defecto 1.
    * - bands: Bandas a mostrar en forma de array y como numero, si el array esta vacio muestra todas
    *   por defecto [].
+   * - min: El valor minimo de los datos de las bandas. Si se proporciona un array,
+   *   los valores corresponden a las bandas en el archivo (no el option bands)
+   * - max: El valor maximo de los datos de las bandas. Si se proporciona un array,
+   *   los valores corresponden a las bandas en el archivo (no el option bands)
    * - nodata: Usado para sobreescribir el parametro nodata del dato original
    * - minZoom: Zoom mínimo aplicable a la capa.
    * - maxZoom: Zoom máximo aplicable a la capa.
@@ -207,6 +211,18 @@ class GeoTIFF extends LayerBase {
      * GeoTIFF bands_. Bandas a renderizar.
      */
     this.bands_ = options.bands ? options.bands : [];
+
+    /**
+     * GeoTIFF min_. Valor minimo de los datos de las bandas. Si se proporciona un array,
+     * los valores corresponden a las bandas en el archivo (no el option bands)
+     */
+    this.min_ = options.min;
+
+    /**
+     * GeoTIFF max_. Valor maximo de los datos de las bandas. Si se proporciona un array,
+     * los valores corresponden a las bandas en el archivo (no el option bands)
+     */
+    this.max_ = options.max;
 
     /**
      * GeoTIFF nodata_. Bandas a renderizar.
@@ -453,6 +469,8 @@ class GeoTIFF extends LayerBase {
     if (isNullOrEmpty(this.vendorOptions_.source)) {
       const convertToRGB = this.convertToRGB_;
       const bands = this.bands_;
+      const min = this.min_;
+      const max = this.max_;
       const nodata = this.nodata_;
       const projectionGeoTIFF = this.options.projection;
       const sources = [
@@ -465,6 +483,12 @@ class GeoTIFF extends LayerBase {
         sources.forEach((src) => {
           // eslint-disable-next-line no-param-reassign
           src.bands = bands;
+          if (min && max) {
+            // eslint-disable-next-line no-param-reassign
+            src.min = min;
+            // eslint-disable-next-line no-param-reassign
+            src.max = max;
+          }
         });
       }
       olSource = new GeoTIFFSource({

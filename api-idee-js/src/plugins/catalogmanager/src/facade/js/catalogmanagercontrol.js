@@ -2844,15 +2844,20 @@ export default class CatalogmanagerControl extends IDEE.Control {
     const style = this.buildRasterStyle(styleSpec);
     const normalize = IDEE.utils.isNullOrEmpty(styleSpec.indice);
     const convertToRGB = styleSpec.convertToRGB;
+    const geotiffOptions = {
+      convertToRGB,
+      normalize,
+      style,
+    };
+    if (styleSpec.ranges) {
+      geotiffOptions.min = styleSpec.ranges.min;
+      geotiffOptions.max = styleSpec.ranges.max;
+    }
     const geotiff = new IDEE.layer.GeoTIFF({
       url: image.href,
       name: image.title,
       legend: image.title,
-    }, {
-      convertToRGB,
-      normalize,
-      style,
-    });
+    }, geotiffOptions);
     /* if (!catalog.layerGroup) {
       catalog.layerGroup = new IDEE.layer.LayerGroup({
         name: catalog.title,
@@ -3260,6 +3265,21 @@ export default class CatalogmanagerControl extends IDEE.Control {
     return [];
   }
 
+  getAssetRanges(asset) {
+    const ranges = {
+      min: [],
+      max: [],
+    };
+    if (!asset.ranges) {
+      return null;
+    }
+    asset.ranges.forEach((range) => {
+      ranges.min.push(range.min);
+      ranges.max.push(range.max);
+    });
+    return ranges;
+  }
+
   /**
    * Determina los índices de bandas RGB para el estilo WebGL según los metadatos del asset
    *
@@ -3284,12 +3304,16 @@ export default class CatalogmanagerControl extends IDEE.Control {
       spec.convertToRGB = true;
     }
     const eoBands = this.getAssetBands(asset);
+    const ranges = this.getAssetRanges(asset);
+    if (ranges) {
+      spec.ranges = ranges;
+    }
     if (!Array.isArray(eoBands) || eoBands.length === 0) {
       return spec;
     }
-    spec.convertToRGB = false;
     // RGB Monobanda
     if (eoBands.length === 1) {
+      spec.convertToRGB = false;
       const commonName = eoBands[0].common_name?.toLowerCase();
       const rgbChannels = {
         red: [1, 0, 0],
@@ -3309,6 +3333,7 @@ export default class CatalogmanagerControl extends IDEE.Control {
       } else if (eoBands.length >= 3) {
         spec.bands = [1, 2, 3];
       } else { // Escala de grises
+        spec.convertToRGB = false;
         spec.bands = [1, 1, 1];
       }
     }
