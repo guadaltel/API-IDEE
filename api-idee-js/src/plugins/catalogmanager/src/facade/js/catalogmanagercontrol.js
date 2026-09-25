@@ -3270,10 +3270,10 @@ export default class CatalogmanagerControl extends IDEE.Control {
       min: [],
       max: [],
     };
-    if (!asset.ranges) {
+    if (!asset.band_statistics) {
       return null;
     }
-    asset.ranges.forEach((range) => {
+    asset.band_statistics.forEach((range) => {
       ranges.min.push(range.min);
       ranges.max.push(range.max);
     });
@@ -3301,7 +3301,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
       spec.indice = 'NBR';
     } else {
       spec.bands = [1, 2, 3];
-      spec.convertToRGB = true;
     }
     const eoBands = this.getAssetBands(asset);
     const ranges = this.getAssetRanges(asset);
@@ -3313,7 +3312,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
     }
     // RGB Monobanda
     if (eoBands.length === 1) {
-      spec.convertToRGB = false;
       const commonName = eoBands[0].common_name?.toLowerCase();
       const rgbChannels = {
         red: [1, 0, 0],
@@ -3333,7 +3331,6 @@ export default class CatalogmanagerControl extends IDEE.Control {
       } else if (eoBands.length >= 3) {
         spec.bands = [1, 2, 3];
       } else { // Escala de grises
-        spec.convertToRGB = false;
         spec.bands = [1, 1, 1];
       }
     }
