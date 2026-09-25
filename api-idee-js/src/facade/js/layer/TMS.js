@@ -4,7 +4,7 @@
 import TMSImpl from 'impl/layer/TMS';
 import LayerBase from './Layer';
 import {
-  isUndefined, isNullOrEmpty, isObject, isString,
+  isUndefined, isNullOrEmpty, isObject, isString, isIdeeMdtRasterDemUrl,
 } from '../util/Utils';
 import Exception from '../exception/exception';
 import * as parameter from '../parameter/parameter';
@@ -41,8 +41,8 @@ import { getValue } from '../i18n/language';
  * @property {Array<Number>} maxExtent_ Extensión máxima.
  * @property {Boolean} displayInLayerSwitcher Indica si la capa se muestra en el selector de capas.
  * @property {Boolean} isBase Define si la capa es base.
- * @property {Boolean} extract Activa la consulta de tesela y color de píxel
- * con control GetFeatureInfo, por defecto verdadero.
+ * @property {Boolean} extract Activa la consulta con GetFeatureInfo; por defecto falso
+ * (verdadero por defecto en el servicio MDT).
  * @api
  * @extends {IDEE.layer}
  */
@@ -66,8 +66,8 @@ class TMS extends LayerBase {
    * - type: Tipo de la capa.
    * - tileGridMaxZoom: Zoom máximo de cuadrícula de mosaico.
    * - tileSize: Tamaño de la tesela
-   * - extract: Activa la consulta de tesela y color de píxel con control GetFeatureInfo,
-   *   por defecto verdadero.
+   * - extract: Activa la consulta con GetFeatureInfo (color de píxel o elevación MDT IDEE).
+   *   Por defecto falso; verdadero por defecto solo en URLs xyz-mdt.idee.es/raster-dem.
    * @param {Mx.parameters.LayerOptions} options Parámetros opcionales para la capa.
    * - opacity: Opacidad de capa, por defecto 1.
    * - minZoom: Zoom mínimo aplicable a la capa.
@@ -146,8 +146,13 @@ class TMS extends LayerBase {
 
     /**
      * TMS extract: consulta de tesela y color de píxel con control GetFeatureInfo.
+     * En el servicio MDT se activa por defecto para mostrar elevación.
      */
-    this.extract = parameters.extract === undefined ? true : parameters.extract;
+    if (parameters.extract === undefined) {
+      this.extract = isIdeeMdtRasterDemUrl(parameters.url);
+    } else {
+      this.extract = parameters.extract;
+    }
 
     /**
      * TMS tileGridMaxZoom. Zoom máximo de cuadrícula de mosaico.

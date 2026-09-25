@@ -14,6 +14,7 @@ import { get as getRemote } from 'IDEE/util/Remote';
 import { compileSync as compileTemplate } from 'IDEE/util/Template';
 import {
   isNullOrEmpty, beautifyAttribute, addParameters, isString, rgbaToHex,
+  isIdeeMdtRasterDemUrl, decodeTerrainRgbElevation,
 } from 'IDEE/util/Utils';
 import { getValue } from 'IDEE/i18n/language';
 import Control from './Control';
@@ -208,7 +209,7 @@ class GetFeatureInfo extends Control {
       if (isNullOrEmpty(tileIndex) && isNullOrEmpty(data)) {
         return;
       }
-      const formatedInfo = GetFeatureInfo.formatXYZInfo(tileIndex, data);
+      const formatedInfo = GetFeatureInfo.formatXYZInfo(tileIndex, data, layer);
       infos.push({
         formatedInfo,
         layerName: layer.legend || layer.name,
@@ -225,11 +226,16 @@ class GetFeatureInfo extends Control {
    * @function
    * @param {{z: number, x: number, y: number}|null} tileIndex Índice de tesela z/x/y.
    * @param {Uint8ClampedArray|Uint8Array|Float32Array|DataView|null} data Color RGBA del píxel.
+   * @param {IDEE.layer.XYZ|IDEE.layer.TMS|null} layer Capa XYZ/TMS (opcional, para MDT IDEE).
    * @returns {string} HTML con la información de la tesela y el color.
    * @api stable
    */
-  static formatXYZInfo(tileIndex, data) {
+  static formatXYZInfo(tileIndex, data, layer) {
     const gfi = getValue('getfeatureinfo');
+    let isMdtElevation = false;
+    if (!isNullOrEmpty(layer) && !isNullOrEmpty(layer.url)) {
+      isMdtElevation = isIdeeMdtRasterDemUrl(layer.url);
+    }
     let html = '<div class=\'divinfo\'>';
     html += '<table class=\'api-idee-table\'><tbody>';
 
@@ -259,33 +265,25 @@ class GetFeatureInfo extends Control {
       if (data.length > 3) {
         alpha = data[3];
       }
-      const hex = rgbaToHex(`rgba(${red}, ${green}, ${blue}, ${alpha / 255})`);
-
-      html += '<tr><td class="key"><b>';
-      html += beautifyAttribute(gfi.red);
-      html += '</b></td><td class="value">';
-      html += red;
-      html += '</td></tr>';
-      html += '<tr><td class="key"><b>';
-      html += beautifyAttribute(gfi.green);
-      html += '</b></td><td class="value">';
-      html += green;
-      html += '</td></tr>';
-      html += '<tr><td class="key"><b>';
-      html += beautifyAttribute(gfi.blue);
-      html += '</b></td><td class="value">';
-      html += blue;
-      html += '</td></tr>';
-      html += '<tr><td class="key"><b>';
-      html += beautifyAttribute(gfi.alpha);
-      html += '</b></td><td class="value">';
-      html += alpha;
-      html += '</td></tr>';
-      html += '<tr><td class="key"><b>';
-      html += beautifyAttribute(gfi.hex);
-      html += '</b></td><td class="value">';
-      html += hex;
-      html += '</td></tr>';
+      if (isMdtElevation) {
+        const isTransparent = alpha === 0;
+        if (isTransparent) {
+          html += '<tr><td class="value" colspan="2">';
+          html += gfi.elevation_nodata;
+          html += '</td></tr>';
+        } else {
+          const elevation = decodeTerrainRgbElevation(red, green, blue);
+          html += '<tr><td class="key"><b>';
+          html += beautifyAttribute(gfi.elevation);
+          html += '</b></td><td class="value">';
+          html += elevation.toFixed(1);
+          html += ' ';
+          html += gfi.elevation_unit;
+          html += '</td></tr>';
+        }
+      } else {
+        html = GetFeatureInfo.appendXyzPixelColorRows(html, data, gfi);
+      }
     } else if (isNullOrEmpty(tileIndex)) {
       html += '<tr><td class="value" colspan="2">';
       html += gfi.pixel_unavailable;
@@ -298,6 +296,56 @@ class GetFeatureInfo extends Control {
 
     html += '</tbody></table></div>';
     return html;
+  }
+
+  /**
+   * Añade filas RGBA/hex de un píxel XYZ/TMS a una tabla HTML parcial.
+   *
+   * @private
+   * @function
+   * @param {string} html HTML parcial.
+   * @param {Uint8ClampedArray|Uint8Array|Float32Array|DataView} data Color RGBA del píxel.
+   * @param {Object} gfi Traducciones getfeatureinfo.
+   * @returns {string} HTML con filas de color añadidas.
+   * @api stable
+   */
+  static appendXyzPixelColorRows(html, data, gfi) {
+    let htmlVar = html;
+    const red = data[0];
+    const green = data[1];
+    const blue = data[2];
+    let alpha = 255;
+    if (data.length > 3) {
+      alpha = data[3];
+    }
+    const hex = rgbaToHex(`rgba(${red}, ${green}, ${blue}, ${alpha / 255})`);
+
+    htmlVar += '<tr><td class="key"><b>';
+    htmlVar += beautifyAttribute(gfi.red);
+    htmlVar += '</b></td><td class="value">';
+    htmlVar += red;
+    htmlVar += '</td></tr>';
+    htmlVar += '<tr><td class="key"><b>';
+    htmlVar += beautifyAttribute(gfi.green);
+    htmlVar += '</b></td><td class="value">';
+    htmlVar += green;
+    htmlVar += '</td></tr>';
+    htmlVar += '<tr><td class="key"><b>';
+    htmlVar += beautifyAttribute(gfi.blue);
+    htmlVar += '</b></td><td class="value">';
+    htmlVar += blue;
+    htmlVar += '</td></tr>';
+    htmlVar += '<tr><td class="key"><b>';
+    htmlVar += beautifyAttribute(gfi.alpha);
+    htmlVar += '</b></td><td class="value">';
+    htmlVar += alpha;
+    htmlVar += '</td></tr>';
+    htmlVar += '<tr><td class="key"><b>';
+    htmlVar += beautifyAttribute(gfi.hex);
+    htmlVar += '</b></td><td class="value">';
+    htmlVar += hex;
+    htmlVar += '</td></tr>';
+    return htmlVar;
   }
 
   /**

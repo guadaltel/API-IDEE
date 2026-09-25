@@ -59,6 +59,9 @@
     "blue": "Blue",
     "alpha": "Alpha",
     "hex": "Hex",
+    "elevation": "Elevation",
+    "elevation_unit": "m",
+    "elevation_nodata": "No elevation data at this pixel.",
     "pixel_unavailable": "Pixel color could not be read.",
     "info": "Information",
     "title": "Consult layer",
@@ -66,7 +69,7 @@
     "info_of": "Information about",
     "unsupported_format": "Unsupported format",
     "textHelp": {
-      "text1": "The obtain information tool allows obtaining the GetFeatureInfo (the information associated with the point clicked on the viewer) in WMS and WMTS services, band values from GeoTIFF layers, and tile index with pixel color from XYZ and TMS layers."
+      "text1": "The obtain information tool allows obtaining the GetFeatureInfo (the information associated with the point clicked on the viewer) in WMS and WMTS services, band values from GeoTIFF layers, tile index with pixel color from XYZ and TMS layers, and decoded elevation from XYZ MDT service."
     }
   },
   "wmcselector": {

@@ -60,6 +60,9 @@
     "blue": "Azul",
     "alpha": "Alfa",
     "hex": "Hexadecimal",
+    "elevation": "Elevación",
+    "elevation_unit": "m",
+    "elevation_nodata": "No hay dato de elevación en este píxel.",
     "pixel_unavailable": "No se pudo leer el color del píxel.",
     "info": "Información",
     "title": "Consultar capa",
@@ -67,7 +70,7 @@
     "info_of": "Información de",
     "unsupported_format": "Formato no soportado",
     "textHelp": {
-      "text1": "La herramienta de obtener información permite obtener el GetFeatureInfo (la información asociada al punto clickado sobre el visualizador) en servicios WMS y WMTS, los valores de banda de capas GeoTIFF y el índice de tesela con color de píxel en capas XYZ y TMS."
+      "text1": "La herramienta de obtener información permite obtener el GetFeatureInfo (la información asociada al punto clickado sobre el visualizador) en servicios WMS y WMTS, los valores de banda de capas GeoTIFF, el índice de tesela con color de píxel en capas XYZ y TMS, y la elevación decodificada en el servicio XYZ MDT."
     }
   },
   "wmcselector": {
