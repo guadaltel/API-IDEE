@@ -609,7 +609,7 @@ export default class TemplateCustomizer extends IDEE.Control {
 
   /**
    * Convierte coordenadas decimales a grados, minutos y segundos (DMS).
-   * Redondea segundos para reducir el error sistemático del truncado.
+   * Segundos con dos decimales para reducir el error del truncado.
    * @param {Number} coord Coordenada
    * @returns {String} Coordenadas en formato DMS
    */
@@ -619,10 +619,11 @@ export default class TemplateCustomizer extends IDEE.Control {
     const degrees = Math.floor(absolute);
     const minutesNotTruncated = (absolute - degrees) * 60;
     const minutes = Math.floor(minutesNotTruncated);
-    let seconds = Math.round((minutesNotTruncated - minutes) * 60);
+    let seconds = (minutesNotTruncated - minutes) * 60;
+    seconds = Math.round(seconds * 100) / 100;
     let finalDegrees = degrees;
     let finalMinutes = minutes;
-    if (seconds === 60) {
+    if (seconds >= 60) {
       seconds = 0;
       finalMinutes += 1;
     }
@@ -630,7 +631,8 @@ export default class TemplateCustomizer extends IDEE.Control {
       finalMinutes = 0;
       finalDegrees += 1;
     }
-    return `${sign}${finalDegrees}º${finalMinutes}'${seconds}"`;
+    const secondsText = seconds.toFixed(2);
+    return `${sign}${finalDegrees}º${finalMinutes}'${secondsText}"`;
   }
 
   /**
@@ -1455,13 +1457,9 @@ export default class TemplateCustomizer extends IDEE.Control {
       this.updateBorderCoordinates(coordElements);
     }
 
-    let baseWidth = originalSize[0];
-    let baseHeight = originalSize[1];
-    if (maskImageContainer && maskImageContainer.clientWidth > 0
-      && maskImageContainer.clientHeight > 0) {
-      baseWidth = maskImageContainer.clientWidth;
-      baseHeight = maskImageContainer.clientHeight;
-    }
+    // Usar el tamaño del preview (no remediar tras quitar el scale CSS)
+    const baseWidth = originalSize[0];
+    const baseHeight = originalSize[1];
 
     const scaleFactor = printDpi / LAYOUT_DPI;
     const newWidth = Math.round(baseWidth * scaleFactor);
@@ -1524,6 +1522,13 @@ export default class TemplateCustomizer extends IDEE.Control {
         // Quitar el viewport del DOM y poner la imagen; layout sigue al 100%
         if (maskImageContainer) {
           this.insertMapImageIntoTemplate(canvas.toDataURL('image/png'));
+          const exportImg = maskImageContainer.querySelector('img');
+          if (exportImg && !exportImg.complete) {
+            await new Promise((resolve) => {
+              exportImg.onload = resolve;
+              exportImg.onerror = resolve;
+            });
+          }
         }
 
         const templateImage64 = await this.generateTemplateImage64({
