@@ -388,11 +388,34 @@ export default class TemplateCustomizer extends IDEE.Control {
       })],
     });
 
+    const locatorLayerNames = [
+      'coordinatexylocator',
+      'searchresult',
+      'coordinatecatastro',
+      'coordinateparcel',
+    ];
     this.previewMap.addLayers(this.map.getLayers().map((layer) => layer.clone()));
     this.previewMap.getLayers().forEach((layer) => {
-      if (typeof layer.getStyle === 'function' && layer.getStyle()) {
-        layer.setStyle(layer.getStyle());
+      if (typeof layer.getStyle !== 'function' || !layer.getStyle()) {
+        return;
       }
+      // El estilo SVG del Locator no sobrevive al clone (canvas_ → Illegal invocation).
+      if (locatorLayerNames.includes(layer.name)) {
+        layer.setStyle(new IDEE.style.Point({
+          radius: 5,
+          fill: {
+            color: '#71a7d3',
+            opacity: 0.9,
+          },
+          stroke: {
+            color: '#71a7d3',
+            opacity: 1,
+            width: 3,
+          },
+        }));
+        return;
+      }
+      layer.setStyle(layer.getStyle());
     });
     const previewContainer = document.querySelector(ID_CONTAINER_DEFAULT_TEMPLATE);
     this.templateElementsContainer_ = previewContainer;
