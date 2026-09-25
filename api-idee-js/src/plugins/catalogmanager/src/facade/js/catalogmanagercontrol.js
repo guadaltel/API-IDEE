@@ -2841,13 +2841,14 @@ export default class CatalogmanagerControl extends IDEE.Control {
     // const catalog = cat;
     const collection = coll;
     const styleSpec = this.resolveStyleSpec(image);
-    const style = this.buildRasterStyle(styleSpec);
+    // const style = this.buildRasterStyle(styleSpec);
     const normalize = IDEE.utils.isNullOrEmpty(styleSpec.indice);
     const convertToRGB = styleSpec.convertToRGB;
     const geotiffOptions = {
       convertToRGB,
       normalize,
-      style,
+      // style,
+      bands: styleSpec.bands,
     };
     if (styleSpec.ranges) {
       geotiffOptions.min = styleSpec.ranges.min;
