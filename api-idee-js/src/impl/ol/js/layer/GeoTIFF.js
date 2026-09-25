@@ -473,22 +473,25 @@ class GeoTIFF extends LayerBase {
       const max = this.max_;
       const nodata = this.nodata_;
       const projectionGeoTIFF = this.options.projection;
-      const sources = [
+      let sources = [
         {
           url: this.url,
           nodata,
         },
       ];
       if (bands.length !== 0) {
-        sources.forEach((src) => {
-          // eslint-disable-next-line no-param-reassign
-          src.bands = bands;
+        sources = [];
+        bands.forEach((band) => {
+          const source = {
+            url: this.url,
+            nodata,
+            bands: [band],
+          };
           if (min && max) {
-            // eslint-disable-next-line no-param-reassign
-            src.min = min;
-            // eslint-disable-next-line no-param-reassign
-            src.max = max;
+            source.min = min[band - 1];
+            source.max = max[band - 1];
           }
+          sources.push(source);
         });
       }
       olSource = new GeoTIFFSource({
