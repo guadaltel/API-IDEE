@@ -810,6 +810,10 @@ export default class TemplateCustomizer extends IDEE.Control {
     }
     const cssContent = this.templateData_.styles.styleTags.join('\n');
     this.styleContainer_.textContent = cssContent;
+    // Misma maquetación que en exportación (también para plantillas remotas con width: 90%)
+    if (!this.fullPageStyle_) {
+      this.fullPageStyle_ = this.injectFullPageTemplateStyles();
+    }
   }
 
   /**
@@ -844,6 +848,11 @@ export default class TemplateCustomizer extends IDEE.Control {
     styleElements.forEach((style) => {
       document.head.removeChild(style);
     });
+
+    if (this.fullPageStyle_) {
+      this.fullPageStyle_.remove();
+      this.fullPageStyle_ = null;
+    }
 
     if (this.templateData_.scripts && this.templateData_.scripts.src) {
       this.templateData_.scripts.src.forEach((scriptSrc) => {
@@ -1266,7 +1275,8 @@ export default class TemplateCustomizer extends IDEE.Control {
   }
 
   /**
-   * Inyecta CSS para que la plantilla ocupe el 100% de la página en exportación.
+   * Inyecta CSS para que la plantilla ocupe el 100% de la página (preview y exportación).
+   * También ensancha un poco las columnas laterales del marco.
    * @returns {HTMLStyleElement} Nodo de estilo (hay que eliminarlo al terminar)
    */
   injectFullPageTemplateStyles() {
@@ -1289,6 +1299,12 @@ export default class TemplateCustomizer extends IDEE.Control {
         width: 100% !important;
         height: 100% !important;
         box-sizing: border-box !important;
+      }
+      ${ID_CONTAINER_DEFAULT_TEMPLATE} .interior-container {
+        grid-template-columns: 1.1fr 15.8fr 1.1fr !important;
+      }
+      ${ID_CONTAINER_DEFAULT_TEMPLATE} .cell {
+        min-width: 60px !important;
       }
     `;
     document.head.appendChild(fullPageStyle);
@@ -1438,7 +1454,8 @@ export default class TemplateCustomizer extends IDEE.Control {
     }
 
     // 100% de página ANTES de medir el marco y renderizar el mapa
-    const fullPageStyle = this.injectFullPageTemplateStyles();
+    const fullPageStyle = this.fullPageStyle_ || this.injectFullPageTemplateStyles();
+    const ownsFullPageStyle = fullPageStyle !== this.fullPageStyle_;
 
     const maskImageContainer = document.querySelector(`#${MAP_CONTAINER_TEMPLATE}`);
     map.updateSize();
@@ -1469,7 +1486,9 @@ export default class TemplateCustomizer extends IDEE.Control {
     const parentNode = originalMapViewport.parentNode;
 
     const cleanupExportLayout = () => {
-      fullPageStyle.remove();
+      if (ownsFullPageStyle) {
+        fullPageStyle.remove();
+      }
       if (mapContainer) {
         mapContainer.style.transform = originalTransform;
       }
