@@ -178,6 +178,25 @@ export const decodeTerrainRgbElevation = (red, green, blue) => {
 };
 
 /**
+ * Resuelve extract en capas XYZ/TMS: true en MDT IDEE raster-dem, false en el resto.
+ *
+ * @function
+ * @param {string} url URL del servicio.
+ * @param {boolean|undefined} extractFromParam Valor de extract si viene en parámetros.
+ * @returns {boolean} Valor de extract.
+ * @api
+ */
+export const resolveXyzTmsExtract = (url, extractFromParam) => {
+  if (!isUndefined(extractFromParam)) {
+    return extractFromParam;
+  }
+  if (isIdeeMdtRasterDemUrl(url)) {
+    return true;
+  }
+  return false;
+};
+
+/**
  * Devuelve verdadero si es valor que se le pasa por
  * parámetros es un numero.
  * @function

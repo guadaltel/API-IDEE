@@ -133,8 +133,12 @@ class XYZ extends LayerBase {
      * XYZ extract: consulta de tesela y color de píxel con control GetFeatureInfo.
      * En el servicio MDT IDEE (raster-dem) se activa por defecto para mostrar elevación.
      */
-    if (parameters.extract === undefined) {
-      this.extract = isIdeeMdtRasterDemUrl(parameters.url);
+    if (isUndefined(parameters.extract)) {
+      if (isIdeeMdtRasterDemUrl(parameters.url)) {
+        this.extract = true;
+      } else {
+        this.extract = false;
+      }
     } else {
       this.extract = parameters.extract;
     }

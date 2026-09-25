@@ -66,8 +66,8 @@ class TMS extends LayerBase {
    * - type: Tipo de la capa.
    * - tileGridMaxZoom: Zoom máximo de cuadrícula de mosaico.
    * - tileSize: Tamaño de la tesela
-   * - extract: Activa la consulta con GetFeatureInfo (color de píxel o elevación MDT IDEE).
-   *   Por defecto falso; verdadero por defecto solo en URLs xyz-mdt.idee.es/raster-dem.
+   * - extract: Activa la consulta con GetFeatureInfo (color de píxel o elevación MDT).
+   *   Por defecto falso; verdadero por defecto solo en MDT.
    * @param {Mx.parameters.LayerOptions} options Parámetros opcionales para la capa.
    * - opacity: Opacidad de capa, por defecto 1.
    * - minZoom: Zoom mínimo aplicable a la capa.
@@ -148,8 +148,12 @@ class TMS extends LayerBase {
      * TMS extract: consulta de tesela y color de píxel con control GetFeatureInfo.
      * En el servicio MDT se activa por defecto para mostrar elevación.
      */
-    if (parameters.extract === undefined) {
-      this.extract = isIdeeMdtRasterDemUrl(parameters.url);
+    if (isUndefined(parameters.extract)) {
+      if (isIdeeMdtRasterDemUrl(parameters.url)) {
+        this.extract = true;
+      } else {
+        this.extract = false;
+      }
     } else {
       this.extract = parameters.extract;
     }
