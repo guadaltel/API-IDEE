@@ -543,7 +543,7 @@ class Map extends Base {
       ].filter(Boolean).join(' ');
       const panel = new CollapsiblePanel(Attributions.NAME, {
         collapsible: true,
-        position: Position[position] || Position.LEFT,
+        position: Position[position] || atribucionControl.position,
         className: panelClassName,
         collapsedButtonClass: 'g-cartografia-comentarios',
         tooltip: tooltip || getValue(Attributions.NAME).title,

@@ -55,7 +55,7 @@ class Panzoombar extends FacadeControl {
     super(Panzoombar.NAME, impl, options);
 
     // Asignar la posición
-    this.position = options.position ?? Position.DOWN;
+    this.position = options.position ?? Position.LEFT;
   }
 
   /**

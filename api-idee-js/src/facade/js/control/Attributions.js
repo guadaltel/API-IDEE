@@ -53,7 +53,7 @@ import * as Position from '../ui/position';
 /**
  * @classdesc
  * Panel de atribuciones API-CING.
- * @property {String} [position='left'] Posición del control.
+ * @property {String} [position='down'] Posición del control.
  * @property {String} [tooltip] Texto del tooltip. por defecto la traducción.
  * @property {String} [title] Texto del título.
  * @property {Boolean} [collapsible=true] Indica si el control es colapsable.
@@ -91,7 +91,7 @@ class Attributions extends Control {
    *
    * @example
    * const control = new IDEE.control.Attributions({
-   *   position: 'left',
+   *   position: 'down',
    *   tooltip: 'Reconocimientos de la capa',
    *   order: 2,
    *   collapsible: false,
@@ -105,7 +105,7 @@ class Attributions extends Control {
     const impl = new AttributionsImpl(options.vendorOptions ?? {});
     super(Attributions.NAME, impl, options);
 
-    this.position = options.position ?? Position.LEFT;
+    this.position = options.position ?? Position.DOWN;
 
     this.collapsible = isBoolean(options.collapsible) ? options.collapsible : true;
 

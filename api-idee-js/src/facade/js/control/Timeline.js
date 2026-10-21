@@ -86,7 +86,7 @@ const EMPTY_LAYER_ID = '__timeline_empty_layer__';
  *
  * El formato extendido puede utilizarse para cualquier timelineType.
  * Se mantiene compatibilidad completa con el formato clásico.
- * @property {String} [position='left'] Posición del control en el mapa.
+ * @property {String} [position='down'] Posición del control en el mapa.
  * @property {Boolean} [collapsible=true] Indica si el control puede colapsarse.
  * @property {Boolean} [collapsed=true] Indica si el control está colapsado.
  * Depende de collapsible, solo se aplica si collapsible es true.
@@ -291,7 +291,7 @@ class Timeline extends Control {
       }
     }
 
-    this.position = Position.isValid(options.position) ? options.position : Position.LEFT;
+    this.position = Position.isValid(options.position) ? options.position : Position.DOWN;
 
     this.tooltip = isString(options.tooltip) ? options.tooltip : this.translation.tooltip ?? '';
 
