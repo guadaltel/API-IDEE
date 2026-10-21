@@ -105,7 +105,7 @@ params.forEach((param) => {
    * @public
    * @api stable
    */
-  IDEE.config('PROXY_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.proxy.url}`);
+  IDEE.config('PROXY_URL', '${api-idee.proxy.url}');
 
   /**
    * The path to the api-idee proxy to send
@@ -115,7 +115,7 @@ params.forEach((param) => {
    * @public
    * @api stable
    */
-  IDEE.config('PROXY_POST_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.proxy_post.url}`);
+  IDEE.config('PROXY_POST_URL', '${api-idee.proxy_post.url}');
 
   /**
    * The static resources URL
@@ -133,7 +133,7 @@ params.forEach((param) => {
    * @public
    * @api stable
    */
-  IDEE.config('THEME_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${api-idee.theme.url}`);
+  IDEE.config('THEME_URL', '${api-idee.theme.url}`');
 
   /**
    * Predefined WMC files. It is composed of URL,
@@ -281,7 +281,7 @@ params.forEach((param) => {
    * @private
    * @type {String}
    */
-  IDEE.config('SQL_WASM_URL', `${(location.protocol !== 'file' && location.protocol !== 'file:') ? location.protocol : 'https:'}\${sql_wasm.url}`);
+  IDEE.config('SQL_WASM_URL', '${sql_wasm.url}');
 
   /**
    * MAP Viewer - Center

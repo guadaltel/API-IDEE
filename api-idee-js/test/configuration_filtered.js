@@ -61,7 +61,7 @@ function fun(IDEE_) {
    * @public
    * @api stable
    */
-  IDEE_.config('PROXY_URL', `${location.protocol}//componentes-desarrollo.idee.es/api-idee/api/proxy`);
+  IDEE_.config('PROXY_URL', 'https://componentes-desarrollo.idee.es/api-idee/api/proxy');
 
   /**
    * The path to the API-IDEE proxy to send
@@ -71,7 +71,8 @@ function fun(IDEE_) {
    * @public
    * @api stable
    */
-  IDEE_.config('PROXY_POST_URL', `${location.protocol}//componentes-desarrollo.idee.es/api-idee/proxyPost`);
+  // IDEE_.config('PROXY_POST_URL', 'https://componentes-desarrollo.idee.es/api-idee/proxyPost');
+  IDEE_.config('PROXY_POST_URL', 'https://mapea4-sigc.juntadeandalucia.es/mapea/proxyPost');
 
   /**
    * The static resources URL
@@ -89,7 +90,7 @@ function fun(IDEE_) {
    * @public
    * @api stable
    */
-  IDEE_.config('THEME_URL', `${location.protocol}//componentes-desarrollo.idee.es/api-idee/assets/`);
+  IDEE_.config('THEME_URL', 'https://componentes-desarrollo.idee.es/api-idee/assets/');
 
   /**
    * Predefined WMC files. It is composed of URL,
