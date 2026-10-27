@@ -77,7 +77,7 @@
     "author": "API-IDEE",
     "org": "Instituto Geográfico Nacional",
     "tags": "api-idee,IDEE,plugin",
-    "icon": "https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_lupa.svg",
+    "icon": "https://componentes.idee.es/estaticos/Simbologia/svg/icons_cota/icn_embudo.svg",
     "centralized": true,
     "compatibility": [
       "2"
