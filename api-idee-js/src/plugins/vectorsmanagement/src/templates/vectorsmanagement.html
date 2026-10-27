@@ -21,6 +21,7 @@
         <div class="m-vectorsmanagement-toolsContent">
             {{#if selection}}
             <button tabindex="0" id="m-vectorsmanagement-selection" title="{{translations.selection}}" class="vectorsmanagement-icon-seleccionar"></button>
+            <button tabindex="0" id="m-vectorsmanagement-selection-tolayer" title="{{translations.selectionToLayer}}" class="vectorsmanagement-icon-layers closed"></button>
             {{/if}}
             {{#if creation}}
              <button tabindex="0" id="m-vectorsmanagement-creation" title="{{translations.creation}}" class="vectorsmanagement-icon-mas"></button>
@@ -38,6 +39,13 @@
              <button tabindex="0" id="m-vectorsmanagement-download" title="{{translations.download}}" class="vectorsmanagement-icon-descargar"></button>
              {{/if}}
         </div>
+        {{#if selection}}
+        <!-- Modos de selección -->
+        <div id="m-vectorsmanagement-selection-modes" class="m-vectorsmanagement-selection-modes closed">
+            <button tabindex="0" id="m-vectorsmanagement-selection-manual" title="{{translations.selectionManual}}" class="vectorsmanagement-icon-seleccionar m-vectorsmanagement-selection-mode"></button>
+            <button tabindex="0" id="m-vectorsmanagement-selection-area" title="{{translations.selectionArea}}" class="vectorsmanagement-icon-poligono m-vectorsmanagement-selection-mode"></button>
+        </div>
+        {{/if}}
     </section>
 
     <!-- Contenedor de controles -->

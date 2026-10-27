@@ -361,6 +361,7 @@ button#cancel-clear-btn {
 .m-vectorsmanagement-edition-container,
 #edition-container,
 #m-vectorsmanagement-previews,
+#m-vectorsmanagement-selection-modes,
 #m-figuretools,
 #edition-attributes-container {
     width: 100%;
@@ -833,9 +834,14 @@ ol-profil button.profile-download-button::before {
 
 .m-vectorsmanagement-toolsContent {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
     gap: .5rem;
+}
+
+.m-vectorsmanagement-selection-modes {
+    width: 100%;
 }
 
 table#attribute-table>tr>th>button,
@@ -881,13 +887,20 @@ div#popup-box>div.popup-section>div>span[class^="vectorsmanagement-icon-"]:befor
 
 #plugin-panel-vectorsmanagement #creationBtns,
 #plugin-panel-vectorsmanagement #analysisBtns>div,
-#plugin-panel-vectorsmanagement #editionBtns {
+#plugin-panel-vectorsmanagement #editionBtns,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes {
     padding: 1rem 0;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center !important;
     column-gap: .2rem;
+}
+
+/* separador como en el resto de paneles: gap del contenedor (.5rem) + margen = 1rem */
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes {
+    margin-top: .5rem;
+    padding-bottom: 0;
 }
 
 #plugin-panel-vectorsmanagement #creationBtns,
@@ -898,25 +911,31 @@ div#popup-box>div.popup-section>div>span[class^="vectorsmanagement-icon-"]:befor
 #plugin-panel-vectorsmanagement #analysisBtns>div>button.activated,
 #plugin-panel-vectorsmanagement #editionBtns,
 #plugin-panel-vectorsmanagement #editionBtns>button,
-#plugin-panel-vectorsmanagement #editionBtns>button.activated {
+#plugin-panel-vectorsmanagement #editionBtns>button.activated,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes>button,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes>button.activated {
     background-color: transparent !important;
 }
 
 #plugin-panel-vectorsmanagement #creationBtns>button:before,
 #plugin-panel-vectorsmanagement #analysisBtns>div>button:before,
-#plugin-panel-vectorsmanagement #editionBtns>button:before {
+#plugin-panel-vectorsmanagement #editionBtns>button:before,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes>button:before {
     color: #757474 !important;
 }
 
 #plugin-panel-vectorsmanagement #creationBtns>button:hover:before,
 #plugin-panel-vectorsmanagement #analysisBtns>div>button:hover:before,
-#plugin-panel-vectorsmanagement #editionBtns>button:hover:before {
+#plugin-panel-vectorsmanagement #editionBtns>button:hover:before,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes>button:hover:before {
     color: var(--idee-color-primary) !important;
 }
 
 #plugin-panel-vectorsmanagement #creationBtns>button.activated:before,
 #plugin-panel-vectorsmanagement #analysisBtns>div>button.activated:before,
-#plugin-panel-vectorsmanagement #editionBtns>button.activated:before {
+#plugin-panel-vectorsmanagement #editionBtns>button.activated:before,
+#plugin-panel-vectorsmanagement #m-vectorsmanagement-selection-modes>button.activated:before {
     color: var(--idee-color-primary-dark) !important;
 }
 

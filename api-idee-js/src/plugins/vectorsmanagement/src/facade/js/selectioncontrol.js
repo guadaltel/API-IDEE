@@ -48,6 +48,13 @@ export default class SelectionControl extends IDEE.Control {
     this.selectedFeatures_ = [];
 
     /**
+     * Modo de selección activo: 'manual', 'area' o null.
+     * @private
+     * @type {String}
+     */
+    this.mode_ = null;
+
+    /**
      * api-idee layer where a square will be drawn around selected feature.
      * @private
      * @type {*}
@@ -61,12 +68,68 @@ export default class SelectionControl extends IDEE.Control {
    * @public
    * @function
    * @param {Node} html
+   * @param {String} mode - 'manual' (por defecto) o 'area'
    * @api
    */
-  active(html) {
+  active(html, mode = 'manual') {
     this.initializeLayers();
-    this.getImpl().activateSelection();
     this.selection_ = 'feature';
+    this.toggleModes(true);
+    this.setMode(mode);
+  }
+
+  /**
+   * Muestra u oculta los botones de modo de selección (manual / área).
+   *
+   * @public
+   * @function
+   * @param {Boolean} show - true para mostrar, false para ocultar
+   * @api
+   */
+  toggleModes(show) {
+    const modes = document.querySelector('#m-vectorsmanagement-selection-modes');
+    if (modes) {
+      modes.classList.toggle('closed', !show);
+    }
+  }
+
+  /**
+   * Establece el modo de selección, manteniendo la selección actual.
+   *
+   * @public
+   * @function
+   * @param {String} mode - 'manual', 'area' o null
+   * @api
+   */
+  setMode(mode) {
+    this.getImpl().removeSelectInteraction();
+    this.getImpl().removeAreaSelectInteraction();
+    this.mode_ = mode;
+    if (mode === 'manual') {
+      this.getImpl().activateSelection();
+    } else if (mode === 'area') {
+      this.getImpl().activateAreaSelection();
+    }
+
+    const manual = document.querySelector('#m-vectorsmanagement-selection-manual');
+    const area = document.querySelector('#m-vectorsmanagement-selection-area');
+    if (manual) {
+      manual.classList.toggle('activated', mode === 'manual');
+    }
+    if (area) {
+      area.classList.toggle('activated', mode === 'area');
+    }
+  }
+
+  /**
+   * Devuelve el modo de selección
+   *
+   * @public
+   * @function
+   * @api
+   */
+  getMode() {
+    return this.mode_;
   }
 
   /**
@@ -113,6 +176,7 @@ export default class SelectionControl extends IDEE.Control {
    */
   hideSelectionLayer() {
     this.getImpl().removeSelectInteraction();
+    this.getImpl().removeAreaSelectInteraction();
   }
 
   /**
@@ -123,7 +187,11 @@ export default class SelectionControl extends IDEE.Control {
    * @api stable
    */
   showSelectedLayer() {
-    this.getImpl().activateSelection();
+    if (this.mode_ === 'area') {
+      this.getImpl().activateAreaSelection();
+    } else if (this.mode_ === 'manual') {
+      this.getImpl().activateSelection();
+    }
   }
 
   /**
@@ -184,15 +252,43 @@ export default class SelectionControl extends IDEE.Control {
   onSelect(e) {
     const MFeatures = this.layer_.getFeatures();
     const olFeatures = e.target.getFeatures().getArray();
+    const features = [];
+    olFeatures.forEach((olFeature) => {
+      const feature = MFeatures.filter((f) => f.getImpl().getFeature() === olFeature)[0];
+      if (feature) {
+        features.push(feature);
+      }
+    });
+    this.updateSelection(features);
+  }
+
+  /**
+   * Selecciona los objetos geográficos de la capa que intersecan con el polígono dibujado.
+   * @public
+   * @function
+   * @api
+   * @param {IDEE.Feature} areaFeature - objeto geográfico del polígono dibujado
+   */
+  onAreaSelect(areaFeature) {
+    const filter = IDEE.filter.spatial.INTERSECT(areaFeature);
+    const features = filter.execute(this.layer_.getFeatures().filter((f) => f.getGeometry()));
+    this.updateSelection(features);
+  }
+
+  /**
+   * Reemplaza los objetos geográficos seleccionados, los resalta y refresca el resto de controles.
+   * @public
+   * @function
+   * @api
+   * @param {Array<IDEE.Feature>} features
+   */
+  updateSelection(features) {
     this.selectionLayer.removeFeatures(this.selectionLayer.getFeatures());
     this.removeSelectedFeatures();
-    olFeatures.forEach((olFeature) => {
-      this.feature = MFeatures.filter((f) => f.getImpl().getFeature() === olFeature)[0]
-        || undefined;
-      if (this.feature) {
-        this.addFeatureToSelection(this.feature);
-      }
-      this.geometry = this.feature.getGeometry().type;
+    features.forEach((feature) => {
+      this.feature = feature;
+      this.addFeatureToSelection(feature);
+      this.geometry = feature.getGeometry().type;
       this.emphasizeSelectedFeature();
     });
     this.managementControl_.refreshSelection();
@@ -335,7 +431,8 @@ export default class SelectionControl extends IDEE.Control {
    */
   deactivate() {
     // this.template.remove();
-    this.getImpl().removeSelectInteraction();
+    this.setMode(null);
+    this.toggleModes(false);
     this.removeSelectedFeatures();
     if (this.selectionLayer) {
       this.selectionLayer.removeFeatures(this.selectionLayer.getFeatures());

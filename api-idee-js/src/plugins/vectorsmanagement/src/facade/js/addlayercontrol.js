@@ -39,10 +39,11 @@ export default class AddLayerControl extends IDEE.Control {
    * @public
    * @function
    * @param {Node} html
+   * @param {Array<IDEE.Feature>} features - objetos geográficos opcionales a añadir a la nueva capa
    * @api
    */
-  active(html) {
-    this.layerBtnClick();
+  active(html, features) {
+    this.layerBtnClick(features);
   }
 
   /**
@@ -50,10 +51,11 @@ export default class AddLayerControl extends IDEE.Control {
    *
    * @public
    * @function
+   * @param {Array<IDEE.Feature>} features - objetos geográficos opcionales a añadir a la nueva capa
    * @api stable
    */
-  layerBtnClick() {
-    this.showLayerDialog();
+  layerBtnClick(features) {
+    this.showLayerDialog(features);
   }
 
   /**
@@ -61,9 +63,10 @@ export default class AddLayerControl extends IDEE.Control {
    *
    * @public
    * @function
+   * @param {Array<IDEE.Feature>} features - objetos geográficos opcionales a añadir a la nueva capa
    * @api stable
    */
-  showLayerDialog() {
+  showLayerDialog(features) {
     IDEE.dialog.info(
       `<div 
         id="chooseLayerName" 
@@ -120,12 +123,15 @@ export default class AddLayerControl extends IDEE.Control {
 
     const inputName = document.querySelector('div.m-modal input#layer-name');
     btnSuccess.addEventListener('click', () => {
-      this.addLayer(inputName.value);
+      const newLayer = this.addLayer(inputName.value, features);
       IDEE.toast.info(getValue('creationLayer_done'), null, 6000);
       const layerSelector = document.querySelector('#m-vectorsmanagement-layer-selector');
       layerSelector.classList.remove('disabled');
+      const options = layerSelector.children[1];
+      const selected = [...options.children]
+        .find((option) => option.dataset.value === newLayer.idLayer) || options.firstChild;
       const changeEvent = new CustomEvent('selectLayer', {
-        detail: { selected: layerSelector.children[1].firstChild },
+        detail: { selected },
         bubbles: true,
       });
       layerSelector.dispatchEvent(changeEvent);
@@ -145,16 +151,21 @@ export default class AddLayerControl extends IDEE.Control {
    * @public
    * @function
    * @param {String} name
-   * @param {String} legend
+   * @param {Array<IDEE.Feature>} features - objetos geográficos opcionales a añadir a la nueva capa
+   * @returns {IDEE.layer.Vector} nueva capa
    * @api stable
    */
-  addLayer(name) {
+  addLayer(name, features) {
     const newVector = new IDEE.layer.Vector({
       name: name || `vector_${Math.floor(Math.random() * 9000) + 1000}`,
       legend: name || `Vector_${Math.floor(Math.random() * 9000) + 1000}`,
     });
     this.map_.addLayers(newVector);
+    if (features && features.length > 0) {
+      newVector.addFeatures(features);
+    }
     this.deactivate();
+    return newVector;
   }
 
   /**
@@ -185,7 +196,10 @@ export default class AddLayerControl extends IDEE.Control {
    * @api stable
    */
   deactivate() {
-    document.querySelector('#layerdrawing').classList.remove('activated');
+    const layerdrawing = document.querySelector('#layerdrawing');
+    if (layerdrawing) {
+      layerdrawing.classList.remove('activated');
+    }
   }
 
   /**

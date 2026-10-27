@@ -100,6 +100,9 @@ export default class VectorsManagementControl extends IDEE.Control {
             edition: getValue('edition'),
             help: getValue('help'),
             selection: getValue('selection'),
+            selectionManual: getValue('selectionManual'),
+            selectionArea: getValue('selectionArea'),
+            selectionToLayer: getValue('selectionToLayer'),
             style: getValue('style'),
             selectLayerDefault: getValue('selectLayerDefault'),
           },
@@ -217,9 +220,11 @@ export default class VectorsManagementControl extends IDEE.Control {
    * @api stable
    */
   selectLayerEvent() {
+    const selection = this.html.querySelector('#m-vectorsmanagement-selection');
     // eslint-disable-next-line no-underscore-dangle
-    if (this.selectionControl && this.selectionControl.selectedFeatures_.length > 0) {
-      document.querySelector('#m-vectorsmanagement-selection').classList.remove('activated');
+    if (this.selectionControl && (this.selectionControl.selectedFeatures_.length > 0
+      || selection.classList.contains('activated'))) {
+      selection.classList.remove('activated');
       this.selectionControl.deactivate();
     }
 
@@ -274,13 +279,56 @@ export default class VectorsManagementControl extends IDEE.Control {
       if (!clickActivate) {
         this.selectionControl.active(html);
         event.target.classList.add('activated');
-        this.creationControl.deactivate();
-        document.querySelector('#m-vectorsmanagement-creation').classList.remove('activated');
+        if (this.creationControl) {
+          this.creationControl.deactivate();
+          document.querySelector('#m-vectorsmanagement-creation').classList.remove('activated');
+        }
       } else {
         this.selectionControl.deactivate();
         event.target.classList.remove('activated');
       }
+      this.refreshSelectionToLayer();
     });
+
+    [['#m-vectorsmanagement-selection-manual', 'manual'], ['#m-vectorsmanagement-selection-area', 'area']].forEach(([id, mode]) => {
+      html.querySelector(id).addEventListener('click', (event) => {
+        if (event.target.classList.contains('activated')) {
+          this.selectionControl.setMode(null);
+        } else {
+          this.selectionControl.active(html, mode);
+        }
+      });
+    });
+
+    html.querySelector('#m-vectorsmanagement-selection-tolayer').addEventListener('click', () => {
+      const features = this.getSelectedFeatures();
+      if (features.length === 0) {
+        IDEE.toast.warning(getValue('selectionToLayer_empty'), null, 6000);
+        return;
+      }
+      if (!this.addLayerControl) {
+        this.addLayerControl = new AddLayerControl(this.map_);
+      }
+      this.addLayerControl.active(html, this.selectionControl.getImpl().cloneFeatures(features));
+    });
+  }
+
+  /**
+   * Esta función muestra el botón para crear una capa a partir de la selección
+   * cuando el control de selección está activo y hay objetos geográficos seleccionados.
+   * (el control de creación también añade a la selección los objetos dibujados)
+   *
+   * @public
+   * @function
+   * @api stable
+   */
+  refreshSelectionToLayer() {
+    const $toLayer = this.html && this.html.querySelector('#m-vectorsmanagement-selection-tolayer');
+    if ($toLayer) {
+      const $selection = this.html.querySelector('#m-vectorsmanagement-selection');
+      const show = $selection.classList.contains('activated') && this.getSelectedFeatures().length > 0;
+      $toLayer.classList.toggle('closed', !show);
+    }
   }
 
   /**
@@ -488,10 +536,11 @@ export default class VectorsManagementControl extends IDEE.Control {
    * @api stable
    */
   getControlActive(html) {
-    if (html.querySelectorAll('#m-vectorsmanagement-previews .activated:not(#m-vectorsmanagement-selection)').length === 0) {
+    const selector = '#m-vectorsmanagement-previews .activated:not(#m-vectorsmanagement-selection):not(.m-vectorsmanagement-selection-mode)';
+    if (html.querySelectorAll(selector).length === 0) {
       return false;
     }
-    return html.querySelectorAll('#m-vectorsmanagement-previews .activated:not(#m-vectorsmanagement-selection)')[0];
+    return html.querySelectorAll(selector)[0];
   }
 
   /**
@@ -552,6 +601,7 @@ export default class VectorsManagementControl extends IDEE.Control {
   removeSelectedFeatures() {
     if (this.selectionControl) {
       this.selectionControl.removeSelectedFeatures();
+      this.refreshSelectionToLayer();
     }
   }
 
@@ -566,6 +616,7 @@ export default class VectorsManagementControl extends IDEE.Control {
   addFeatureToSelection(feature) {
     if (this.selectionControl) {
       this.selectionControl.addFeatureToSelection(feature);
+      this.refreshSelectionToLayer();
     }
   }
 
@@ -658,6 +709,7 @@ export default class VectorsManagementControl extends IDEE.Control {
    * @api stable
    */
   refreshSelection() {
+    this.refreshSelectionToLayer();
     const active = this.getControlActive(this.html);
     if (active) {
       if (active.id === 'm-vectorsmanagement-edition') {

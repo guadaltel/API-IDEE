@@ -65,6 +65,7 @@ export default class Selectioncontrol extends IDEE.impl.Control {
     }
 
     if (drawingLayer) {
+      this.removeSelectInteraction();
       this.select = new ol.interaction.Select({
         wrapX: false,
         layers: [drawingLayer],
@@ -78,6 +79,9 @@ export default class Selectioncontrol extends IDEE.impl.Control {
         }
       });
 
+      // keeps previous selection so it can be extended with platform modifier key
+      this.select.getFeatures().extend(this.facadeControl.getSelectedOLFeatures());
+
       olMap.addInteraction(this.select);
     }
   }
@@ -90,6 +94,51 @@ export default class Selectioncontrol extends IDEE.impl.Control {
    */
   removeSelectInteraction() {
     this.facadeMap_.getMapImpl().removeInteraction(this.select);
+  }
+
+  /**
+   * Activa el modo de selección por área (dibujo de polígono).
+   * @public
+   * @function
+   * @api
+   */
+  activateAreaSelection() {
+    this.removeAreaSelectInteraction();
+    this.drawSelect = new ol.interaction.Draw({
+      type: 'Polygon',
+      stopClick: true,
+    });
+
+    this.drawSelect.on('drawend', (e) => {
+      this.facadeControl.onAreaSelect(IDEE.impl.Feature.feature2Facade(e.feature));
+    });
+
+    this.facadeMap_.getMapImpl().addInteraction(this.drawSelect);
+  }
+
+  /**
+   * Elimina la interacción de selección por área
+   * @public
+   * @function
+   * @api
+   */
+  removeAreaSelectInteraction() {
+    if (this.drawSelect) {
+      this.facadeMap_.getMapImpl().removeInteraction(this.drawSelect);
+      this.drawSelect = null;
+    }
+  }
+
+  /**
+   * Crea una copia de los objetos geográficos de api-idee.
+   * @public
+   * @function
+   * @api
+   * @param {Array<IDEE.Feature>} features
+   * @returns {Array<IDEE.Feature>}
+   */
+  cloneFeatures(features) {
+    return features.map((f) => IDEE.impl.Feature.feature2Facade(f.getImpl().getFeature().clone()));
   }
 
   /**
