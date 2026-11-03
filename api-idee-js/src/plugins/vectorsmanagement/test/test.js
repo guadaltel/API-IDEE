@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import VectorsManagement from 'facade/vectorsmanagement';
+import { TURF_SAMPLES, addSampleLayers } from './turfsamples';
 
 IDEE.language.setLang('es');
 // IDEE.language.setLang('en');
@@ -13,7 +14,11 @@ const map = IDEE.map({
 });
 window.map = map;
 
-// map.addPlugin(new IDEE.plugin.Layerswitcher({ collapsed: true, position: 'TR' }));
+map.addPlugin(new IDEE.plugin.Layerswitcher({ collapsed: true, position: 'TL' }));
+
+// Capas de ejemplo de los geoprocesos de Turf (ver turfsamples.js)
+window.turfSamples = TURF_SAMPLES;
+window.sampleLayers = addSampleLayers(TURF_SAMPLES);
 
 /* / Capa Vector
 map.addLayers(new IDEE.layer.Vector({
@@ -72,25 +77,81 @@ window.fetch(`${IDEE.config.STATIC_RESOURCES_URL}/Datos/mbtiles/countries.mbtile
   map.addLayers(mbtilesvector);
 }).catch((e) => { throw e; }); // */
 
-const mp = new VectorsManagement({
-  position: 'right',
-  collapsed: false,
-  // tooltip: 'TOOLTIP TEST Gestionar mis vectores',
-  // useProxy => falta implementar
+let mp = null;
 
-  // Herramientas
-  help: true,
-  addlayer: true,
-  selection: true, // Si es false automaticamente desactiva "edition" y "analysis"
-  creation: true,
-  edition: true,
-  style: true,
-  analysis: true,
-  download: true,
-  order: null,
+const createPlugin = (options) => {
+  mp = new VectorsManagement(options);
+  window.mp = mp;
+  map.addPlugin(mp);
+};
+
+const removePlugin = () => {
+  if (mp) map.removePlugins(mp);
+};
+
+const removeButton = document.getElementById('removeButton');
+removeButton.addEventListener('click', () => { removePlugin(); });
+
+const selectPosition = document.getElementById('selectPosition');
+const selectCollapsed = document.getElementById('selectCollapsed');
+const inputOrder = document.getElementById('inputOrder');
+const selectSelection = document.getElementById('selectSelection');
+const selectAddlayer = document.getElementById('selectAddlayer');
+const selectAnalysis = document.getElementById('selectAnalysis');
+const selectCreation = document.getElementById('selectCreation');
+const selectDownload = document.getElementById('selectDownload');
+const selectEdition = document.getElementById('selectEdition');
+const selectHelp = document.getElementById('selectHelp');
+const selectStyle = document.getElementById('selectStyle');
+const selectTurf = document.getElementById('selectTurf');
+const inputSnapping = document.getElementById('inputSnapping');
+
+const boolVal = (select, defaultVal = true) => {
+  const v = select.options[select.selectedIndex].value;
+  if (v === '') return defaultVal;
+  return v === 'true';
+};
+
+const updatePlugin = () => {
+  const options = {};
+  options.position = selectPosition.options[selectPosition.selectedIndex].value || 'right';
+  options.collapsed = boolVal(selectCollapsed, false);
+  options.order = Number(inputOrder.value);
+  // Si selection es false automaticamente desactiva "edition" y "analysis"
+  options.selection = boolVal(selectSelection);
+  options.addlayer = boolVal(selectAddlayer);
+  options.analysis = boolVal(selectAnalysis);
+  options.creation = boolVal(selectCreation);
+  options.download = boolVal(selectDownload);
+  options.edition = boolVal(selectEdition);
+  options.help = boolVal(selectHelp);
+  options.style = boolVal(selectStyle);
+  options.turf = boolVal(selectTurf);
+  // true, false, JSON o base64 (lo valida el plugin)
+  options.snapping = inputSnapping.value.trim() || undefined;
+
+  removePlugin();
+  createPlugin(options);
+};
+
+[
+  selectPosition,
+  selectCollapsed,
+  inputOrder,
+  selectSelection,
+  selectAddlayer,
+  selectAnalysis,
+  selectCreation,
+  selectDownload,
+  selectEdition,
+  selectHelp,
+  selectStyle,
+  selectTurf,
+  inputSnapping,
+].forEach((ctrl) => {
+  ctrl.addEventListener('change', updatePlugin);
 });
 
-map.addPlugin(mp);
-window.mp = mp;
+updatePlugin();
 
-// vectorsmanagement=position*!collapsed*!order*!selection*!addlayer*!analysis*!creation*!download*!edition*!help*!style
+// vectorsmanagement=position*!collapsed*!order*!selection*!addlayer*!analysis*!creation*!download*!edition*!help*!style*!snapping*!turf
