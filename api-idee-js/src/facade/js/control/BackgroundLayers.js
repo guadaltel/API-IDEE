@@ -92,8 +92,8 @@ class BackgroundLayers extends ControlBase {
    * ]
    *
    * const control = new IDEE.control.BackgroundLayers({
-   *   position: 'left',
-   *   order: 2,
+   *   position: 'right',
+   *   order: 0,
    *   layerIndex: 1,
    *   visible: true,
    *   tooltip: 'Selector de capas base',
@@ -158,7 +158,7 @@ class BackgroundLayers extends ControlBase {
     /**
      * position: Posición del control en el mapa.
      */
-    this.position = options.position ?? Position.DOWN;
+    this.position = options.position ?? Position.RIGHT;
 
     /**
     * tooltip: Título del control

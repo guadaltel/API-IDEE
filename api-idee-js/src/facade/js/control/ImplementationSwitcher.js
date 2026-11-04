@@ -16,6 +16,7 @@ import {
   isBoolean,
 } from '../util/Utils';
 import * as Dialog from '../dialog';
+import * as Position from '../ui/position';
 
 /**
  * @typedef {Object} module:IDEE/control/ImplementationSwitcher~Options
@@ -31,6 +32,7 @@ import * as Dialog from '../dialog';
 /**
  * @classdesc
  * Agrega la herramienta de cambio de implementación.
+ * @property {String} [position='right'] Posición del control.
  * @property {Boolean} [collapsible=true] Indica si el control es colapsable.
  * @property {Boolean} [collapsed=true] Indica si el control está colapsado.
  *
@@ -46,7 +48,7 @@ class ImplementationSwitcher extends ControlBase {
    * para el control de fachada.
    * @example
    * const control = new IDEE.control.ImplementationSwitcher({
-   *   position: 'left',
+   *   position: 'right',
    *   tooltip: 'Cambiar implementación',
    *   order: 1,
    *   collapsible: true,
@@ -62,6 +64,8 @@ class ImplementationSwitcher extends ControlBase {
     const implementationSwitcherImpl = new ImplementationSwitcherImpl();
 
     super(ImplementationSwitcher.NAME, implementationSwitcherImpl, options);
+
+    this.position = options.position ?? Position.RIGHT;
 
     if (!window.implementations) {
       window.implementations = (IDEE.config.implementationswitcher || []).map((impl) => ({

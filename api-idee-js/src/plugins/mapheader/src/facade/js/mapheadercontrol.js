@@ -210,31 +210,73 @@ class MapheaderControl extends IDEE.Control {
     this.applyTopContainersMargin(opened, ph);
   }
 
+  /**
+   * Desplaza los contenedores superiores bajo la cabecera abierta.
+   * Se aplica padding-top al contenedor (no margin a cada hijo): los
+   * contenedores son flex column + wrap y un margen por hijo separaba
+   * los botones y los repartía en varias columnas.
+   *
+   * @private
+   * @function
+   */
   applyTopContainersMargin(opened, ph) {
-    const margin = opened ? `${ph + 10}px` : '';
-    const selectors = [
-      '.m-api-idee-center-panel-top-left',
-      '.m-api-idee-center-panel-top-right',
-      '.m-api-idee-left-buttons',
-      '.m-api-idee-right-buttons',
+    // La pestaña Mostrar/Ocultar está a la izquierda: los contenedores de ese
+    // lado reservan además su altura para que no tape el primer control.
+    const tabHeight = this.getTabHeight();
+    const containers = [
+      { selector: '.m-api-idee-center-panel-top-left', tab: true },
+      { selector: '.m-api-idee-left-buttons', tab: true },
+      { selector: '.m-api-idee-center-panel-top-right', tab: false },
+      { selector: '.m-api-idee-right-buttons', tab: false },
     ];
 
-    selectors.forEach((selector) => {
+    containers.forEach(({ selector, tab }) => {
       const container = document.querySelector(selector);
       if (!container) {
         return;
       }
-      Array.from(container.children).forEach((element) => {
-        if (!element.classList || element.classList.contains('m-plugin-mapheader')) {
-          return;
-        }
-        if (opened) {
-          element.style.setProperty('margin-top', margin, 'important');
-        } else {
-          element.style.removeProperty('margin-top');
-        }
-      });
+      let offset = opened ? ph : 0;
+      if (tab && tabHeight > 0) {
+        offset += tabHeight;
+      }
+      if (offset > 0) {
+        container.style.setProperty('box-sizing', 'border-box', 'important');
+        container.style.setProperty('padding-top', `${offset + 10}px`, 'important');
+      } else {
+        container.style.removeProperty('box-sizing');
+        container.style.removeProperty('padding-top');
+      }
     });
+  }
+
+  clearTopContainersPadding() {
+    [
+      '.m-api-idee-center-panel-top-left',
+      '.m-api-idee-left-buttons',
+      '.m-api-idee-center-panel-top-right',
+      '.m-api-idee-right-buttons',
+    ].forEach((selector) => {
+      const container = document.querySelector(selector);
+      if (container) {
+        container.style.removeProperty('box-sizing');
+        container.style.removeProperty('padding-top');
+      }
+    });
+  }
+
+  /**
+   * Altura visible de la pestaña Mostrar/Ocultar (0 si no-collapsible).
+   *
+   * @private
+   * @function
+   * @returns {number}
+   */
+  getTabHeight() {
+    const button = this.getPanelButton();
+    if (!button) {
+      return 0;
+    }
+    return Math.ceil(button.getBoundingClientRect().height);
   }
 
   destroy() {
@@ -246,7 +288,7 @@ class MapheaderControl extends IDEE.Control {
     if (panel) {
       panel.style.removeProperty('top');
     }
-    this.setTopMargin(false);
+    this.clearTopContainersPadding();
     this.injectedLinks.forEach((link) => {
       if (link && link.parentNode) {
         link.parentNode.removeChild(link);

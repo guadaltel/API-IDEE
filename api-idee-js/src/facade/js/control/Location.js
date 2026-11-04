@@ -31,7 +31,7 @@ import * as Position from '../ui/position';
  * Hereda de {@link module:IDEE/control/Control|Control}.
  * Localiza la posición del usuario en el mapa y permite dibujarla.
  *
- * @property {String} [position='left'] Posición del control en el mapa.
+ * @property {String} [position='right'] Posición del control en el mapa.
  * @property {Boolean} [tracking=true] Seguimiento de la localización activado (true)
  * o desactivado (false).
  * @property {Boolean} [highAccuracy=false] Seguimiento de alta precisión activado (true)
@@ -51,7 +51,7 @@ class Location extends ControlBase {
    * @param {module:IDEE/control/Location~Options} options Opciones del control.
    * @example
    * new Location({
-   *  position: "left",
+   *  position: "right",
    *  tracking: true,
    *  highAccuracy: false,
    *  vendorOptions: {}
@@ -78,7 +78,7 @@ class Location extends ControlBase {
     // calls the super constructor
     super(Location.NAME, impl, options);
 
-    this.position = options.position ?? Position.LEFT;
+    this.position = options.position ?? Position.RIGHT;
 
     /**
      * @param {Boolean} tracking Seguimiento de la localización, por defecto verdadero.

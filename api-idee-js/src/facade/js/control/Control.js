@@ -10,6 +10,7 @@ import * as EventType from '../event/eventtype';
 import { getValue } from '../i18n/language';
 import Plugin from '../Plugin';
 import * as Position from '../ui/position';
+import { getDefaultOrder } from '../ui/controlOrder';
 import isControlImpl from '../../../impl/util/control/isControlImpl';
 import getControlImpl from '../../../impl/util/control/getControlImpl';
 import OverviewMapButton from '../ui/buttons/OverviewMapButton';
@@ -122,7 +123,16 @@ class Control extends Base {
      * Determines the position of the tool when it is inside a map tool container
      * @type {number}
      */
-    this.order = isNumber(options.order) ? options.order : 0;
+    if (isNumber(options.order)) {
+      this.order = options.order;
+    } else {
+      const defaultOrder = getDefaultOrder(this.name);
+      if (isNumber(defaultOrder)) {
+        this.order = defaultOrder;
+      } else {
+        this.order = 0;
+      }
+    }
 
     this.controls = null;
 

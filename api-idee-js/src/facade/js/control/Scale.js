@@ -29,7 +29,7 @@ import * as Position from '../ui/position';
  * @property {String} [position='down'] Posición del control.
  * @property {String} [tooltip_] Texto del tooltip. por defecto la tradcución
  * @property {Boolean} [exactScale=false] Indica si se debe mostrar la escala exacta.
- * @property {Number} [order=0] Accesibilidad, z-index.
+ * @property {Number} [order=2] Accesibilidad, z-index.
  * @api
  * @extends {IDEE.Control}
  *
@@ -45,7 +45,7 @@ class Scale extends ControlBase {
    * const control = new IDEE.control.Scale({
    *   position: 'down',
    *   tooltip: 'Escala del mapa',
-   *   order: 1,
+   *   order: 2,
    *   exactScale: true,
    * });
    * @api
@@ -61,9 +61,10 @@ class Scale extends ControlBase {
 
     const impl = new ScaleImpl(vendorOptions);
 
-    super(Scale.NAME, impl, options);
-
-    this.position = options.position ?? Position.DOWN;
+    super(Scale.NAME, impl, {
+      ...options,
+      position: options.position ?? Position.DOWN,
+    });
   }
 
   /**

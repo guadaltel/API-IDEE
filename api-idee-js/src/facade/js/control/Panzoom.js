@@ -27,7 +27,7 @@ import * as Position from '../ui/position';
  * @classdesc
  * Control que muestra los botones '+' y '-' para acercar y alejar el mapa.
  * @property {String} [position='left'] Posición del control.
- * @property {Number} [order=0] Accesibilidad, z-index.
+ * @property {Number} [order=0] Orden en la zona (primero arriba a la izquierda).
  * @property {String} [tooltipZoomIn] Título opcional del control que aumenta el zoom.
  * @property {String} [tooltipZoomOut] Título opcional del control que disminuye el zoom.
  * @api
@@ -44,7 +44,7 @@ class Panzoom extends ControlBase {
    * @example
    * const control = new IDEE.control.Panzoom({
    *   position: 'left',
-   *   order: 2,
+   *   order: 0,
    *   tooltipZoomIn: 'Más zoom',
    *   vendorOptions: {
    *   },

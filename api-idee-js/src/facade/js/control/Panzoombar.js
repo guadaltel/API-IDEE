@@ -35,7 +35,7 @@ class Panzoombar extends FacadeControl {
    * configuración por defecto
    * @example
    * const control = new IDEE.control.Panzoombar({
-   *   position: 'down',
+   *   position: 'left',
    *   tooltip: 'Barra de zoom',
    *   order: 1,
    *   vendorOptions: { className: 'm-panzoombar' },

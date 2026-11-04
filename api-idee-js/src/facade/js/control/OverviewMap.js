@@ -40,7 +40,7 @@ import { compileSync } from '../util/Template';
  * y para estar colapsado o no colapsado por defecto.
  *
  * @typedef {Object} Options
- * @param {string} [position='center-bottom-right'] posición del control en el mapa.
+ * @param {string} [position='right'] posición del control en el mapa.
  * @param {string} [tooltip] información sobre herramientas del control.
  * Por defecto es 'Mapa general'.
  * @param {boolean} [collapsible=true] indica si el control es plegable o no.
@@ -80,7 +80,7 @@ class OverviewMap extends Control {
   * };
   *
   * const control = new IDEE.control.OverviewMap({
-  *   position: 'left',
+  *   position: 'right',
   *   order: 2,
   *   tooltip: 'Mapa general',
   *   collapsible: false,
@@ -115,7 +115,7 @@ class OverviewMap extends Control {
       OverviewMap.NAME,
       impl,
       {
-        position: Position.isValid(options.position) ? options.position : Position.CBR,
+        position: Position.isValid(options.position) ? options.position : Position.RIGHT,
         ...options,
       },
     );
