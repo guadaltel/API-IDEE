@@ -13,154 +13,6 @@ import myhelp from '../../templates/myhelp';
 import es from './i18n/es';
 import en from './i18n/en';
 
-// Estas capas hacen referencia a la estructura de iberpix
-const PRECHARGED = {
-  services: [
-    // {
-    //   type: 'WMS',
-    //   name: 'Camino de Santiago',
-    //   url: 'https://www.ign.es/wms-inspire/camino-santiago',
-    // }, {
-    //   type: 'WMS',
-    //   name: 'Redes Geodésicas',
-    //   url: 'https://www.ign.es/wms-inspire/redes-geodesicas',
-    // }, {
-    //   type: 'WMS',
-    //   name: 'Planimetrías',
-    //   url: 'https://www.ign.es/wms/minutas-cartograficas',
-    // }, {
-    //   type: 'MapLibre',
-    //   name: 'Mapa Libre',
-    //   legend: 'Mapa Libre',
-    //   url: 'https://vt-mapabase.idee.es/files/styles/mapaBase_scn_color1_CNIG.json',
-    // },
-  ],
-  groups: [{
-    name: 'Cartografía',
-    services: [{
-      type: 'WMTS',
-      name: 'Mapas',
-      url: 'https://www.ign.es/wmts/mapa-raster?',
-    }, {
-      type: 'WMTS',
-      name: 'Callejero',
-      url: 'https://www.ign.es/wmts/ign-base?',
-    }, {
-      type: 'WMTS',
-      name: 'Primera edición MTN y Minutas de 1910-1970',
-      url: 'https://www.ign.es/wmts/primera-edicion-mtn?',
-    }, {
-      type: 'WMS',
-      name: 'Planimetrías (1870 y 1950)',
-      url: 'https://www.ign.es/wms/minutas-cartograficas?',
-    }, {
-      type: 'WMTS',
-      name: 'Planos de Madrid (1622 - 1960)',
-      url: 'https://www.ign.es/wmts/planos?',
-    }, {
-      type: 'WMS',
-      name: 'Hojas kilométricas (Madrid - 1860)',
-      url: 'https://www.ign.es/wms/hojas-kilometricas?',
-    }, {
-      type: 'WMS',
-      name: 'Cuadrículas Mapa Topográfico Nacional',
-      url: 'https://www.ign.es/wms-inspire/cuadriculas?',
-    }],
-  }, {
-    name: 'Imágenes',
-    services: [{
-      type: 'WMTS',
-      name: 'Ortofotos máxima actualidad PNOA',
-      url: 'https://www.ign.es/wmts/pnoa-ma?',
-    }, {
-      type: 'WMS',
-      name: 'Ortofotos históricas y PNOA anual',
-      url: 'https://www.ign.es/wms/pnoa-historico?',
-    }, {
-      type: 'WMS',
-      name: 'Ortofotos provisionales PNOA',
-      url: 'https://wms-pnoa.idee.es/pnoa-provisionales?',
-    }, {
-      type: 'WMS',
-      name: 'Mosaicos de satélite',
-      url: 'https://wms-satelites-historicos.idee.es/satelites-historicos?',
-    }, {
-      type: 'WMS',
-      name: 'Fototeca (Consulta de fotogramas históricos y PNOA)',
-      url: 'https://wms-fototeca.idee.es/fototeca?',
-    }],
-  }, {
-    name: 'Información geográfica de referencia y temática',
-    services: [{
-      type: 'WMS',
-      name: 'Catastro',
-      url: 'https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx?',
-    }, {
-      type: 'WMS',
-      name: 'Unidades administrativas',
-      url: 'https://www.ign.es/wms-inspire/unidades-administrativas?',
-    }, {
-      type: 'WMS',
-      name: 'Nombres geográficos (Nomenclátor Geográfico Básico NGBE)',
-      url: 'https://www.ign.es/wms-inspire/ngbe?',
-    }, {
-      type: 'WMS',
-      name: 'Redes de transporte',
-      url: 'https://servicios.idee.es/wms-inspire/transportes?',
-    }, {
-      type: 'WMS',
-      name: 'Hidrografía',
-      url: 'https://servicios.idee.es/wms-inspire/hidrografia?',
-    }, {
-      type: 'WMS',
-      name: 'Direcciones y códigos postales',
-      url: 'https://www.cartociudad.es/wms-inspire/direcciones-ccpp?',
-    }, {
-      type: 'WMTS',
-      name: 'Ocupación del suelo (Corine y SIOSE)',
-      url: 'https://servicios.idee.es/wmts/ocupacion-suelo?',
-    }, {
-      type: 'WMS',
-      name: 'Ocupación del suelo Histórico (Corine y SIOSE)',
-      url: 'https://servicios.idee.es/wms-inspire/ocupacion-suelo-historico?',
-    },
-    // {
-    //   type: 'WMS',
-    //   name: 'Copernicus Land Monitoring Service',
-    //   url: 'https://servicios.idee.es/wms/copernicus-landservice-spain?',
-    // },
-    {
-      type: 'WMS',
-      name: 'Información sísmica (terremotos)',
-      url: 'https://www.ign.es/wms-inspire/geofisica?',
-    }, {
-      type: 'WMS',
-      name: 'Red de vigilancia volcánica',
-      url: 'https://wms-volcanologia.ign.es/volcanologia?',
-    }, {
-      type: 'WMS',
-      name: 'Redes geodésicas',
-      url: 'https://www.ign.es/wms-inspire/redes-geodesicas?',
-    }],
-  }, {
-    name: 'Modelos digitales de elevaciones',
-    services: [{
-      type: 'WMTS',
-      name: 'Modelo Digital de Superficies (Sombreado superficies y consulta de elevaciones edificios y vegetación)',
-      url: 'https://wmts-mapa-lidar.idee.es/lidar?',
-    }, {
-      type: 'WMTS',
-      name: 'Modelo Digital del Terreno (Sombreado terreno y consulta de altitudes)',
-      url: 'https://servicios.idee.es/wmts/mdt?',
-      white_list: ['EL.ElevationGridCoverage'],
-    }, {
-      type: 'WMS',
-      name: 'Curvas de nivel y puntos acotados',
-      url: 'https://servicios.idee.es/wms-inspire/mdt?',
-      white_list: ['EL.ContourLine', 'EL.SpotElevation'],
-    }],
-  }],
-};
 export default class Layerswitcher extends IDEE.Plugin {
   constructor(options = {}) {
     super('layerswitcher', {
@@ -226,12 +78,14 @@ export default class Layerswitcher extends IDEE.Plugin {
     this.statusLayers = options.statusLayers;
 
     /**
-     * Object with precharged layers to show in the plugin
+     * Catálogo de servicios precargados. Puede ser un objeto, una cadena JSON,
+     * una cadena JSON codificada en base64 o una URL a un fichero JSON.
+     * Si no se informa, se usa la URL definida en configuración (LIST_PRECHARGED_URL).
      * @public
-     * @type {Object}
+     * @type {Object|String}
      */
     let { precharged } = options;
-    if (typeof precharged === 'string') {
+    if (typeof precharged === 'string' && !IDEE.utils.isUrl(precharged.trim())) {
       try {
         precharged = JSON.parse(precharged);
       } catch (e) {
@@ -242,10 +96,20 @@ export default class Layerswitcher extends IDEE.Plugin {
           precharged = undefined;
         }
       }
+    } else if (typeof precharged === 'string') {
+      precharged = precharged.trim();
     }
-    this.precharged = precharged && Object.keys(precharged).length > 0
-      ? precharged
-      : PRECHARGED;
+    const isEmpty = IDEE.utils.isNullOrEmpty(precharged)
+      || (IDEE.utils.isObject(precharged) && Object.keys(precharged).length === 0);
+    this.precharged = isEmpty ? IDEE.config.LIST_PRECHARGED_URL : precharged;
+
+    /**
+     * URL del JSON de capas precargadas (si precharged se ha indicado como URL)
+     * @private
+     * @type {String}
+     */
+    this.prechargedUrl_ = IDEE.utils.isUrl(this.precharged) ? this.precharged : undefined;
+    this.loadPrecharged_();
 
     /**
      * Option to show or not the label of the layers in the plugin
@@ -373,9 +237,48 @@ export default class Layerswitcher extends IDEE.Plugin {
     this.controls[0].addEventPanel(this.panel);
   }
 
+  /**
+   * Carga el catálogo precargado desde una URL JSON.
+   * @private
+   */
+  loadPrecharged_() {
+    if (!IDEE.utils.isUrl(this.precharged)) {
+      return;
+    }
+    window.fetch(this.precharged)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(String(response.status));
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!data || !IDEE.utils.isObject(data)) {
+          throw new Error('invalid json');
+        }
+        this.setPrecharged_(data);
+      })
+      .catch(() => {
+        this.setPrecharged_({});
+        IDEE.dialog.error(getValue('exception.errorPrechargedUrl'), 'Layerswitcher.precharged');
+      });
+  }
+
+  /**
+   * Actualiza el catálogo precargado en el plugin y en su control.
+   * @private
+   */
+  setPrecharged_(precharged) {
+    this.precharged = precharged;
+    if (this.controls && this.controls[0]) {
+      this.controls[0].precharged = precharged;
+    }
+  }
+
   // Devuelve la cadena API-REST del plugin
   getAPIRest() {
-    return `${this.name}=${this.position}*${this.collapsed_}*${this.order}*${this.tooltip}*${this.isMoveLayers}*${this.modeSelectLayers}*${this.tools}*${this.http}*${this.https}*${this.showCatalog}*${this.useProxy}*${this.addLayers}*${this.statusLayers}*${this.displayLabel}*${this.useAttributions}*${JSON.stringify(this.precharged)}`;
+    const precharged = this.prechargedUrl_ || JSON.stringify(this.precharged);
+    return `${this.name}=${this.position}*${this.collapsed_}*${this.order}*${this.tooltip}*${this.isMoveLayers}*${this.modeSelectLayers}*${this.tools}*${this.http}*${this.https}*${this.showCatalog}*${this.useProxy}*${this.addLayers}*${this.statusLayers}*${this.displayLabel}*${this.useAttributions}*${precharged}`;
   }
 
   // Devuelve la cadena API-REST del plugin en base64
