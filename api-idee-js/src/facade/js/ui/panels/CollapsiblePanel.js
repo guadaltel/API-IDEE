@@ -9,7 +9,6 @@ import {
   isNullOrEmpty,
   isString,
   isBoolean,
-  isNumber,
 } from '../../util/Utils';
 import Panel from './Panel';
 import * as EventType from '../../event/eventtype';
@@ -168,7 +167,7 @@ class CollapsiblePanel extends Panel {
       this.element.insertBefore(this._buttonPanel, this.element.firstChild);
     }
 
-    if (isNumber(this._order)) {
+    if (this._order) {
       this.element.style.setProperty('order', this._order, 'important');
       this.element.setAttribute('tabIndex', this._order);
     } else {

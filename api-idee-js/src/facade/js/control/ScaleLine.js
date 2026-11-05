@@ -26,7 +26,7 @@ import * as Position from '../ui/position';
  * Añadir escala gráfica.
  * @property {String} [position='down'] Posición del control.
  * @property {String} [tooltip] Texto del tooltip. por defecto la tradcución
- * @property {Number} [order=1] Accesibilidad, z-index.
+ * @property {Number} [order=0] Accesibilidad, z-index.
  * @api
  * @extends {IDEE.Control}
  *

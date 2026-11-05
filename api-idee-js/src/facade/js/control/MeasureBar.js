@@ -77,6 +77,12 @@ class MeasureBar extends Control {
     this.measureClear = null;
 
     /**
+     *@private
+     *@type { Number }
+     */
+    this.order = options.order >= -1 ? options.order : null;
+
+    /**
      * Option to allow the control to be collapsible or not
      * @private
      * @type {Boolean}

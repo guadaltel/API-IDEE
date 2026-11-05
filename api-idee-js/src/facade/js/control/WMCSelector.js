@@ -27,7 +27,7 @@ import * as Position from '../ui/position';
  * Agregar selector de capas WMC.
  * @property {String} [position='down'] Posición del control.
  * @property {String} [tooltip] Texto del tooltip. por defecto la traducción.
- * @property {Number} [order=1] Accesibilidad, z-index.
+ * @property {Number} [order=0] Accesibilidad, z-index.
  * @api
  * @extends {IDEE.Control}
  *
@@ -43,7 +43,7 @@ class WMCSelector extends ControlBase {
    * const control = new IDEE.control.WMCSelector({
    *   position: 'down',
    *   tooltip: 'Selector WMC',
-   *   order: 1,
+   *   order: 0,
    * });
    * @api
    */

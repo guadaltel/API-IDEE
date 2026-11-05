@@ -123,7 +123,7 @@ class OverviewMapButton extends MObject {
     this.element.title = this.tooltip;
     this.element.role = 'button';
     this.element.ariaLabel = this.tooltip;
-    if (isNumber(this.order)) {
+    if (this.order) {
       this.element.style.setProperty('order', this.order, 'important');
       this.element.setAttribute('tabIndex', this.order);
     } else {

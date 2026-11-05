@@ -27,7 +27,7 @@ import * as Position from '../ui/position';
  * @classdesc
  * Control que muestra los botones '+' y '-' para acercar y alejar el mapa.
  * @property {String} [position='left'] Posición del control.
- * @property {Number} [order=0] Orden en la zona (primero arriba a la izquierda).
+ * @property {Number} [order=0] Accesibilidad, z-index.
  * @property {String} [tooltipZoomIn] Título opcional del control que aumenta el zoom.
  * @property {String} [tooltipZoomOut] Título opcional del control que disminuye el zoom.
  * @api
