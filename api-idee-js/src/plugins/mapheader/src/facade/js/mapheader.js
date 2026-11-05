@@ -25,9 +25,10 @@ export default class Mapheader extends IDEE.Plugin {
    */
   constructor(options = {}) {
     super('mapheader', {
-      position: options.position || 'center-top-left',
+      // position y order no son configurables: el panel es fixed a ancho completo
+      // (arriba) y el CSS anula su colocación en el contenedor.
+      position: 'center-top-left',
       tooltip: options.tooltip || getValue('tooltip'),
-      order: options.order,
     });
 
     /**
@@ -138,8 +139,6 @@ export default class Mapheader extends IDEE.Plugin {
       cssList: this.cssList,
       open: !this.collapsed,
       tooltip: this.tooltip,
-      position: this.position,
-      order: this.order,
     });
     this.controls = [this.control];
 
@@ -151,7 +150,6 @@ export default class Mapheader extends IDEE.Plugin {
       maxWidth: this.maxPanelWidth,
       className: this.className,
       tooltip: this.tooltip,
-      order: this.order,
       collapsedButtonClass: this.collapsedButtonClass,
       openedButtonClass: this.openedButtonClass,
     });
@@ -233,7 +231,7 @@ export default class Mapheader extends IDEE.Plugin {
    * @api
    */
   getAPIRest() {
-    return `${this.name}=${this.position}${this.separatorApiJson}${this.collapsed}${this.separatorApiJson}${this.order}${this.separatorApiJson}${this.tooltip}${this.separatorApiJson}${this.collapsible}`;
+    return `${this.name}=${this.collapsed}${this.separatorApiJson}${this.tooltip}${this.separatorApiJson}${this.collapsible}`;
   }
 
   /**

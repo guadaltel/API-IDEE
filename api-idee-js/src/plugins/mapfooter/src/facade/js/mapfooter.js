@@ -25,9 +25,8 @@ export default class Mapfooter extends IDEE.Plugin {
    */
   constructor(options = {}) {
     super('mapfooter', {
-      position: options.position || 'down',
+      position: 'down',
       tooltip: options.tooltip || getValue('tooltip'),
-      order: options.order,
     });
 
     /**
@@ -154,8 +153,6 @@ export default class Mapfooter extends IDEE.Plugin {
       cssList: this.cssList,
       open: !this.collapsed,
       tooltip: this.tooltip,
-      position: this.position,
-      order: this.order,
     });
     this.controls = [this.control];
 
@@ -167,7 +164,6 @@ export default class Mapfooter extends IDEE.Plugin {
       maxWidth: this.maxPanelWidth,
       className: this.className,
       tooltip: this.tooltip,
-      order: this.order,
       collapsedButtonClass: this.collapsedButtonClass,
       openedButtonClass: this.openedButtonClass,
     });
@@ -248,7 +244,7 @@ export default class Mapfooter extends IDEE.Plugin {
    * @api
    */
   getAPIRest() {
-    return `${this.name}=${this.position}${this.separatorApiJson}${this.collapsed}${this.separatorApiJson}${this.order}${this.separatorApiJson}${this.tooltip}${this.separatorApiJson}${this.collapsible}`;
+    return `${this.name}=${this.collapsed}${this.separatorApiJson}${this.tooltip}${this.separatorApiJson}${this.collapsible}`;
   }
 
   /**

@@ -48,10 +48,8 @@ const removePlugin = () => {
 const botonEliminar = document.getElementById('botonEliminar');
 botonEliminar.addEventListener('click', () => { removePlugin(); });
 
-const selectPosicion = document.getElementById('selectPosicion');
 const selectCollapsed = document.getElementById('selectCollapsed');
 const selectCollapsible = document.getElementById('selectCollapsible');
-const inputOrder = document.getElementById('inputOrder');
 const inputTooltip = document.getElementById('inputTooltip');
 const inputCssList = document.getElementById('inputCssList');
 const buttonApi = document.getElementById('buttonAPI');
@@ -60,10 +58,8 @@ const boolVal = (select) => select.options[select.selectedIndex].value === 'true
 
 const updatePlugin = () => {
   const options = {
-    position: selectPosicion.options[selectPosicion.selectedIndex].value,
     collapsed: boolVal(selectCollapsed),
     collapsible: boolVal(selectCollapsible),
-    order: Number(inputOrder.value),
     tooltip: inputTooltip.value,
     htmlCode: textareaHtmlCode.value,
     cssList: inputCssList.value
@@ -76,10 +72,8 @@ const updatePlugin = () => {
 };
 
 [
-  selectPosicion,
   selectCollapsed,
   selectCollapsible,
-  inputOrder,
   inputTooltip,
   inputCssList,
   textareaHtmlCode,
@@ -88,13 +82,11 @@ const updatePlugin = () => {
 });
 
 buttonApi.addEventListener('click', () => {
-  const posicion = selectPosicion.options[selectPosicion.selectedIndex].value;
   const collapsed = selectCollapsed.options[selectCollapsed.selectedIndex].value;
-  const order = inputOrder.value;
   const tooltip = inputTooltip.value;
   const collapsible = selectCollapsible.options[selectCollapsible.selectedIndex].value;
 
-  window.location.href = `${window.location.href.substring(0, window.location.href.indexOf('api-idee'))}api-idee/?mapheader=${posicion}*${collapsed}*${order}*${tooltip}*${collapsible}`;
+  window.location.href = `${window.location.href.substring(0, window.location.href.indexOf('api-idee'))}api-idee/?mapheader=${collapsed}*${tooltip}*${collapsible}`;
 });
 
 updatePlugin();

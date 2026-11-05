@@ -38,14 +38,8 @@ Ejemplo:
 
 El constructor se inicializa con un JSON con los siguientes atributos:
 
-- **position**: Posición donde se muestra el plugin (por defecto `center-top-left`).
-  - `left`, `right`
-  - `center-bottom-left`, `center-bottom-right`
-  - `center-top-left`, `center-top-right`
-  - `down`
 - **collapsed**: Si la cabecera aparece colapsada al inicio (por defecto `true`). Compatibilidad legacy: `open: true` equivale a `collapsed: false`.
 - **collapsible**: Si el panel puede abrirse y cerrarse (por defecto `true`).
-- **order**: Orden del panel respecto a otros controles/plugins.
 - **tooltip**: Texto del tooltip del botón.
 - **htmlCode**: Código HTML de la cabecera.
 - **cssList**: Lista de URLs CSS (array o string separado por comas) que se inyectan en el visor.
@@ -53,7 +47,7 @@ El constructor se inicializa con un JSON con los siguientes atributos:
 # API-REST
 
 ```javascript
-URL_API?mapheader=position*collapsed*order*tooltip*collapsible
+URL_API?mapheader=collapsed*tooltip*collapsible
 ```
 
 `htmlCode` y `cssList` deben enviarse mediante **base64** (demasiado largos para el separador `*`).
@@ -65,18 +59,8 @@ URL_API?mapheader=position*collapsed*order*tooltip*collapsible
         <th>Disponibilidad</th>
     </tr>
     <tr>
-        <td>position</td>
-        <td>left, right, down, center-top-left, center-top-right, center-bottom-left, center-bottom-right</td>
-        <td>Base64 ✔️ | Separador ✔️</td>
-    </tr>
-    <tr>
         <td>collapsed</td>
         <td>true / false</td>
-        <td>Base64 ✔️ | Separador ✔️</td>
-    </tr>
-    <tr>
-        <td>order</td>
-        <td>número</td>
         <td>Base64 ✔️ | Separador ✔️</td>
     </tr>
     <tr>
@@ -103,7 +87,7 @@ URL_API?mapheader=position*collapsed*order*tooltip*collapsible
 
 ### Ejemplos de uso API-REST
 ```
-https://componentes.idee.es/api-idee?mapheader=center-top-left*false*0*Cabecera*true
+https://componentes.idee.es/api-idee?mapheader=false*Cabecera*true
 ```
 
 ### Ejemplo de uso API-REST en base64
@@ -117,7 +101,6 @@ IDEE.utils.encodeBase64(obj_params);
 Ejemplo de constructor:
 ```javascript
 {
-  position: 'center-top-left',
   collapsed: false,
   htmlCode: `<p>mi cabecera</p>`,
   cssList: [
@@ -137,7 +120,6 @@ const map = IDEE.map({
 });
 
 const mp = new IDEE.plugin.Mapheader({
-  position: 'center-top-left',
   collapsed: false,
   htmlCode: `
 <header>

@@ -24,8 +24,6 @@ class MapheaderControl extends IDEE.Control {
     const impl = new MapheaderImplControl();
     super(MapheaderControl.NAME, impl, {
       tooltip: options.tooltip,
-      position: options.position,
-      order: options.order,
     });
 
     this.htmlCode = options.htmlCode || '';
