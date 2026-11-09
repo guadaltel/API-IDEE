@@ -24,21 +24,6 @@
           "position": 2
         }
       ]
-    },
-    {
-      "type": "boolean",
-      "name": "collapsed",
-      "position": 0
-    },
-    {
-      "type": "string",
-      "name": "tooltip",
-      "position": 1
-    },
-    {
-      "type": "boolean",
-      "name": "collapsible",
-      "position": 2
     }
   ],
   "files": {
