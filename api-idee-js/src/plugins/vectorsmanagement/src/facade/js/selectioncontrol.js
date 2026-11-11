@@ -246,6 +246,13 @@ export default class SelectionControl extends IDEE.Control {
     this.selection_ = 'layer';
 
     this.layer_ = null;
+
+    /**
+     * Modo de selección activo: 'manual', 'area' o null.
+     * @private
+     * @type {String}
+     */
+    this.mode_ = null;
   }
 
   /**
@@ -254,12 +261,78 @@ export default class SelectionControl extends IDEE.Control {
    * @public
    * @function
    * @param {Node} html
+   * @param {String} mode - 'manual' (por defecto) o 'area'
    * @api
    */
-  active(html) {
+  active(html, mode = 'manual') {
     this.initializeLayers();
-    this.getImpl().activateSelection(this.getSelectedFeatures());
     this.selection_ = 'feature';
+    this.toggleModes(true);
+    this.setMode(mode);
+  }
+
+  /**
+   * Muestra u oculta los botones de modo de selección (manual / área).
+   *
+   * @public
+   * @function
+   * @param {Boolean} show - true para mostrar, false para ocultar
+   * @api
+   */
+  toggleModes(show) {
+    const modes = document.querySelector('#m-vectorsmanagement-selection-modes');
+    if (modes) {
+      modes.classList.toggle('closed', !show);
+    }
+  }
+
+  /**
+   * Establece el modo de selección, manteniendo la selección actual.
+   *
+   * @public
+   * @function
+   * @param {String} mode - 'manual', 'area' o null
+   * @api
+   */
+  setMode(mode) {
+    this.getImpl().removeSelectInteraction();
+    this.getImpl().removeAreaSelectInteraction();
+    this.mode_ = mode;
+    this.activateMode_();
+
+    const manual = document.querySelector('#m-vectorsmanagement-selection-manual');
+    const area = document.querySelector('#m-vectorsmanagement-selection-area');
+    if (manual) {
+      manual.classList.toggle('activated', mode === 'manual');
+    }
+    if (area) {
+      area.classList.toggle('activated', mode === 'area');
+    }
+  }
+
+  /**
+   * Devuelve el modo de selección
+   *
+   * @public
+   * @function
+   * @api
+   * @returns {String} 'manual', 'area' o null
+   */
+  getMode() {
+    return this.mode_;
+  }
+
+  /**
+   * Activa la interacción del modo de selección actual.
+   * @private
+   * @function
+   */
+  activateMode_() {
+    if (this.mode_ === 'area') {
+      this.getImpl().activateAreaSelection();
+    } else if (this.mode_ === 'manual') {
+      this.getImpl().activateSelection(this.getSelectedFeatures());
+    }
   }
 
   /**
@@ -293,6 +366,7 @@ export default class SelectionControl extends IDEE.Control {
    */
   hideSelectionLayer() {
     this.getImpl().removeSelectInteraction();
+    this.getImpl().removeAreaSelectInteraction();
   }
 
   /**
@@ -303,7 +377,7 @@ export default class SelectionControl extends IDEE.Control {
    * @api stable
    */
   showSelectedLayer() {
-    this.getImpl().activateSelection(this.getSelectedFeatures());
+    this.activateMode_();
   }
 
   /**
@@ -370,6 +444,30 @@ export default class SelectionControl extends IDEE.Control {
   }
 
   /**
+   * Selects the layer features that intersect with the drawn polygon.
+   * @public
+   * @function
+   * @api
+   * @param {IDEE.Feature} areaFeature - drawn polygon
+   */
+  onAreaSelect(areaFeature) {
+    const filter = IDEE.filter.spatial.INTERSECT(areaFeature);
+    const features = filter.execute(this.layer_.getFeatures().filter((f) => f.getGeometry()));
+    this.managementControl_.getFeatureSelection().select(features);
+  }
+
+  /**
+   * Returns copies of the selected features.
+   * @public
+   * @function
+   * @api
+   * @returns {Array<IDEE.Feature>}
+   */
+  cloneSelectedFeatures() {
+    return this.getImpl().cloneFeatures(this.getSelectedFeatures());
+  }
+
+  /**
    * Draws again the emphasis of selected features.
    * @public
    * @function
@@ -430,7 +528,8 @@ export default class SelectionControl extends IDEE.Control {
    */
   deactivate() {
     // this.template.remove();
-    this.getImpl().removeSelectInteraction();
+    this.setMode(null);
+    this.toggleModes(false);
     this.selection_ = 'layer';
     this.managementControl_.getFeatureSelection().clear();
   }

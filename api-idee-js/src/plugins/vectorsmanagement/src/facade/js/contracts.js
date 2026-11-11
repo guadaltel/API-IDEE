@@ -36,12 +36,22 @@ export const SNAPPING = contract('updateSnap');
 
 /**
  * Selección de objetos de la capa gestionada.
- * - activateSelection(): void. Selecciona y notifica `onSelect({ features })`.
+ * - activateSelection(features: Array<IDEE.Feature>): void. Selecciona y notifica
+ *   `onSelect({ features })`.
  * - removeSelectInteraction(): void.
+ * - activateAreaSelection(): void. Dibuja un polígono y notifica `onAreaSelect(feature)`.
+ * - removeAreaSelectInteraction(): void.
+ * - cloneFeatures(features: Array<IDEE.Feature>): Array<IDEE.Feature>. Devuelve copias.
  * @const
  * @type {Array<String>}
  */
-export const SELECT_INTERACTION = contract('activateSelection', 'removeSelectInteraction');
+export const SELECT_INTERACTION = contract(
+  'activateSelection',
+  'removeSelectInteraction',
+  'activateAreaSelection',
+  'removeAreaSelectInteraction',
+  'cloneFeatures',
+);
 
 /**
  * Dibujo de objetos en la capa gestionada.

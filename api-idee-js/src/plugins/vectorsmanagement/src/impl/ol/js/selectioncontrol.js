@@ -63,6 +63,7 @@ export default class Selectioncontrol extends IDEE.impl.Control {
     // this.facadeControl.hideTextPoint();
 
     if (drawingLayer) {
+      this.removeSelectInteraction();
       this.select = new ol.interaction.Select({
         wrapX: false,
         layers: [drawingLayer],
@@ -92,6 +93,51 @@ export default class Selectioncontrol extends IDEE.impl.Control {
    */
   removeSelectInteraction() {
     this.facadeMap_.getMapImpl().removeInteraction(this.select);
+  }
+
+  /**
+   * Activates area selection mode (polygon drawing).
+   * @public
+   * @function
+   * @api
+   */
+  activateAreaSelection() {
+    this.removeAreaSelectInteraction();
+    this.drawSelect = new ol.interaction.Draw({
+      type: 'Polygon',
+      stopClick: true,
+    });
+
+    this.drawSelect.on('drawend', (e) => {
+      this.facadeControl.onAreaSelect(IDEE.impl.Feature.feature2Facade(e.feature));
+    });
+
+    this.facadeMap_.getMapImpl().addInteraction(this.drawSelect);
+  }
+
+  /**
+   * Removes area select interaction
+   * @public
+   * @function
+   * @api
+   */
+  removeAreaSelectInteraction() {
+    if (this.drawSelect) {
+      this.facadeMap_.getMapImpl().removeInteraction(this.drawSelect);
+      this.drawSelect = null;
+    }
+  }
+
+  /**
+   * Creates clones of the features.
+   * @public
+   * @function
+   * @api
+   * @param {Array<IDEE.Feature>} features
+   * @returns {Array<IDEE.Feature>} clones
+   */
+  cloneFeatures(features) {
+    return features.map((f) => cloneFeature(f));
   }
 
   /**
